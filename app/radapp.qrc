@@ -1,0 +1,77 @@
+<RCC>
+    <qresource prefix="/std">
+        <file alias="new-assessment.png">images/blue-document.png</file>
+        <file alias="open-assessment.png">images/blue-folder-open-document.png</file>
+        <file alias="app-quit.png">images/cross-octagon-frame.png</file>
+        <file alias="edit-clear.png">images/eraser.png</file>
+        <file alias="edit-option.png">images/gear--pencil.png</file>
+        <file alias="grid-show.png">images/grid.png</file>
+        <file>images/blue-document-stand.png</file>
+        <file>images/blue-folder-horizontal-open.png</file>
+        <file>images/blue-folder-open.png</file>
+        <file>images/border-all.png</file>
+        <file alias="model-calculate.png">images/calculator--arrow.png</file>
+        <file>images/calculator-scientific.png</file>
+        <file>images/categories.png</file>
+        <file>images/chart.png</file>
+        <file>images/color.png</file>
+        <file>images/color-swatch.png</file>
+        <file>images/cross-white.png</file>
+        <file>images/gear.png</file>
+        <file>images/grid-dot.png</file>
+        <file alias="grid-snap.png">images/grid-snap.png</file>
+        <file>images/grid-snap-dot.png</file>
+        <file>images/highlighter.png</file>
+        <file>images/lifebuoy.png</file>
+        <file alias="zoom-actual.png">images/magnifier-zoom-actual.png</file>
+        <file>images/magnifier-zoom-actual-equal.png</file>
+        <file alias="zoom-fit.png">images/magnifier-zoom-fit.png</file>
+        <file alias="zoom-in.png">images/magnifier-zoom-in.png</file>
+        <file alias="zoom-out.png">images/magnifier-zoom-out.png</file>
+        <file alias="model-map.png">images/map.png</file>
+        <file alias="model-location.png">images/map-pin.png</file>
+        <file>images/minus-circle-frame.png</file>
+        <file>images/minus-octagon.png</file>
+        <file>images/minus-octagon-frame.png</file>
+        <file alias="edit-connect.png">images/node-design.png</file>
+        <file>images/pencil.png</file>
+        <file>images/plus-circle-frame.png</file>
+        <file>images/plus-octagon-frame.png</file>
+        <file alias="print-setup.png">images/printer--pencil.png</file>
+        <file>images/printer-color.png</file>
+        <file>images/processor.png</file>
+        <file>images/property.png</file>
+        <file>images/property-blue.png</file>
+        <file alias="help-content.png">images/question-frame.png</file>
+        <file>images/question-octagon-frame.png</file>
+        <file alias="model-radioactivity.png">images/radioactivity.png</file>
+        <file>images/report.png</file>
+        <file>images/report-excel.png</file>
+        <file alias="model-report.png">images/report-image.png</file>
+        <file>images/report-word.png</file>
+        <file alias="edit-remove.png">images/scissors.png</file>
+        <file>images/scissors-blue.png</file>
+        <file>images/tick.png</file>
+        <file alias="model-verify.png">images/tick-circle-frame.png</file>
+        <file>images/tick-octagon-frame.png</file>
+        <file>images/toggle-small.png</file>
+        <file>images/toggle-small-expand.png</file>
+        <file>images/wafer.png</file>
+        <file>images/water.png</file>
+        <file>images/weather.png</file>
+        <file>images/weather-cloud.png</file>
+        <file>images/weather-cloudy.png</file>
+        <file>images/x-ray.png</file>
+        <file alias="cross.png">images/cross-circle.png</file>
+        <file alias="sort.png">images/sort.png</file>
+        <file alias="print.png">images/printer.png</file>
+        <file>images/document.png</file>
+        <file alias="save-assessment.png">images/disk.png</file>
+        <file alias="save-assessment-as.png">images/disk--arrow.png</file>
+        <file alias="edit-remove-con.png">images/node-delete.png</file>
+        <file alias="app-icon.png">images/fruit-lime.png</file>
+        <file alias="model-database.png">images/database-property.png</file>
+        <file alias="edit-cursor.png">images/cursor.png</file>
+        <file alias="edit-renumber.png">images/tag-hash.png</file>
+    </qresource>
+</RCC>

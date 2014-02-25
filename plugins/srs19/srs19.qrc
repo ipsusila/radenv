@@ -1,0 +1,9 @@
+<RCC>
+    <qresource prefix="/srs19">
+        <file alias="cloud.png">images/upload-cloud.png</file>
+        <file alias="water.png">images/water--arrow.png</file>
+        <file alias="atmospheric.png">images/weather-clouds.png</file>
+        <file alias="transport.png">images/sort-date-descending.png</file>
+        <file alias="river.png">images/water.png</file>
+    </qresource>
+</RCC>
