@@ -6,6 +6,27 @@
 EstuarineTransport::EstuarineTransport(IModelFactory * fact, const KModelInfo& inf)
     : Transport(fact, inf)
 {
+    DataGroup dg1(QObject::tr("River conditions"));
+    dg1 << KData(&Srs19::RiverEstuaryWidth, 0)
+        << KData(&Srs19::FlowDepth, 0)
+        << KData(&Srs19::LowRiverFlowRate, 0);
+    _userInputs << dg1;
+
+    DataGroup dg2(QObject::tr("Parameter estimation"));
+    dg2 << KData(&Srs19::EstimateParameters, false)
+        << KData(&Srs19::TidalRiverWidth, 0);
+    _userInputs << dg2;
+
+    DataGroup dg3(QObject::tr("Estuary conditions"));
+    dg3 << KData(&Srs19::TidalPeriod, 0)
+        << KData(&Srs19::MaximumEbbVelocity, 0.5)
+        << KData(&Srs19::MaximumFloodVelocity, 0.5);
+    _userInputs << dg3;
+
+    DataGroup dg4(QObject::tr("Receptor position"));
+    dg4 << KData(&Srs19::ReceptorOnOpposite, false)
+        << KData(&Srs19::ReceptorAtUpstream, false);
+    _userInputs << dg4;
 }
 
 /**
@@ -14,12 +35,8 @@ EstuarineTransport::EstuarineTransport(IModelFactory * fact, const KModelInfo& i
  */
 bool EstuarineTransport::allocateIoPorts()
 {
-    KPort * port = new KPort(this, &Srs19::AtmosphericDischargeRate, KPort::Input);
-    _inpPorts.append(port);
-
-    port = new KPort(this, &Srs19::ConcentrationInAir, KPort::Output);
-
-    _outPorts.append(port);
+    _inpPorts << new KPort(this, &Srs19::WaterDischargeRate, KPort::Input);
+    _outPorts << new KPort(this, &Srs19::TotalConcentrationInWater, KPort::Output);
 
     return true;
 }
@@ -31,49 +48,61 @@ bool EstuarineTransport::verify(int * oerr, int * owarn)
 {
     int err = 0, warn = 0;
 
-    /*
-    //mandatory parameter
-    if (_dataList.isEmpty()) {
-        xError() << *this << QObject::tr("Atmospheric discharge parameter is not defined.");
+    KLocationPort * lp = locationPort();
+    if (lp == 0 || !lp->hasLocation()) {
+        xError() << *this << QObject::tr("Receptor location is not specified. Please double-click the port to specify location.");
         err ++;
     }
 
-    //release height
-    XData xd = _dataList.find(Srs19::ReleaseHeight);
-    if (!xd.isValid() || xd.numericValue() <= 0.0) {
-        xError() << *this << QObject::tr("Parameter [Release height] not set.");
+    //check wether input port is connected or not
+    if (!_inpPorts.first()->isConnected()) {
+        xError() << *this << QObject::tr("Input port is not connected.");
         err ++;
     }
 
-    xd = _dataList.find(Srs19::DischargePeriod);
-    if (!xd.isValid() || xd.numericValue() <= 0.0) {
-        xError() << *this << QObject::tr("Parameter [Discharge period] not set.");
-        err ++;
+    KDataArray daInput = this->_inpPorts.first()->result();
+    KData daF = daInput.find(Srs19::LiquidFlowRate);
+    if (!daF.isValid() || daF.numericValue() <= 0) {
+        xError() << *this << QObject::tr("Liquid flow rate not specified.");
+        err++;
     }
 
-    xd = _dataList.find(Srs19::AtmosphericDischargeRate);
-    if (!xd.isValid() || xd.numericValue() <= 0.0) {
-        xError() << *this << QObject::tr("Radionuclides and/or Discharge rate value not set properly.");
-        err ++;
+    bool estimate = _userInputs.valueOf(Srs19::EstimateParameters).toBool();
+    if (estimate) {
+        qreal Bd = _userInputs.numericValueOf(Srs19::TidalRiverWidth);
+        if (Bd <= 0) {
+            xError() << *this << QObject::tr("River width for parameter estimation not specified.");
+            err++;
+        }
     }
+    else {
+        //ceck all parameter
+        /*
+        qreal B = _userInputs.numericValueOf(Srs19::RiverEstuaryWidth);
+        qreal qr = _userInputs.numericValueOf(Srs19::LowRiverFlowRate);
+        qreal U = _userInputs.numericValueOf(Srs19::NetFreshwaterVelocity);
+        qreal D = _userInputs.numericValueOf(Srs19::FlowDepth);
 
-    //optional parameter
-    xd = _dataList.find(Srs19::AirFlowRate);
-    if (!xd.isValid() || xd.numericValue() <= 0.0) {
-        xWarning() << *this << QObject::tr("Parameter [Air flow rate] not set.");
-        warn ++;
-    }
+        if (B <= 0) {
+            xError() << *this << QObject::tr("River width not specified.");
+            err++;
+        }
 
-    xd = _dataList.find(Srs19::Diameter);
-    if (!xd.isValid() || xd.numericValue() <= 0.0) {
-        xWarning() << *this << QObject::tr("Parameter [Stack diameter] is not set.");
-        warn ++;
-    }
+        if (qr <= 0) {
+            xError() << *this << QObject::tr("River flow rate(qr) not specified.");
+            err++;
+        }
 
-    XLocationPort * lp = locationPort();
-    if (lp == 0 || !lp->location().isValid()) {
-        xWarning() << *this << QObject::tr("Receptor location is not specified. Please double-click the port to specify location.");
-        warn ++;
+        if (U <= 0) {
+            xError() << *this << QObject::tr("Net fresh water velocity not specified.");
+            err++;
+        }
+
+        if (D <= 0) {
+            xError() << *this << QObject::tr("Flow depth not specified.");
+            err++;
+        }
+        */
     }
 
     xInfo() << tagName() << QString(QObject::tr(" -> %1 error(s), %2 warning(s)"))
@@ -83,7 +112,6 @@ bool EstuarineTransport::verify(int * oerr, int * owarn)
         *oerr = err;
     if (owarn)
         *owarn = warn;
-    */
 
     return err == 0;
 }

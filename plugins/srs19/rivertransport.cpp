@@ -85,19 +85,25 @@ void RiverTransport::calcualteConcentration(qreal x, qreal qr, qreal U, const KD
 {
     const KData & qiW = inpQi.find(Srs19::WaterDischargeRate);
     QVector<KDataItem> cwList;
+    QVector<KDataItem> ctList;
     for(int k = 0; k < qiW.count(); k++) {
         const KDataItem & qi = qiW.at(k);
         const KRadionuclide & rn = KStorage::storage()->radionuclide(qi.name());
         qreal l = rn.halfLife().decayConstant();
 
+        // maximum concentration
+        qreal ct = (qi.numericValue() * qExp(-(l*x)/U))/qr;
+
         //equation 12, page 35.
-        qreal cw = (pr * qi.numericValue() * qExp(-(l*x)/U))/qr;
+        qreal cw = pr * ct;
 
         //add to result
+        ctList << KDataItem(qi.name(), ct);
         cwList << KDataItem(qi.name(), cw);
     }
 
     if (!cwList.isEmpty()) {
+        _dataList << KData(&Srs19::OppositeBankMaxConcentration, ctList);
         _dataList << KData(&Srs19::TotalConcentrationInWater, cwList);
     }
 }

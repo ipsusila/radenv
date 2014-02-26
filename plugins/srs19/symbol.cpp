@@ -62,9 +62,9 @@ const Symbol VerticalDiffusionParameter =
 
 //---
 const Symbol RiverEstuaryWidth =
-    {27, Rad::Real, 2, 0, MAX_REAL, 0, "B", "B", QObject::tr("River/Estuary width"), "m", "m", QObject::tr("River or estuary width")};
+    {27, Rad::Real, 2, 0, MAX_REAL, 0, "B", "B", QObject::tr("River/estuary width"), "m", "m", QObject::tr("River or estuary width")};
 const Symbol TidalRiverWidth =
-    {28, Rad::Real, 2, 0, MAX_REAL, 0, "Bd", "Bd", QObject::tr("River width"), "m", "m", QObject::tr("River width under a mean of annual river flow rate upstream of the tidal flow rate")};
+    {28, Rad::Real, 2, 0, MAX_REAL, 0, "Bd", "Bd", QObject::tr("River/estuary width"), "m", "m", QObject::tr("River width under a mean of annual river flow rate upstream of the tidal flow rate")};
 const Symbol EffluentRadionuclideConcentration =
     {29, Rad::Real, DIGIT_DEF, 0, MAX_REAL, 0, "C0", "C_0", QObject::tr("Concentration in effluent"), "Bq/m3", "Bq/m^3", QObject::tr("Radionuclide concentration in water at the effluent discharge outfall")};
 const Symbol ConcentrationInBottomSediment =
@@ -222,6 +222,17 @@ const Symbol ReceptorOnOpposite =
     {104, Rad::Boolean, DIGIT_DEF, 0, MAX_REAL, 0, "ro", "ro", QObject::tr("Receptor located at the opposite to discharge point?"), "", "", QObject::tr("Receptor x on the same bank side or in opposite side of the discharge point.")};
 const Symbol EstimateParameters =
     {105, Rad::Boolean, DIGIT_DEF, 0, MAX_REAL, 0, "ep", "ep", QObject::tr("Estimate parameter(s)"), "", "", QObject::tr("Estimate needed parameters.")};
+
+const Symbol MaximumEbbVelocity =
+    {106, Rad::Real, DIGIT_DEF, 0, MAX_REAL, 0, "Ue", "Ue", QObject::tr("Maximum ebb velocity"), "m/s", "m/s", QObject::tr("Maximum ebb (seaward) velocity")};
+const Symbol MaximumFloodVelocity =
+    {107, Rad::Real, DIGIT_DEF, 0, MAX_REAL, 0, "Uf", "Uf", QObject::tr("Maximum flood velocity"), "m/s", "m/s", QObject::tr("Maximum flood (upstream) velocity")};
+const Symbol TidalFlowRate =
+    {108, Rad::Real, DIGIT_DEF, 0, MAX_REAL, 0, "qw", "q_w", QObject::tr("Tidal flow rate"), "m3/s", "m^3/s", QObject::tr("Tidal flow rate")};
+const Symbol MeanTidalFlowSpeed =
+    {109, Rad::Real, DIGIT_DEF, 0, MAX_REAL, 0, "Ut", "U_t", QObject::tr("Mean tidal flow speed"), "m/s", "m/s", QObject::tr("Mean tidal flow speed")};
+const Symbol ReceptorAtUpstream =
+    {110, Rad::Boolean, DIGIT_DEF, 0, MAX_REAL, 0, "ru", "ru", QObject::tr("Receptor at estuary upstream location?"), "", "", QObject::tr("Receptor x located at either upstream or downstream.")};
 
 //end of symbol namespace
 }

@@ -114,6 +114,11 @@ namespace Srs19 {
     extern const Symbol CorrectedVerticalDiffusionParameter;
     extern const Symbol ReceptorOnOpposite;
     extern const Symbol EstimateParameters;
+    extern const Symbol MaximumEbbVelocity;
+    extern const Symbol MaximumFloodVelocity;
+    extern const Symbol TidalFlowRate;
+    extern const Symbol MeanTidalFlowSpeed;
+    extern const Symbol ReceptorAtUpstream;
 
 }
 

@@ -26,6 +26,7 @@ void UserInput::createControls(KDataGroupArray *ga)
         if (sz > 0) {
             QGroupBox * gb = new QGroupBox(name, this);
             QGridLayout * grid = new QGridLayout();
+            grid->setVerticalSpacing(3);
             for (int k = 0; k < sz; k++) {
                 KData * d = beg->pointerAt(k);
 
