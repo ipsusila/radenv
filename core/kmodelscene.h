@@ -31,6 +31,7 @@ public:
     void verify();
     void calculate();
     void pause();
+    void resume();
     void stop();
 
     const CalculationList & calculationResults() const;

@@ -3,7 +3,7 @@
 #include "symbol.h"
 
 DischargeItemTable::DischargeItemTable(QWidget *parent) :
-    QTableWidget(parent), _variable(&Rad::EmptySymbol)
+    UiAutoRowTable(parent), _variable(&Rad::EmptySymbol)
 {
     setColumnCount(2);
     setRowCount(1);
@@ -12,30 +12,25 @@ DischargeItemTable::DischargeItemTable(QWidget *parent) :
 
     DischargeItemDelegate * itemDelegate = new DischargeItemDelegate(this);
     this->setItemDelegate(itemDelegate);
-
-    connect(this, SIGNAL(cellChanged(int,int)), this, SLOT(onCellChanged(int,int)));
-    this->setToolTip(tr("Discharge rate table. Double click cell to input radionuclide and discharge rate"));
+    this->setToolTip(tr("Double click cell to input radionuclide and associated value"));
 }
 DischargeItemTable::~DischargeItemTable()
 {
     //delete
 }
-
-void DischargeItemTable::onCellChanged(int row, int column)
+void DischargeItemTable::setDecimals(int dec)
 {
-    if (column == 0) {
-        bool lastRow = (row + 1) == this->rowCount();
-        QTableWidgetItem * item = this->item(row, column);
-        if (lastRow) {
-            if (!item->text().isEmpty())
-                this->setRowCount(row+2);
-        }
-        else {
-            if (item->text().isEmpty()) {
-                this->removeRow(row);
-            }
-        }
-    }
+    DischargeItemDelegate * delegate = qobject_cast<DischargeItemDelegate *>(this->itemDelegate());
+    if (delegate != 0)
+        delegate->setDecimals(dec);
+}
+
+int DischargeItemTable::decimals() const
+{
+    DischargeItemDelegate * delegate = qobject_cast<DischargeItemDelegate *>(this->itemDelegate());
+    if (delegate != 0)
+        return delegate->decimals();
+    return 0;
 }
 
 KData DischargeItemTable::data() const
@@ -46,18 +41,18 @@ KData DischargeItemTable::data() const
         if (cell == 0 || cell->text().isEmpty())
             return KData();
 
-        QVector<KDataItem> items;
+        DataItemArray items;
         for (int k = 0; k < rowCount(); k++) {
             QTableWidgetItem * iNuc = item(k, 0);
-            QTableWidgetItem * iRate = item(k, 1);
-            if (iNuc == 0 || iNuc->text().isEmpty() || iRate == 0 || iRate->text().isEmpty())
+            QTableWidgetItem * iVal = item(k, 1);
+            if (iNuc == 0 || iNuc->text().isEmpty() || iVal == 0 || iVal->text().isEmpty())
                 continue;
 
             QString nuc = iNuc->text();
-            qreal rate = iRate->text().toDouble();
+            qreal rate = iVal->text().toDouble();
 
             if (!nuc.isEmpty() && rate > 0.0) {
-                KDataItem d(nuc, rate);
+                KDataItem d(nuc, rate, KData::Radionuclide);
                 items.append(d);
             }
         }
@@ -73,6 +68,9 @@ KData DischargeItemTable::data() const
 }
 void DischargeItemTable::setData(const KData& d)
 {
+    if (d.isEmpty())
+        return;
+
     //set row count
     this->setRowCount(d.count()+1);
 
@@ -88,22 +86,25 @@ void DischargeItemTable::setData(const KData& d)
 }
 void DischargeItemTable::setData(const KDataArray& list)
 {
-    KData qi = list.find(_variable->symbol);
-    if (qi.isValid()) {
-        setData(qi);
-    }
+    const KData & qi = list.find(_variable->symbol);
+    setData(qi);
+}
+void DischargeItemTable::setData(const KDataGroupArray& list)
+{
+    const KData & qi = list.find(*_variable);
+    setData(qi);
 }
 
-const Symbol * DischargeItemTable::variable() const
+const Quantity * DischargeItemTable::variable() const
 {
     return _variable;
 }
-void DischargeItemTable::setVariable(const Symbol * s)
+void DischargeItemTable::setVariable(const Quantity * s)
 {
     if (_variable != s) {
         _variable = s;
         QStringList headers;
-        headers << tr("Radionuclides") << QString("%1 (%2)").arg(s->text).arg(s->unit);
+        headers << tr("Radionuclides") << s->displayTextWithUnit();
         setHorizontalHeaderLabels(headers);
     }
 }

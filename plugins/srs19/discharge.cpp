@@ -1,13 +1,10 @@
-#include<QtDebug>
-#include<QtCore/qmath.h>
 #include "discharge.h"
-#include "kport.h"
-#include "koutput.h"
-
-#include "dialogatmosphericdischarge.h"
-#include "dialogwaterdischarge.h"
-#include "dialogsewagedischarge.h"
 #include "symbol.h"
+#include "radcore.h"
+
+#include "widgetatmosphericdischarge.h"
+#include "widgetwaterdischarge.h"
+#include "widgetsewagedischarge.h"
 
 ///////////////////////////////////////////////////////////////////////////////
 Discharge::Discharge(IModelFactory * fact, const KModelInfo& inf)
@@ -15,7 +12,12 @@ Discharge::Discharge(IModelFactory * fact, const KModelInfo& inf)
 {
 }
 
-KDataArray Discharge::result()
+KData Discharge::modelData(const Quantity &sym) const
+{
+    return _dataList.find(sym);
+}
+
+KDataArray Discharge::result() const
 {
     return _dataList;
 }
@@ -37,13 +39,13 @@ bool Discharge::isSource() const
     return true;
 }
 
-const PortList & Discharge::outputs() const
+const KPortList & Discharge::outputs() const
 {
     return _outPorts;
 }
 QString Discharge::displayText() const
 {
-    return _dataList.displayText();
+    return "";
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -60,66 +62,60 @@ bool AirDischarge::allocateIoPorts()
     _outPorts << new KPort(this, &Srs19::AtmosphericDischargeRate, KPort::Output);
     return true;
 }
-void AirDischarge::promptParameters()
+IUserInput * AirDischarge::createUserInputWidget(QWidget *parent)
 {
-    DialogAtmosphericDischarge dlg(_dataList);
-    if (dlg.exec() == QDialog::Accepted) {
-        _dataList = dlg.dataList();
-        setToolTip(displayText());
-        xInfo() << *this << QObject::tr(" parameters is assigned.")
-                << KOutput::EndLine << _dataList.displayText();
-    }
+    WidgetAtmosphericDischarge * w =
+            new WidgetAtmosphericDischarge(&_dataList, parent);
+    return w;
 }
+
 bool AirDischarge::verify(int * oerr, int * owarn)
 {
     int err = 0, warn = 0;
-    //mandatory parameter
-    if (_dataList.isEmpty()) {
-        xError() << *this << QObject::tr("Atmospheric discharge parameter is not defined.");
-        err ++;
-    }
 
     //release height
     KData xd = _dataList.find(Srs19::ReleaseHeight);
     if (!xd.isValid() || xd.numericValue() <= 0.0) {
-        xError() << *this << QObject::tr("Parameter [Release height] not set.");
+        KOutputProxy::errorNotSpecified(this, Srs19::ReleaseHeight);
         err ++;
     }
 
     xd = _dataList.find(Srs19::DischargePeriod);
     if (!xd.isValid() || xd.numericValue() <= 0.0) {
-        xError() << *this << QObject::tr("Parameter [Discharge period] not set.");
+        KOutputProxy::errorNotSpecified(this, Srs19::DischargePeriod);
         err ++;
     }
 
     xd = _dataList.find(Srs19::AtmosphericDischargeRate);
     if (!xd.isValid() || xd.numericValue() <= 0.0) {
-        xError() << *this << QObject::tr("Radionuclides and/or Discharge rate value not set properly.");
+        KOutputProxy::errorNotSpecified(this, Srs19::AtmosphericDischargeRate);
         err ++;
     }
 
     //optional parameter
     xd = _dataList.find(Srs19::AirFlowRate);
     if (!xd.isValid() || xd.numericValue() <= 0.0) {
-        xWarning() << *this << QObject::tr("Parameter [Air flow rate] not set.");
+        KOutputProxy::warningNotProperlyDefined(this, Srs19::AirFlowRate);
         warn ++;
     }
 
     xd = _dataList.find(Srs19::Diameter);
     if (!xd.isValid() || xd.numericValue() <= 0.0) {
-        xWarning() << *this << QObject::tr("Parameter [Stack diameter] is not set.");
+        KOutputProxy::warningNotProperlyDefined(this, Srs19::Diameter);
         warn ++;
     }
 
     KLocationPort * lp = locationPort();
     if (lp == 0 || !lp->hasLocation()) {
-        xWarning() << *this << QObject::tr("Receptor location is not specified. Please double-click the port to specify location.");
+        KOutputProxy::warningLocationNotSpecified(this);
         warn ++;
     }
+    else {
+        //assign location
+        _dataList.setLocation(lp->location());
+    }
 
-    xInfo() << tagName() << QString(QObject::tr(" -> %1 error(s), %2 warning(s)"))
-               .arg(err).arg(warn);
-
+    KOutputProxy::infoVerificationResult(this, err, warn);
     if (oerr)
         *oerr = err;
     if (owarn)
@@ -133,9 +129,9 @@ bool AirDischarge::load(QIODevice * io)
     Q_UNUSED(io);
     return true;
 }
-bool AirDischarge::save(QIODevice * i)
+bool AirDischarge::save(QIODevice * io)
 {
-    Q_UNUSED(i);
+    Q_UNUSED(io);
     return true;
 }
 
@@ -152,53 +148,46 @@ bool WaterDischarge::allocateIoPorts()
     _outPorts << new KPort(this, &Srs19::WaterDischargeRate, KPort::Output);
     return true;
 }
-void WaterDischarge::promptParameters()
+IUserInput * WaterDischarge::createUserInputWidget(QWidget *parent)
 {
-    DialogWaterDischarge dlg(_dataList);
-    if (dlg.exec() == QDialog::Accepted) {
-        _dataList = dlg.dataList();
-        setToolTip(displayText());
-        xInfo() << *this << QObject::tr(" parameters is assigned.")
-                << KOutput::EndLine << _dataList.displayText();
-    }
+    WidgetWaterDischarge * w =
+            new WidgetWaterDischarge(&_dataList, parent);
+    return w;
 }
 bool WaterDischarge::verify(int * oerr, int * owarn)
 {
     int err = 0, warn = 0;
-    //mandatory parameter
-    if (_dataList.isEmpty()) {
-        xError() << *this << QObject::tr("Surface water discharge parameter is not defined.");
-        err ++;
-    }
 
     //discharge period
     KData xd = _dataList.find(Srs19::DischargePeriod);
     if (!xd.isValid() || xd.numericValue() <= 0.0) {
-        xError() << *this << QObject::tr("Parameter [Discharge period] not set.");
+        KOutputProxy::errorNotSpecified(this, Srs19::DischargePeriod);
         err ++;
     }
 
     xd = _dataList.find(Srs19::WaterDischargeRate);
     if (!xd.isValid() || xd.numericValue() <= 0.0) {
-        xError() << *this << QObject::tr("Radionuclides and/or Discharge rate value not set properly.");
+        KOutputProxy::errorNotSpecified(this, Srs19::WaterDischargeRate);
         err ++;
     }
 
     xd = _dataList.find(Srs19::LiquidFlowRate);
     if (!xd.isValid() || xd.numericValue() <= 0.0) {
-        xWarning() << *this << QObject::tr("Parameter [Liquid flow rate] not set.");
+        KOutputProxy::errorNotSpecified(this, Srs19::LiquidFlowRate);
         err ++;
     }
 
     KLocationPort * lp = locationPort();
     if (lp == 0 || !lp->hasLocation()) {
-        xWarning() << *this << QObject::tr("Receptor location is not specified. Please double-click the port to specify location.");
+        KOutputProxy::warningLocationNotSpecified(this);
         warn ++;
     }
+    else {
+        //assign location
+        _dataList.setLocation(lp->location());
+    }
 
-    xInfo() << tagName() << QString(QObject::tr(" -> %1 error(s), %2 warning(s)"))
-               .arg(err).arg(warn);
-
+    KOutputProxy::infoVerificationResult(this, err, warn);
     if (oerr)
         *oerr = err;
     if (owarn)
@@ -212,21 +201,25 @@ bool WaterDischarge::calculate(const KCalculationInfo& ci)
 
     const KData & daQi = _dataList.find(Srs19::WaterDischargeRate);
     const KData & daF = _dataList.find(Srs19::LiquidFlowRate);
-    if (!daQi.isValid() || !daF.isValid()) {
-        xWarning() << *this << QObject::tr("Discharge rate and/or flow rate not set");
+    if (!daQi.isValid()) {
+        KOutputProxy::errorNotSpecified(this, Srs19::WaterDischargeRate);
+        return false;
+    }
+    if (!daF.isValid()) {
+        KOutputProxy::errorNotSpecified(this, Srs19::LiquidFlowRate);
         return false;
     }
 
-    QVector<KDataItem> C0Array;
+    DataItemArray C0Array;
     qreal F = daF.numericValue();
     for (int k = 0; k < daQi.count(); k++) {
         const KDataItem & di = daQi.at(k);
         qreal C0 = di.numericValue() / F;
 
-        C0Array << KDataItem(di.name(), C0);
+        C0Array << KDataItem(di.name(), C0, KData::Radionuclide);
     }
     //replace existing
-    _dataList.addOrReplace(KData(&Srs19::EffluentRadionuclideConcentration, C0Array));
+    _dataList.appendOrReplace(KData(&Srs19::EffluentRadionuclideConcentration, C0Array));
 
     return true;
 }
@@ -237,9 +230,9 @@ bool WaterDischarge::load(QIODevice * io)
     Q_UNUSED(io);
     return true;
 }
-bool WaterDischarge::save(QIODevice * i)
+bool WaterDischarge::save(QIODevice * io)
 {
-    Q_UNUSED(i);
+    Q_UNUSED(io);
     return true;
 }
 
@@ -252,59 +245,52 @@ bool SewageDischarge::allocateIoPorts()
     _outPorts << new KPort(this, &Srs19::AverageConcentrationInSewage, KPort::Output);
     return true;
 }
-void SewageDischarge::promptParameters()
+IUserInput * SewageDischarge::createUserInputWidget(QWidget *parent)
 {
-    DialogSewageDischarge dlg(_dataList);
-    if (dlg.exec() == QDialog::Accepted) {
-        _dataList = dlg.dataList();
-        setToolTip(displayText());
-        xInfo() << *this << QObject::tr(" parameters is assigned.")
-                << KOutput::EndLine << _dataList.displayText();
-    }
+    WidgetSewageDischarge * w =
+            new WidgetSewageDischarge(&_dataList, parent);
+    return w;
 }
 bool SewageDischarge::verify(int * oerr, int * owarn)
 {
     int err = 0, warn = 0;
-    //mandatory parameter
-    if (_dataList.isEmpty()) {
-        xError() << *this << QObject::tr("Sewage sludge discharge parameter is not defined.");
-        err ++;
-    }
 
     //discharge period
     KData xd = _dataList.find(Srs19::DischargePeriod);
     if (!xd.isValid() || xd.numericValue() <= 0.0) {
-        xError() << *this << QObject::tr("Parameter [Discharge period] not set.");
+        KOutputProxy::errorNotSpecified(this, Srs19::DischargePeriod);
         err ++;
     }
 
     xd = _dataList.find(Srs19::SewageDischargeRate);
     if (!xd.isValid() || xd.numericValue() <= 0.0) {
-        xError() << *this << QObject::tr("Radionuclides and/or Discharge rate value not set properly.");
+        KOutputProxy::errorNotSpecified(this, Srs19::SewageDischargeRate);
         err ++;
     }
 
     xd = _dataList.find(Srs19::AnnualSludgeProduction);
     if (!xd.isValid() || xd.numericValue() <= 0.0) {
-        xWarning() << *this << QObject::tr("Annual sludge production not set.");
+        KOutputProxy::errorNotSpecified(this, Srs19::AnnualSludgeProduction);
         err ++;
     }
 
     xd = _dataList.find(Srs19::NumOfServedPerson);
     if (!xd.isValid() || xd.numericValue() <= 0.0) {
-        xWarning() << *this << QObject::tr("Number of served person in the facility not set.");
+        KOutputProxy::errorNotSpecified(this, Srs19::NumOfServedPerson);
         err ++;
     }
 
     KLocationPort * lp = locationPort();
     if (lp == 0 || !lp->hasLocation()) {
-        xWarning() << *this << QObject::tr("Receptor location is not specified. Please double-click the port to specify location.");
+        KOutputProxy::warningLocationNotSpecified(this);
         warn ++;
     }
+    else {
+        //assign location
+        _dataList.setLocation(lp->location());
+    }
 
-    xInfo() << tagName() << QString(QObject::tr(" -> %1 error(s), %2 warning(s)"))
-               .arg(err).arg(warn);
-
+    KOutputProxy::infoVerificationResult(this, err, warn);
     if (oerr)
         *oerr = err;
     if (owarn)
@@ -318,8 +304,8 @@ bool SewageDischarge::load(QIODevice * io)
     Q_UNUSED(io);
     return true;
 }
-bool SewageDischarge::save(QIODevice * i)
+bool SewageDischarge::save(QIODevice * io)
 {
-    Q_UNUSED(i);
+    Q_UNUSED(io);
     return true;
 }

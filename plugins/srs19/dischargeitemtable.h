@@ -1,13 +1,12 @@
 #ifndef DISCHARGEITEMTABLE_H
 #define DISCHARGEITEMTABLE_H
 
-#include <QTableWidget>
+#include "uiautorowtable.h"
 #include "kdata.h"
 #include "symbol.h"
 
-class DischargeItemTable : public QTableWidget
+class DischargeItemTable : public UiAutoRowTable
 {
-    Q_OBJECT
 public:
     explicit DischargeItemTable(QWidget *parent = 0);
     ~DischargeItemTable();
@@ -15,14 +14,14 @@ public:
     KData data() const;
     void setData(const KData& d);
     void setData(const KDataArray& list);
-    const Symbol * variable() const;
-    void setVariable(const Symbol * s);
-    
-public slots:
-    void onCellChanged(int row, int column);
+    void setData(const KDataGroupArray& list);
+    const Quantity * variable() const;
+    void setVariable(const Quantity * s);
+    void setDecimals(int dec);
+    int decimals() const;
 
 private:
-    const Symbol * _variable;
+    const Quantity * _variable;
 };
 
 #endif // DISCHARGEITEMTABLE_H

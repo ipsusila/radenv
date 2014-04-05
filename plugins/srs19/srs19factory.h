@@ -13,17 +13,21 @@ public:
 
     bool isTopLevel() const;
     bool initialize();
+    void onFinalized();
     IModel * createModel(const KModelInfo & info);
     const GroupInfoList & groups() const;
+    ConstSymbolList availableQuantities() const;
     QString name() const;
     QString author() const;
     QString version() const;
     QString description() const;
 
     IParamsEditor * paramsEditor();
+    KSettingManager * settingManager();
 private:
     GroupInfoList _groupInfos;
     IParamsEditor * _paramsEditor;
+    KSettingManager * _settingManager;
 };
 
 #endif // SRS19FACTORY_H

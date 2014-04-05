@@ -9,12 +9,12 @@
 #include "klocationport.h"
 #include "kmodelscene.h"
 #include "koutput.h"
-#include "userinput.h"
+#include "uiuserinput.h"
 
 /**
  * @brief Empty Ports list.
  */
-static const PortList EmptyPorts;
+static const KPortList EmptyPorts;
 SPadding IModel::Padding = {10, 25, 10, 26};
 
 IModel::IModel(IModelFactory * fact, const KModelInfo& inf) : _tagId(0), _locPort(0), _repPort(0),
@@ -38,11 +38,11 @@ IModel::~IModel()
 
 void IModel::removeConnections()
 {
-    const PortList& inpList = inputs();
+    const KPortList& inpList = inputs();
     foreach(KPort * p, inpList)
         p->removeConnections();
 
-    const PortList& outList = outputs();
+    const KPortList& outList = outputs();
     foreach(KPort * p, outList)
         p->removeConnections();
 }
@@ -56,14 +56,14 @@ void IModel::visit(IModel * visitor)
     if (visitor == 0) {
         //this node must be source
         if (!isSource()) {
-            xWarning() << tagName() << QObject::tr(" is not source but visited by NULL node. Set distance to 0.");
+            xWarning() << *this << QObject::tr(" is not source but visited by NULL node. Set distance to 0.");
         }
         _sourceDistance = 0;
     }
     else if (visitor == _visitor) {
         //check for loop
         if (_sourceDistance < visitor->sourceDistance()) {
-            xWarning() << tagName() << QObject::tr(" and ") << visitor->tagName()
+            xWarning() << *this << QObject::tr(" and ") << visitor->tagName()
                        << QObject::tr(" are connected as loop. Could not be evaluated properly.");
         }
     }
@@ -76,14 +76,14 @@ void IModel::visit(IModel * visitor)
     }
 
     //display in output window
-    xInfo() << QObject::tr("Visiting ") << tagName() << QObject::tr(" by ")
+    xInfo() << QObject::tr("Visiting ") << *this << QObject::tr(" by ")
             << (visitor == 0 ? "NULL" : visitor->tagName())
             << QObject::tr(", source distance is ") << sourceDistance();
 
     //visit all nodes that is connected to this model
-    const PortList& outs = this->outputs();
+    const KPortList& outs = this->outputs();
     foreach(KPort * p, outs) {
-        const PortList& conPorts = p->connectedPorts();
+        const KPortList& conPorts = p->connectedPorts();
         foreach(KPort * cp, conPorts) {
             IModel * md = cp->model();
             md->visit(this);
@@ -125,6 +125,10 @@ const IModel * IModel::latestVisitor() const
     return _visitor;
 }
 
+void IModel::defineParameters()
+{
+}
+
 bool IModel::allocateIoPorts()
 {
     return true;
@@ -164,7 +168,7 @@ void IModel::arrangePorts()
 
     //input port position
     float dh, ph, base;
-    const PortList inp = inputs();
+    const KPortList inp = inputs();
     int np = inp.size();
     if (np > 0) {
         ph = inp.first()->boundingRect().height();
@@ -177,7 +181,7 @@ void IModel::arrangePorts()
     }
 
     //output port position
-    const PortList out = outputs();
+    const KPortList out = outputs();
     np = out.size();
     if (np > 0) {
         ph = out.first()->boundingRect().height();
@@ -204,11 +208,21 @@ bool IModel::initialize()
     //arrange ports
     arrangePorts();
 
+    //define user inputs
+    defineParameters();
+
     return ok;
 }
 
-void IModel::promptParameters()
+void IModel::userInputsFinished(bool accepted)
 {
+    Q_UNUSED(accepted);
+}
+
+bool IModel::promptUserInputs()
+{
+    bool accepted = false;
+
     //create default user input dialogs
     IUserInput * wUserInp = createUserInputWidget();
     if (wUserInp != 0) {
@@ -227,16 +241,36 @@ void IModel::promptParameters()
         dlg->setWindowTitle(QString("%1 - user input parameter(s)").arg(this->tagName()));
         if (dlg->exec() == QDialog::Accepted) {
             wUserInp->acceptValues();
+            accepted = true;
         }
 
         delete dlg;
     }
+
+    return accepted;
+}
+
+void IModel::askUserParameters()
+{
+    bool accepted = promptUserInputs();
+    userInputsFinished(accepted);
 }
 void IModel::refresh()
 {
     KLocationPort * lp = locationPort();
     if (lp)
         lp->refresh();
+}
+KData IModel::data(const Quantity & sym) const
+{
+    //get from this model
+    KData d = modelData(sym);
+    if (d.isValid())
+        return d;
+
+    //if data not found,
+    //ask from connected model
+    return inputs().data(sym);
 }
 void IModel::generateReport()
 {
@@ -256,17 +290,22 @@ void IModel::generateReport()
     rep->addResult(this->result());
 }
 
-const PortList & IModel::inputs() const
+const KPortList & IModel::inputs() const
 {
     return EmptyPorts;
 }
-const PortList & IModel::outputs() const
+const KPortList & IModel::outputs() const
 {
     return EmptyPorts;
 }
 QString IModel::displayText() const
 {
     return "";
+}
+
+IModelFactory * IModel::factory() const
+{
+    return this->_factory;
 }
 
 bool IModel::isSource() const
@@ -295,12 +334,12 @@ void IModel::setInfo(const KModelInfo& i)
     _info = i;
     this->setToolTip(i.text()+"\n"+i.description());
 }
-QList<KDataArray> IModel::inputResults() const
+DataArrayList IModel::inputResults() const
 {
-    QList<KDataArray> resultList;
-    const PortList& inpList = inputs();
+    DataArrayList resultList;
+    const KPortList& inpList = inputs();
     foreach(KPort * p, inpList)
-        resultList << p->result();
+        resultList << p->data();
     return resultList;
 }
 
@@ -351,7 +390,7 @@ IUserInput * IModel::createUserInputWidget(QWidget * parent)
     //generate widget
     KDataGroupArray * ga = userInputs();
     if (ga != 0)
-        return new UserInput(ga, parent);
+        return new UiUserInput(ga, parent);
     return 0;
 }
 
@@ -379,6 +418,7 @@ void IModel::paint(QPainter * painter, const QStyleOptionGraphicsItem * option, 
     painter->setBrush(QColor(225,225,225));
     painter->setPen(QPen(Qt::darkGray, 1));
 
+    int penWidth = painter->pen().width();
     QRectF rect = modelRect();
     painter->drawRect(rect);
 
@@ -386,8 +426,16 @@ void IModel::paint(QPainter * painter, const QStyleOptionGraphicsItem * option, 
     f.setPointSize(9.5f);
     painter->setFont(f);
     painter->setBrush(Qt::darkGray);
-    painter->drawText(rect.x(), rect.bottom(), rect.width(), Padding.bottom/2,
+    painter->drawText(rect.x()+penWidth+2, rect.bottom(), rect.width(), Padding.bottom/2,
         Qt::AlignLeft|Qt::AlignTop, this->tagName(""));
+
+    //display text
+    QString dispTxt = displayText();
+    if (!dispTxt.isEmpty()) {
+        painter->setBrush(Qt::black);
+        painter->drawText(rect.translated(penWidth+2,-penWidth-2),
+                          Qt::AlignLeft | Qt::AlignBottom, dispTxt);
+    }
 
     //bounding rect
     if (this->isSelected()) {
@@ -401,7 +449,7 @@ void IModel::paint(QPainter * painter, const QStyleOptionGraphicsItem * option, 
 void IModel::mouseDoubleClickEvent (QGraphicsSceneMouseEvent * event)
 {
     QGraphicsItem::mouseDoubleClickEvent(event);
-    promptParameters();
+    askUserParameters();
     event->accept();
 }
 QVariant IModel::itemChange(GraphicsItemChange change, const QVariant &value)

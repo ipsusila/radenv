@@ -31,6 +31,8 @@ public:
      */
     static KElement fromSymbol(const QString& symbol);
     static KElement fromNuclide(const QString& nuclide);
+    static KElement ** elements();
+    static int elementCount();
 
     /**
      *static element value

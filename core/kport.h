@@ -4,6 +4,17 @@
 #include <QGraphicsItem>
 #include "kdata.h"
 
+class KPortList : public QList<KPort *>
+{
+public:
+    KData data(const Quantity& sym) const;
+    KData data(int idx, const Quantity& sym) const;
+    KLocation firstValidLocation() const;
+    bool isConnected(int idx = 0) const;
+    bool isAllConnected() const;
+    bool isAnyConnected() const;
+};
+
 class K_CORE_EXPORT KPort : public QGraphicsItem
 {
 public:
@@ -17,15 +28,17 @@ public:
     };
     Q_DECLARE_FLAGS(DataDirection, Direction)
 
-    KPort(IModel * m, const Symbol * sym, DataDirection dir);
+    KPort(IModel * m, const Quantity * sym, DataDirection dir);
     virtual ~KPort();
 
     bool isConnected() const;
-    const Symbol * symbol() const;
+    const Quantity * symbol() const;
     DataDirection direction() const;
-    const PortList & connectedPorts() const;
+    const KPortList & connectedPorts() const;
     ConnectorList connectors() const;
-    KDataArray result() const;
+    KDataArray data() const;            //deprecated (will be removed)
+    KData data(const Quantity& sym) const;
+    KLocation firstValidLocation() const;
 
     void removeConnections();
     void connectTo(KPort * dest, KConnector * con);
@@ -40,11 +53,12 @@ public:
 
 private:
     IModel *            _model;
-    const Symbol *      _symbol;
+    const Quantity *      _symbol;
     KPort::DataDirection _direction;
-    PortList            _conPorts;
+    KPortList            _conPorts;
     ConnectorList       _conList;
 };
+
 
 Q_DECLARE_OPERATORS_FOR_FLAGS(KPort::DataDirection)
 

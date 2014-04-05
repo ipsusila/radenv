@@ -47,6 +47,19 @@ struct KGroup
     inline T * pointerAt(int idx)
     { return &(items[idx]); }
 
+    inline void replaceAt(int idx, const T& v)
+    { items[idx] = v; }
+
+    bool operator==(const KGroup<T> & o) const
+    {
+        return (o.name == this->name && o.items == this->items);
+    }
+
+    bool operator!=(const KGroup<T> & o) const
+    {
+        return (o.name != this->name || o.items != this->items);
+    }
+
     KGroup & operator<<(const T& item)
     { items.append(item); return *this; }
 

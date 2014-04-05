@@ -1,28 +1,108 @@
 #include "smalllaketransport.h"
-#include "kport.h"
-#include "koutput.h"
 #include "symbol.h"
+#include "radcore.h"
 
 SmallLakeTransport::SmallLakeTransport(IModelFactory * fact, const KModelInfo& inf)
     : Transport(fact, inf)
 {
 }
+bool SmallLakeTransport::needLocation() const
+{
+    return false;
+}
+
 /**
  * @brief Create output ports
  * @return
  */
 bool SmallLakeTransport::allocateIoPorts()
 {
-    KPort * port = new KPort(this, &Srs19::AtmosphericDischargeRate, KPort::Input);
-    _inpPorts.append(port);
+    _inpPorts << new KPort(this, &Srs19::WaterDischargeRate, KPort::Input)
+              << new KPort(this, &Srs19::DailyDepositionRate, KPort::Input);
 
-    port = new KPort(this, &Srs19::ConcentrationInAir, KPort::Output);
-    _outPorts.append(port);
+    _outPorts << new KPort(this, &Srs19::TotalConcentrationInWater, KPort::Output);
 
     return true;
 }
-bool SmallLakeTransport::calculate(const KCalculationInfo& ci)
+void SmallLakeTransport::defineParameters()
 {
+    //define user inputs
+    DataGroup dg1(QObject::tr("River conditions"));
+    dg1 << KData(&Srs19::LowRiverFlowRate, 0)
+        << KData(&Srs19::EstimateParameters, false)
+        << KData(&Srs19::EstimatedRiverWidth, 0);
+    _userInputs << dg1;
+
+    DataGroup dg2(QObject::tr("Lake parameters"));
+    dg2 << KData(&Srs19::LakeSurfaceArea, 0)
+        << KData(&Srs19::LakeVolume, 0);
+
+    _userInputs << dg2;
+}
+
+bool SmallLakeTransport::calculate(const KCalculationInfo& ci, const KLocation & loc, KDataArray * calcResult)
+{
+    Q_UNUSED(loc);
+    Q_UNUSED(ci);
+
+    //estimate qr
+    bool estimate = _userInputs.valueOf(Srs19::EstimateParameters).toBool();
+    if (estimate) {
+        qreal Bd = _userInputs.numericValueOf(Srs19::EstimatedRiverWidth);
+        xTrace() << "Estimating parameter with Bd=" << Bd;
+
+        //SRS-19 page 168
+        //B = 10*qr^0.460
+        //log B = log 10 + 0.460*log qr
+        //(log B - 1) / 0.460 = log qr
+        //qr = 10 ^ (...)
+        qreal qrd = qPow(10.0, (log10(Bd) - 1.0) / 0.460);
+        qreal qr = qrd / 3;
+        _userInputs.replace(KData(&Srs19::LowRiverFlowRate, qr));
+    }
+
+    qreal qr = _userInputs.numericValueOf(Srs19::LowRiverFlowRate);
+    qreal Al = _userInputs.numericValueOf(Srs19::LakeSurfaceArea);
+    qreal V = _userInputs.numericValueOf(Srs19::LakeVolume);
+    qreal di = _inpPorts.data(1, Srs19::DailyDepositionRate).numericValue();
+    qreal T = _inpPorts.data(Srs19::DischargePeriod).numericValue();
+    qreal t = T * 365 * 24 * 60 * 60;
+
+    qreal cw;
+    KData qiW = _inpPorts.data(0, Srs19::WaterDischargeRate);
+    DataItemArray cwList;
+    DataItemArray qiaList;
+    for(int k = 0; k < qiW.count(); k++) {
+        const KDataItem & qi = qiW.at(k);
+        const KRadionuclide & rn = KStorage::storage()->radionuclide(qi.name());
+        qreal l = rn.halfLife().decayConstant();
+
+        qreal qia = qi.numericValue() + ((3 * di * Al) / 86400);
+        qiaList << KDataItem(qi.name(), qia, KData::Radionuclide);
+
+        qreal c = qr/V + l;
+        calcResult->appendOrMerge(&Srs19::LambdaConstant, qi.name(), c, KData::Radionuclide);
+        if (c <= 1e-8) {
+            //equation 23, page 49
+            cw = (qia / (qr + l * V)) * (1.0 - qExp(-t * c));
+        }
+        else {
+            //equation 23, page 49
+            cw = qia / (qr + l * V);
+        }
+
+        //add to result
+        cwList << KDataItem(qi.name(), cw, KData::Radionuclide);
+    }
+
+    if (!qiaList.isEmpty()) {
+        (*calcResult) << KData(&Srs19::CombinedReleaseRate, qiaList);
+    }
+
+    if (!cwList.isEmpty()) {
+        (*calcResult) << KData(&Srs19::TotalConcentrationInWater, cwList);
+    }
+
     return true;
 }
 
@@ -30,59 +110,52 @@ bool SmallLakeTransport::verify(int * oerr, int * owarn)
 {
     int err = 0, warn = 0;
 
-    /*
-    //mandatory parameter
-    if (_dataList.isEmpty()) {
-        xError() << *this << QObject::tr("Atmospheric discharge parameter is not defined.");
+    //check wether input port is connected or not
+    if (!_inpPorts.isConnected()) {
+        KOutputProxy::errorPortNotConnected(this, _inpPorts.first());
+        err ++;
+    }
+    if (!_inpPorts.isConnected(1)) {
+        KOutputProxy::warningMessage(this, _inpPorts.at(1)->symbol()->symbol + QObject::tr(" not connected."));
+        warn++;
+        //KOutputProxy::errorPortNotConnected(this, _inpPorts.at(1));
+        //err ++;
+    }
+
+    //get qr
+    bool estimate = _userInputs.valueOf(Srs19::EstimateParameters).toBool();
+    if (estimate) {
+        qreal Bd = _userInputs.numericValueOf(Srs19::EstimatedRiverWidth);
+        if (Bd <= 0) {
+            KOutputProxy::errorNotSpecified(this, Srs19::EstimatedRiverWidth);
+            err ++;
+        }
+    }
+    else {
+        qreal qr = _userInputs.numericValueOf(Srs19::LowRiverFlowRate);
+        if (qr <= 0) {
+            KOutputProxy::errorNotSpecified(this, Srs19::LowRiverFlowRate);
+            err ++;
+        }
+    }
+
+    qreal Al = _userInputs.numericValueOf(Srs19::LakeSurfaceArea);
+    if (Al <= 0) {
+        KOutputProxy::errorNotSpecified(this, Srs19::LakeSurfaceArea);
         err ++;
     }
 
-    //release height
-    XData xd = _dataList.find(Srs19::ReleaseHeight);
-    if (!xd.isValid() || xd.numericValue() <= 0.0) {
-        xError() << *this << QObject::tr("Parameter [Release height] not set.");
-        err ++;
+    qreal V = _userInputs.numericValueOf(Srs19::LakeVolume);
+    if (V <= 0) {
+        KOutputProxy::errorNotSpecified(this, Srs19::LakeVolume);
+        err++;
     }
-
-    xd = _dataList.find(Srs19::DischargePeriod);
-    if (!xd.isValid() || xd.numericValue() <= 0.0) {
-        xError() << *this << QObject::tr("Parameter [Discharge period] not set.");
-        err ++;
-    }
-
-    xd = _dataList.find(Srs19::AtmosphericDischargeRate);
-    if (!xd.isValid() || xd.numericValue() <= 0.0) {
-        xError() << *this << QObject::tr("Radionuclides and/or Discharge rate value not set properly.");
-        err ++;
-    }
-
-    //optional parameter
-    xd = _dataList.find(Srs19::AirFlowRate);
-    if (!xd.isValid() || xd.numericValue() <= 0.0) {
-        xWarning() << *this << QObject::tr("Parameter [Air flow rate] not set.");
-        warn ++;
-    }
-
-    xd = _dataList.find(Srs19::Diameter);
-    if (!xd.isValid() || xd.numericValue() <= 0.0) {
-        xWarning() << *this << QObject::tr("Parameter [Stack diameter] is not set.");
-        warn ++;
-    }
-
-    XLocationPort * lp = locationPort();
-    if (lp == 0 || !lp->location().isValid()) {
-        xWarning() << *this << QObject::tr("Receptor location is not specified. Please double-click the port to specify location.");
-        warn ++;
-    }
-
-    xInfo() << tagName() << QString(QObject::tr(" -> %1 error(s), %2 warning(s)"))
-               .arg(err).arg(warn);
 
     if (oerr)
         *oerr = err;
     if (owarn)
         *owarn = warn;
-    */
+    KOutputProxy::infoVerificationResult(this, err, warn);
 
     return err == 0;
 }
@@ -92,9 +165,9 @@ bool SmallLakeTransport::load(QIODevice * io)
     Q_UNUSED(io);
     return true;
 }
-bool SmallLakeTransport::save(QIODevice * i)
+bool SmallLakeTransport::save(QIODevice * io)
 {
-    Q_UNUSED(i);
+    Q_UNUSED(io);
     return true;
 }
 

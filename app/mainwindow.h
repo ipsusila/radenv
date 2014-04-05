@@ -43,6 +43,9 @@ private slots:
     void helpContent();
     void helpAbout();
 
+protected:
+    void closeEvent(QCloseEvent *event);
+
 private:
 
     void createView();
@@ -57,6 +60,8 @@ private:
     void populatePluginMenus(QMenu * groupMenu, IModelFactory * factory, GroupInfoList groupList);
     void loadAllPlugins();
     bool loadPlugin(KModelScene * scene, const QString& path=QString());
+
+    FactoryList factories;
 
     XOutputView * outView;
     KModelScene * scene;

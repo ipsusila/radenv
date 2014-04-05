@@ -10,7 +10,7 @@ greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
 TARGET = radpf
 TEMPLATE = app
-win32:CONFIG(debug, debug|release): join(TARGET,,,d)
+win32:CONFIG(debug, debug|release):join(TARGET,,,d)
 
 SOURCES += main.cpp\
         mainwindow.cpp \ 

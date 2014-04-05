@@ -3,80 +3,86 @@
 #include "kdata.h"
 #include "kgroup.h"
 #include "koutput.h"
-
-/** empty variable */
-namespace Rad {
-
-const char LatinEndLine = '\n';
-
-const Symbol EmptySymbol = {0, Rad::Real, 0, 0, 0, 0, "","","","","",""};
-const Symbol ScalarInput =
-    {std::numeric_limits<unsigned int>::max(), Rad::Real, DIGIT_DEF, MIN_REAL, MAX_REAL, 0, "X","X",QObject::tr("Input"),"","","Arbitrary numeric value"};
-const Symbol ScalarInput1 =
-    {std::numeric_limits<unsigned int>::max() - 1, Rad::Real, DIGIT_DEF, MIN_REAL, MAX_REAL, 0, "X1","X1",QObject::tr("Input 1"),"","","Arbitrary numeric value"};
-const Symbol ScalarInput2 =
-    {std::numeric_limits<unsigned int>::max() - 2, Rad::Real, DIGIT_DEF, MIN_REAL, MAX_REAL, 0, "X2","X2",QObject::tr("Input 2"),"","","Arbitrary numeric value"};
-const Symbol ScalarInput3 =
-    {std::numeric_limits<unsigned int>::max() - 3, Rad::Real, DIGIT_DEF, MIN_REAL, MAX_REAL, 0, "X3","X3",QObject::tr("Input 3"),"","","Arbitrary numeric value"};
-const Symbol ScalarInput4 =
-    {std::numeric_limits<unsigned int>::max() - 4, Rad::Real, DIGIT_DEF, MIN_REAL, MAX_REAL, 0, "X4","X4",QObject::tr("Input 4"),"","","Arbitrary numeric value"};
-const Symbol ScalarInput5 =
-    {std::numeric_limits<unsigned int>::max() - 5, Rad::Real, DIGIT_DEF, MIN_REAL, MAX_REAL, 0, "X5","X5",QObject::tr("Input 5"),"","","Arbitrary numeric value"};
-const Symbol ScalarInput6 =
-    {std::numeric_limits<unsigned int>::max() - 6, Rad::Real, DIGIT_DEF, MIN_REAL, MAX_REAL, 0, "X6","X6",QObject::tr("Input 6"),"","","Arbitrary numeric value"};
-const Symbol ScalarInput7 =
-    {std::numeric_limits<unsigned int>::max() - 7, Rad::Real, DIGIT_DEF, MIN_REAL, MAX_REAL, 0, "X7","X7",QObject::tr("Input 7"),"","","Arbitrary numeric value"};
-const Symbol ScalarInput8 =
-    {std::numeric_limits<unsigned int>::max() - 8, Rad::Real, DIGIT_DEF, MIN_REAL, MAX_REAL, 0, "X8","X8",QObject::tr("Input 8"),"","","Arbitrary numeric value"};
-const Symbol ScalarInput9 =
-    {std::numeric_limits<unsigned int>::max() - 9, Rad::Real, DIGIT_DEF, MIN_REAL, MAX_REAL, 0, "X9","X9",QObject::tr("Input 9"),"","","Arbitrary numeric value"};
-
-const Symbol ScalarOutput =
-    {std::numeric_limits<unsigned int>::max() - 10, Rad::Real, DIGIT_DEF, MIN_REAL, MAX_REAL, 0, "Y","Y",QObject::tr("Output"),"","","Arbitrary numeric value"};
-const Symbol ScalarOutput1 =
-    {std::numeric_limits<unsigned int>::max() - 11, Rad::Real, DIGIT_DEF, MIN_REAL, MAX_REAL, 0, "Y1","Y1",QObject::tr("Output 1"),"","","Arbitrary numeric value"};
-const Symbol ScalarOutput2 =
-    {std::numeric_limits<unsigned int>::max() - 12, Rad::Real, DIGIT_DEF, MIN_REAL, MAX_REAL, 0, "Y2","Y2",QObject::tr("Output 2"),"","","Arbitrary numeric value"};
-const Symbol ScalarOutput3 =
-    {std::numeric_limits<unsigned int>::max() - 13, Rad::Real, DIGIT_DEF, MIN_REAL, MAX_REAL, 0, "Y3","Y3",QObject::tr("Output 3"),"","","Arbitrary numeric value"};
-const Symbol ScalarOutput4 =
-    {std::numeric_limits<unsigned int>::max() - 14, Rad::Real, DIGIT_DEF, MIN_REAL, MAX_REAL, 0, "Y4","Y4",QObject::tr("Output 4"),"","","Arbitrary numeric value"};
-const Symbol ScalarOutput5 =
-    {std::numeric_limits<unsigned int>::max() - 15, Rad::Real, DIGIT_DEF, MIN_REAL, MAX_REAL, 0, "Y5","Y5",QObject::tr("Output 5"),"","","Arbitrary numeric value"};
-
-const Symbol CommentSymbol =
-    {std::numeric_limits<unsigned int>::max() - 16, Rad::Comment, DIGIT_DEF, MIN_REAL, MAX_REAL, 0, "C","C",QObject::tr("Comment"),"","","Arbitrary comment"};
-}
+#include "kradionuclide.h"
+#include "kstorage.h"
 
 /** null parameter */
 static const KData __nullData;
 static const QVariant __nullValue;
+static const KDataItem __nullItem;
 
 class KDataPrivate : public QSharedData
 {
 public:
-    const Symbol * _symbol;
-    //XData::Types _types;
-    QVector<KDataItem> _items;
+    const Quantity * _symbol;
+    DataItemArray _items;
+    KData::ContentTypes _types;
 
-    KDataPrivate() : _symbol(&Rad::EmptySymbol)
+    KDataPrivate() : _symbol(&Rad::EmptySymbol), _types(KData::Undefined)
     {
     }
-    KDataPrivate(const Symbol * var, const QVariant& v) : _symbol(var),
-        _items(QVector<KDataItem>(1, KDataItem(var->symbol, v)))
+
+    KDataPrivate(const Quantity * var, const QVariant& v)
+        : _symbol(var), _types(KData::Undefined)
     {
         Q_ASSERT(_symbol != 0);
+        if (v.isValid()) {
+            KData::ContentType t = guessType(v);
+            _types |= t;
+            _items.append(KDataItem(var->symbol, v, t));
+        }
+    }
+    KDataPrivate(const Quantity *sym, KData::ContentTypes types, const QVariant& v)
+        : _symbol(sym), _types(types)
+    {
+        if (v.isValid())
+            _items.append(KDataItem(sym->symbol, v, types));
     }
 
-    KDataPrivate(const Symbol * var, const QVector<KDataItem> & it)
+    KDataPrivate(const Quantity * var, const QString& nm, const QVariant& v, KData::ContentTypes t)
+    {
+        _symbol = var;
+        _items.append(KDataItem(nm, v, t));
+        _types |= t;
+    }
+
+    KDataPrivate(const Quantity * var, const DataItemArray & it)
         : _symbol(var), _items(it)
     {
         Q_ASSERT(_symbol != 0);
+        _types = KData::Undefined;
+        for(int k = 0; k < it.size(); k++)
+            _types |= it.at(k).contentTypes();
+        _types |= KData::Array;
     }
+
+    inline KData::ContentType guessType(const QVariant & v) {
+        KData::ContentType t;
+        if (!v.isValid())
+            t = KData::Undefined;
+        else if (v.type() == QVariant::Bool)
+            t = KData::Boolean;
+        else if (v.type() == QVariant::String)
+            t = KData::Text;
+        else if (v.canConvert(QVariant::Double))
+            t = KData::Numeric;
+        else
+            t = KData::Object;
+        return t;
+    }
+
+    inline void append(const QString& nm, const QVariant& v, KData::ContentTypes t)
+    {
+        _items.append(KDataItem(nm, v, t));
+        _types |= (t | KData::Array) ;
+    }
+
     inline void setValue(int idx, const QVariant& v)
     {
         Q_ASSERT(idx < _items.size());
         _items[idx].setValue(v);
+        KData::ContentType t = guessType(v);
+        _types |= t;
     }
     inline QVariant value(int idx) const
     {
@@ -87,6 +93,22 @@ public:
             return _items[idx].value();
         }
     }
+    qreal numericValue(const QString& name, qreal defValue) const
+    {
+        for(int k = _items.size() - 1; k >= 0; k--) {
+            if (_items[k].name() == name)
+                return _items[k].numericValue();
+        }
+        return defValue;
+    }
+    const KDataItem & itemAt(const QString& name) const
+    {
+        for(int k = _items.size() - 1; k >= 0; k--) {
+            if (_items.at(k).name() == name)
+                return _items.at(k);
+        }
+        return __nullItem;
+    }
     inline QString toString(const KDataItem &di) const
     {
         bool flag;
@@ -94,6 +116,10 @@ public:
         case Rad::Boolean:
             flag = di.value().toBool();
             return (flag ? "True" : "False");
+        case Rad::Text:
+            return di.value().toString();
+        case Rad::Comment:
+            return "//" + di.value().toString();
         default:
             return QString::number(di.numericValue());
         }
@@ -104,42 +130,75 @@ public:
         if (_items.isEmpty()) {
             return QString();
         }
-        else if (_items.count() == 1) {
-            return QString("%1: %2 %3").arg(_symbol->displayText())
-                    .arg(toString(_items.at(0))).arg(_symbol->unit);
+        else if (_items.count() == 1 && !_types.testFlag(KData::Array)) {
+            const KDataItem & di = _items.first();
+            QString txt = QString("%1: %2 %3").arg(_symbol->displayText())
+                    .arg(toString(di)).arg(_symbol->unit);
+            if (di.contentTypes().testFlag(KData::RadionuclideSource)) {
+                const KRadionuclide & nuc = KStorage::storage()->radionuclide(di.name());
+                txt += QString(" (%1, lambda = %2 s-1)").arg(nuc.nuclide()).arg(nuc.halfLife().decayConstant());
+            }
+
+            return txt;
         }
 
-        QVector<KDataItem>::const_iterator beg = _items.begin();
-        QVector<KDataItem>::const_iterator end = _items.end();
+        DataItemArray::const_iterator beg = _items.begin();
+        DataItemArray::const_iterator end = _items.end();
         QString txt = _symbol->displayText();
 
         while (beg != end) {
             txt += QString("\n  %1: %2 %3").arg(beg->name())
                     .arg(toString(*beg)).arg(_symbol->unit);
+            if (beg->contentTypes().testFlag(KData::RadionuclideSource)) {
+                const KRadionuclide & nuc = KStorage::storage()->radionuclide(beg->name());
+                txt += QString(" (lambda = %1 s-1)").arg(nuc.halfLife().decayConstant());
+            }
             beg++;
         }
-
         return txt;
     }
 };
 
 /***********************************************************************************/
 KDataItem::KDataItem()
-    : _name(QString()), _value(QVariant()) {}
-KDataItem::KDataItem(const QString& nm, const QVariant& v)
-    : _name(nm), _value(v) {}
+    : _name(QString()), _value(QVariant()), _types(KData::Undefined)
+{
+}
+KDataItem::KDataItem(const QString& nm, const QVariant& v, KData::ContentTypes t)
+    : _name(nm), _value(v)
+{
+    //make sure no array
+    _types = t & (~KData::Array);
+}
 KDataItem::KDataItem(const KDataItem& other)
-    : _name(other._name), _value(other._value) {}
-KDataItem &KDataItem::operator=(const KDataItem& rhs) {
+    : _name(other._name), _value(other._value), _types(other._types)
+{
+}
+KDataItem &KDataItem::operator=(const KDataItem& rhs)
+{
     if (this != &rhs) {
         _name = rhs._name;
         _value = rhs._value;
+        _types = rhs._types;
     }
     return *this;
 }
-QString KDataItem::name() const { return _name; }
-QVariant KDataItem::value() const { return _value; }
-qreal KDataItem::numericValue() const { return _value.toDouble(); }
+QString KDataItem::name() const
+{
+    return _name;
+}
+QVariant KDataItem::value() const
+{
+    return _value;
+}
+qreal KDataItem::numericValue() const
+{
+    return _value.toDouble();
+}
+KData::ContentTypes KDataItem::contentTypes() const
+{
+    return _types;
+}
 void KDataItem::setValue(const QVariant &v)
 {
     _value = v;
@@ -147,12 +206,12 @@ void KDataItem::setValue(const QVariant &v)
 
 KDataItem KDataItem::operator*(qreal c) const
 {
-    return KDataItem(_name, _value.toDouble()*c);
+    return KDataItem(_name, _value.toDouble()*c, _types);
 }
 
 KDataItem KDataItem::operator/(qreal c) const
 {
-    return KDataItem(_name, _value.toDouble()/c);
+    return KDataItem(_name, _value.toDouble()/c, _types);
 }
 KDataItem & KDataItem::operator*=(qreal c)
 {
@@ -171,12 +230,28 @@ KData::KData()
     : data(new KDataPrivate())
 {
 }
-KData::KData(const Symbol * var, const QVariant& v)
-    : data(new KDataPrivate(var, v))
+
+KData::KData(const Quantity *sym)
+    : data(new KDataPrivate(sym, sym->defaultValue))
 {
 }
 
-KData::KData(const Symbol * var, const QVector<KDataItem> & items)
+KData::KData(const Quantity * var, const QVariant& v)
+    : data(new KDataPrivate(var, v))
+{
+}
+KData::KData(const Quantity * var, ContentTypes  types, const QVariant & v)
+    : data(new KDataPrivate(var, types, v))
+{
+
+}
+
+KData::KData(const Quantity * var, const QString& nm, const QVariant& v, ContentTypes t)
+    : data(new KDataPrivate(var, nm, v, t))
+{
+}
+
+KData::KData(const Quantity * var, const DataItemArray & items)
     : data(new KDataPrivate(var, items))
 {
 }
@@ -184,7 +259,7 @@ KData::KData(const Symbol * var, const QVector<KDataItem> & items)
 KData::KData(const KData& rhs) : data(rhs.data)
 {
 }
-KData::KData(const Symbol * sym, const KData& other) : data(other.data)
+KData::KData(const Quantity * sym, const KData& other) : data(other.data)
 {
     if (this != &other) {
         data.operator=(other.data);
@@ -202,9 +277,21 @@ KData::~KData()
 {
 }
 
-const Symbol & KData::symbol() const
+const Quantity & KData::symbol() const
 {
     return *(data->_symbol);
+}
+const Quantity * KData::symbolPtr() const
+{
+    return data->_symbol;
+}
+KData::ContentTypes KData::contentTypes() const
+{
+    return data->_types;
+}
+bool KData::contains(ContentType type) const
+{
+    return data->_types.testFlag(type);
 }
 
 int KData::count() const
@@ -218,8 +305,18 @@ void KData::resize(int cnt)
 
 bool KData::isValid() const
 {
-    return !data->_items.isEmpty();
+    //return !data->_items.isEmpty();
+    return data->_types != KData::Undefined;
 }
+bool KData::isEmpty() const
+{
+    return data->_items.isEmpty();
+}
+void KData::append(const QString& nm, const QVariant& v, ContentTypes t)
+{
+    data->append(nm, v, t);
+}
+
 QVariant KData::value(int idx) const
 {
     return data->value(idx);
@@ -236,30 +333,25 @@ qreal KData::numericValue(int idx) const
 {
     return data->value(idx).toDouble();
 }
+qreal KData::numericValue(const QString& name, qreal defValue) const
+{
+    return data->numericValue(name, defValue);
+}
+
+const KDataItem & KData::at(const QString& name) const
+{
+    return data->itemAt(name);
+}
 
 const KDataItem & KData::at(int idx) const
 {
-    Q_ASSERT(isValid());
+    Q_ASSERT(!isEmpty());
     return data->_items.at(idx);
-}
-KDataItem & KData::operator[](int idx)
-{
-    Q_ASSERT(isValid());
-    return data->_items[idx];
-}
-
-const KDataItem& KData::operator[](int idx) const
-{
-    Q_ASSERT(isValid());
-    return data->_items[idx];
 }
 KData KData::operator*(qreal c) const
 {
     KData p(*this);
-    int sz = data->_items.size();
-    for (int k = 0; k < sz; k++) {
-        p[k] = data->_items.at(k) * c;
-    }
+    p *= c;
 
     return p;
 }
@@ -267,10 +359,7 @@ KData KData::operator*(qreal c) const
 KData KData::operator/(qreal c) const
 {
     KData p(*this);
-    int sz = data->_items.size();
-    for (int k = 0; k < sz; k++) {
-        p[k] = data->_items.at(k) / c;
-    }
+    p /= c;
 
     return p;
 }
@@ -313,18 +402,39 @@ KDataArray::KDataArray()
 }
 
 KDataArray::KDataArray(const KDataArray& o)
-    : QList<KData>(o)
+    : DataList(o)
+{
+    if (this != &o)
+        this->_location = o.location();
+}
+KDataArray::KDataArray(const DataList &o)
+    : DataList(o)
 {
 }
-KDataArray::KDataArray(const QList<KData> &o)
-    : QList<KData>(o)
+
+void KDataArray::setLocation(const KLocation &loc)
 {
+    this->_location = loc;
+}
+KLocation KDataArray::location() const
+{
+    return this->_location;
+}
+ConstSymbolList KDataArray::symbols() const
+{
+    ConstSymbolList list;
+    for(int k = 0; k < size(); k++) {
+        const Quantity * sym = at(k).symbolPtr();
+        if (!list.contains(sym))
+            list.append(sym);
+    }
+    return list;
 }
 
 const KData & KDataArray::find(const QString& sym) const
 {
-    QList<KData>::const_iterator beg = this->begin();
-    QList<KData>::const_iterator end = this->end();
+    DataList::const_iterator beg = this->begin();
+    DataList::const_iterator end = this->end();
     while (beg != end) {
         if (beg->symbol().symbol == sym)
             return *beg;
@@ -334,10 +444,10 @@ const KData & KDataArray::find(const QString& sym) const
     return __nullData;
 }
 
-const KData & KDataArray::find(const Symbol& v) const
+const KData & KDataArray::find(const Quantity& v) const
 {
-    QList<KData>::const_iterator beg = this->begin();
-    QList<KData>::const_iterator end = this->end();
+    DataList::const_iterator beg = this->begin();
+    DataList::const_iterator end = this->end();
     while (beg != end) {
         if (beg->symbol() == v)
             return *beg;
@@ -347,10 +457,10 @@ const KData & KDataArray::find(const Symbol& v) const
     return __nullData;
 }
 
-qreal KDataArray::numericValueOf(const Symbol& v) const
+qreal KDataArray::numericValueOf(const Quantity& v) const
 {
-    QList<KData>::const_iterator beg = this->begin();
-    QList<KData>::const_iterator end = this->end();
+    DataList::const_iterator beg = this->begin();
+    DataList::const_iterator end = this->end();
     while (beg != end) {
         if (beg->symbol() == v)
             return beg->numericValue();
@@ -359,10 +469,10 @@ qreal KDataArray::numericValueOf(const Symbol& v) const
     return __nullValue.toDouble();
 }
 
-QVariant KDataArray::valueOf(const Symbol& v) const
+QVariant KDataArray::valueOf(const Quantity& v) const
 {
-    QList<KData>::const_iterator beg = this->begin();
-    QList<KData>::const_iterator end = this->end();
+    DataList::const_iterator beg = this->begin();
+    DataList::const_iterator end = this->end();
     while (beg != end) {
         if (beg->symbol() == v)
             return beg->value();
@@ -376,8 +486,8 @@ QString KDataArray::displayText() const
     if (isEmpty())
         return QString();
 
-    QList<KData>::const_iterator beg = this->begin();
-    QList<KData>::const_iterator end = this->end();
+    DataList::const_iterator beg = this->begin();
+    DataList::const_iterator end = this->end();
     QString txt = beg->displayText();
 
     while ((++beg) != end) {
@@ -386,7 +496,20 @@ QString KDataArray::displayText() const
 
     return txt;
 }
-void KDataArray::addOrReplace(const KData &di)
+
+void KDataArray::appendOrMerge(const Quantity * sym, const QString& nm, const QVariant& v, KData::ContentTypes t)
+{
+    for(int k = 0; k < size(); k++) {
+        KData & d = (*this)[k];
+        if (d.symbol() == *sym) {
+            d.append(nm, v, t);
+            return;
+        }
+    }
+    append(KData(sym, nm, v, t | KData::Array));
+}
+
+void KDataArray::appendOrReplace(const KData &di)
 {
     for(int k = 0; k < size(); k++) {
         if (this->at(k).symbol() == di.symbol()) {
@@ -394,10 +517,10 @@ void KDataArray::addOrReplace(const KData &di)
             return;
         }
     }
-    this->append(di);
+    append(di);
 }
 
-const KData & KDataGroupArray::find(const Symbol& v) const
+const KData & KDataGroupArray::find(const Quantity& v) const
 {
     KDataGroupArray::const_iterator it = this->begin();
     KDataGroupArray::const_iterator end = this->end();
@@ -414,7 +537,22 @@ const KData & KDataGroupArray::find(const Symbol& v) const
 
     return __nullData;
 }
-qreal KDataGroupArray::numericValueOf(const Symbol& v) const
+
+KDataGroupArray::KDataGroupArray() : QVector<DataGroup >()
+{
+}
+
+KDataGroupArray::KDataGroupArray(const QString& name, const KDataArray & da)
+    : QVector<DataGroup >()
+{
+    DataGroup g(name);
+    foreach(const KData& d, da) {
+        g.add(d);
+    }
+    this->append(g);
+}
+
+qreal KDataGroupArray::numericValueOf(const Quantity& v) const
 {
     KDataGroupArray::const_iterator it = this->begin();
     KDataGroupArray::const_iterator end = this->end();
@@ -430,7 +568,7 @@ qreal KDataGroupArray::numericValueOf(const Symbol& v) const
     }
     return __nullValue.toDouble();
 }
-QVariant KDataGroupArray::valueOf(const Symbol& v) const
+QVariant KDataGroupArray::valueOf(const Quantity& v) const
 {
     KDataGroupArray::const_iterator it = this->begin();
     KDataGroupArray::const_iterator end = this->end();
@@ -445,6 +583,64 @@ QVariant KDataGroupArray::valueOf(const Symbol& v) const
         it++;
     }
     return __nullValue;
+}
+ConstSymbolList KDataGroupArray::symbols() const
+{
+    ConstSymbolList list;
+    KDataGroupArray::const_iterator it = this->begin();
+    KDataGroupArray::const_iterator end = this->end();
+    while (it != end) {
+        int nz = it->count();
+        for(int k = 0; k < nz; k++) {
+            const Quantity * sym = it->itemAt(k).symbolPtr();
+            if (!list.contains(sym))
+                list.append(sym);
+        }
+
+        it++;
+    }
+    return list;
+}
+void KDataGroupArray::replace(const KData &di)
+{
+    KDataGroupArray::iterator it = this->begin();
+    KDataGroupArray::iterator end = this->end();
+    while (it != end) {
+        int nz = it->count();
+        for(int k = 0; k < nz; k++) {
+            const KData & d = it->itemAt(k);
+            if (d.symbol() == di.symbol()) {
+                it->replaceAt(k, di);
+                return;
+            }
+        }
+
+        it++;
+    }
+}
+KDataArray KDataGroupArray::toDataArray() const
+{
+    KDataArray list;
+    KDataGroupArray::const_iterator it = this->begin();
+    KDataGroupArray::const_iterator end = this->end();
+    while (it != end) {
+        int nz = it->count();
+        for(int k = 0; k < nz; k++) {
+            list << it->itemAt(k);
+        }
+
+        it++;
+    }
+    return list;
+}
+void KDataGroupArray::addQuantityControl(const KSymbolControl & qc)
+{
+    _controlList.append(qc);
+}
+
+const QuantityControlList & KDataGroupArray::quantityControls() const
+{
+    return _controlList;
 }
 
 

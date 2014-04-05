@@ -20,11 +20,30 @@ public:
     virtual bool initialize() = 0;
 
     /**
+     * @brief Do something before destroying this object
+     * @return
+     */
+    virtual void onFinalized() = 0;
+
+    /**
      * @brief Tell the factory to create new Model.
      * @param info
      * @return
      */
     virtual bool isTopLevel() const = 0;
+
+    /**
+     * @brief List all available symbols in the plugins.
+     * @return
+     */
+    virtual ConstSymbolList availableQuantities() const = 0;
+
+    /**
+     * @brief Get setting manager for the plugins.
+     * @return
+     */
+    virtual KSettingManager * settingManager() = 0;
+
     virtual IModel * createModel(const KModelInfo & info) = 0;
     virtual const GroupInfoList & groups() const = 0;
     virtual QString name() const = 0;

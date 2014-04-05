@@ -65,8 +65,20 @@ bool KRadionuclide::isNobleGas() const
     //TODO
     return false;
 }
+bool KRadionuclide::isTritium() const
+{
+    return data->nuclide == "H-3";
+}
+bool KRadionuclide::isCarbon14() const
+{
+    return data->nuclide == "C-14";
+}
+bool KRadionuclide::isDepositedInGround() const
+{
+    return !(isNobleGas() && isTritium() && isCarbon14());
+}
 
-KElement KRadionuclide::element() const
+const KElement& KRadionuclide::element() const
 {
     return data->element;
 }
@@ -93,4 +105,12 @@ int KRadionuclide::attributes() const
 void KRadionuclide::addAttribute(int attr)
 {
     data->attribute |= attr;
+}
+
+QString KRadionuclide::elementName(const QString &nuc)
+{
+    int pos = nuc.indexOf('-');
+    if (pos > 0)
+        return nuc.left(pos);
+    return QString();
 }

@@ -10,6 +10,7 @@ static KReport __defaultReport;
 KReportPort::KReportPort(IModel *parent) : QGraphicsItem(parent), _report(0)
 {
     setFlags(QGraphicsItem::ItemIsSelectable);
+    setReport(&__defaultReport);
 }
 KReportPort::~KReportPort()
 {

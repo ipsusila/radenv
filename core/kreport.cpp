@@ -90,7 +90,7 @@ void KReport::addModel(IModel * model)
     Q_ASSERT(_stream);
     const KModelInfo & info = model->info();
     (*_stream)  << Rad::LatinEndLine << "=================================================================================" << Rad::LatinEndLine
-                << QObject::tr("Model ") << model->tagName() << info.text() << Rad::LatinEndLine
+                << QObject::tr("Model ") << model->tagName() << " " << info.text() << Rad::LatinEndLine
                 << info.description() << Rad::LatinEndLine;
 }
 void KReport::addLocation(const KLocation& loc)
@@ -113,7 +113,7 @@ void KReport::addUserInputs(const KDataGroupArray & dga)
 
     (*_stream) << Rad::LatinEndLine << "---------------------------------------------------------------------------------" << Rad::LatinEndLine;
     for(int k = 0; k < dga.size(); k++) {
-        const KGroup<KData> & group = dga.at(k);
+        const DataGroup & group = dga.at(k);
         (*_stream) << QObject::tr("@Group : ") << group.name << Rad::LatinEndLine;
         for(int n = 0; n < group.count(); n++)
             printData(group.itemAt(n));

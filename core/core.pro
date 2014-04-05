@@ -7,7 +7,7 @@
 QT       += xml core gui sql
 
 TARGET = radpfcore
-win32:CONFIG(debug, debug|release): join(TARGET,,,d)
+win32:CONFIG(debug, debug|release):join(TARGET,,,d)
 
 TEMPLATE = lib
 
@@ -37,11 +37,18 @@ SOURCES += \
     kreport.cpp \
     kreportport.cpp \
     kmodelscene.cpp \
-    userinput.cpp \
     kdata.cpp \
     kcalculationinfo.cpp \
     dialogcalculation.cpp \
-    kmath.cpp
+    kmath.cpp \
+    kmodelrunner.cpp \
+    uiuserinput.cpp \
+    uiradionuclideitemdelegate.cpp \
+    uiautorowtable.cpp \
+    uiradionuclideitemtable.cpp \
+    ksymbolcontrol.cpp \
+    radsymbol.cpp \
+    ksettingmanager.cpp
 
 HEADERS +=\
     kradionuclide.hxx \
@@ -71,14 +78,21 @@ HEADERS +=\
     kreportport.h \
     kmodelscene.h \
     kgroup.h \
-    userinput.h \
     iuserinput.h \
     kdata.h \
     kcalculationinfo.h \
     dialogcalculation.h \
     kmath.h \
     radcore.h \
-    radglobal.h
+    radglobal.h \
+    kmodelrunner.h \
+    uiuserinput.h \
+    uiradionuclideitemdelegate.h \
+    uiautorowtable.h \
+    uiradionuclideitemtable.h \
+    ksymbolcontrol.h \
+    radsymbol.h \
+    ksettingmanager.h
 
 symbian {
     MMP_RULES += EXPORTUNFROZEN

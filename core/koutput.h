@@ -9,6 +9,25 @@ class QPointF;
 class QRect;
 class QRectF;
 
+class K_CORE_EXPORT KOutputProxy
+{
+public:
+    KOutputProxy();
+
+    static void errorNotSpecified(IModel * model, const Quantity& sym);
+    static void errorMessage(IModel * model, const Quantity& sym, const QString& msg);
+    static void errorMessage(IModel * model, const QString& msg);
+    static void errorPortNotConnected(IModel * model, KPort * port = 0);
+    static void errorReceptorNotSpecified(IModel * model);
+    static void errorLoadFailed(IModel * model, const QString & val);
+    static void errorLoadFailed(IModel * model, const Quantity & sym);
+    static void warningLocationNotSpecified(IModel * model);
+    static void warningNotProperlyDefined(IModel * model, const Quantity& sym);
+    static void warningMessage(IModel * model, const QString& msg);
+    static void infoVerificationResult(IModel * model, int err, int warn);
+    static void infoUseDefaultValue(IModel * model, const Quantity& sym);
+};
+
 class K_CORE_EXPORT KOutput
 {
 public:
@@ -46,6 +65,7 @@ public:
     KOutput & operator<<(const QRectF& r);
     KOutput & operator<<(const IModel & model);
     KOutput & operator<<(const KPort & port);
+    KOutput & operator<<(const Quantity & sym);
 
     static KOutput & handler();
     static void setupHandler(KOutput * h);

@@ -39,8 +39,19 @@ MainWindow::MainWindow(XOutputView * vw, QWidget *parent) :
     setWindowTitle(tr("SMEA Dose Assessments"));
     setUnifiedTitleAndToolBarOnMac(true);
 
+    /*
     for (int k = 1; k < 20; k++)
         qDebug() << "Pr(" << k << ")=" << KMath::pr(k);
+
+    for(int k = 0; k < 5; k++)
+        qDebug() << "M-N(" << (-0.5 + k*0.5) << ")=" << KMath::ratioN(-0.5+k*0.5);
+    qDebug() << "M-N(1.73) = " << KMath::ratioN(1.73);
+    qDebug() << "M-N(100) = " << KMath::ratioN(100);
+
+    KHalfLife hl(10);
+    KHalfLife l2 = hl;
+    qDebug() << "Half life: " << l2.displayText();
+    */
 
     //test
     /*
@@ -105,6 +116,14 @@ MainWindow::~MainWindow()
 
     //delete storage;
     KStorage::removeStorages();
+}
+
+void MainWindow::closeEvent(QCloseEvent *event)
+{
+    for (int k = 0; k < factories.size(); k++) {
+        factories[k]->onFinalized();
+    }
+    event->accept();
 }
 
 /**
@@ -470,8 +489,8 @@ void MainWindow::createMenus()
 void MainWindow::createPluginMenus()
 {
     //add top menus
-    bool hasSeparator = false;
-    QList<IModelFactory *> factories = scene->factories();
+    bool hasSeparator = false;    
+    FactoryList factories = scene->factories();
     foreach(IModelFactory * factory, factories) {
         //if is top level factory, add as new menu item (placed after model)
         if (factory->isTopLevel()) {
@@ -616,6 +635,7 @@ bool MainWindow::loadPlugin(KModelScene * scene, const QString& path)
                 xTrace() << "Plugin directory: " << pluginsDir.absoluteFilePath(fileName);
                 xInfo() << "Name:" << factory->name() << ",Author:" << factory->author()
                          << "Version: " << factory->version();
+                factories.append(factory);
             }
         }
         else {

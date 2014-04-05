@@ -11,6 +11,7 @@
 #include "kport.h"
 #include "kconnector.h"
 #include "dialogcalculation.h"
+#include "kmodelrunner.h"
 
 class KModelScenePrivate
 {
@@ -20,6 +21,7 @@ class KModelScenePrivate
     KModelScene::EditMode _editMode;
     KConnector * _tempConnector;
     DialogCalculation  * _calcDialog;
+    KModelRunner * _modelRunner;
     FactoryList _factoryList;
     QStringList _modelNames;
     ModelList _verifiedNodes;     ///< List of verified nodes
@@ -28,10 +30,12 @@ class KModelScenePrivate
 public:
     KModelScenePrivate() : _snapToGrid(true), _gridPixel(20),
         _displayGrid(true), _editMode(KModelScene::None),
-        _tempConnector(0), _calcDialog(0)
+        _tempConnector(0), _calcDialog(0), _modelRunner(0)
     {
     }
     ~KModelScenePrivate() {
+        stopCalculation();
+        delete _modelRunner;
         delete _calcDialog;
     }
 
@@ -41,7 +45,7 @@ public:
     inline void setGridPixel(int px) { _gridPixel = px; }
     inline bool displayGrid() const { return _displayGrid; }
     inline void setDisplayGrid(bool v) { _displayGrid = v; }
-    inline QList<IModel *> * verifiedNodes() { return &_verifiedNodes; }
+    inline ModelList * verifiedNodes() { return &_verifiedNodes; }
     inline KModelScene::EditMode editMode() const { return _editMode; }
     inline KConnector * tempConnector() const { return _tempConnector; }
 
@@ -114,6 +118,41 @@ public:
         _modelNames.clear();
         _verifiedNodes.clear();
         _calcInfos.clear();
+    }
+
+    inline void stopCalculation(int wms = 2000)
+    {
+        if (_modelRunner != 0) {
+            if (_modelRunner->isRunning()) {
+                _modelRunner->stop();
+                _modelRunner->wait(wms);
+            }
+        }
+    }
+
+    void runCalculation(const KCalculationInfo & ci)
+    {
+        //clear calculation info
+        this->clearCalculationInfo();
+
+        stopCalculation();
+        if (_modelRunner)
+            delete _modelRunner;
+        _modelRunner = new KModelRunner(&_verifiedNodes, ci);
+        _modelRunner->start();
+    }
+    void stop() {
+        if (_modelRunner != 0)
+           _modelRunner->stop();
+    }
+    void pause() {
+        if (_modelRunner != 0)
+            _modelRunner->pause();
+    }
+
+    void resume() {
+        if (_modelRunner)
+            _modelRunner->resume();
     }
 };
 
@@ -297,12 +336,17 @@ void KModelScene::verify()
 }
 void KModelScene::pause()
 {
-    //todo
+    data->pause();
 }
 
 void KModelScene::stop()
 {
-    //todo
+    data->stop();
+}
+
+void KModelScene::resume()
+{
+    data->resume();
 }
 
 void KModelScene::calculate()
@@ -310,6 +354,8 @@ void KModelScene::calculate()
     if (this->items().isEmpty())
         return;
 
+    //do verification before calculate
+    //if error, return
     ModelList * vNodes = data->verifiedNodes();
     if (vNodes->isEmpty()) {
         verify();
@@ -320,51 +366,10 @@ void KModelScene::calculate()
     }
 
     //show run dialog
+    //and exec running thread
     DialogCalculation * dlg = data->calculationDialog();
-    if (dlg->exec() != QDialog::Accepted)
-        return;
-
-    //clear calculation info
-    data->clearCalculationInfo();
-
-    //calculation result flags
-    bool result = true;
-
-    //begin calculation loop
-    KCalculationInfo ci = dlg->calculationInfo();
-    int msec = ci.intervalMilisecond();
-    int runId = ci.runId();
-    int runCnt = ci.runCount();
-    while (runId < runCnt || ci.isContinuous()) {
-        xInfo() << tr("Calculating dose...") << runId;
-        foreach(IModel * md, *vNodes) {
-            KCalculationInfo mci(md, ci.intervalMilisecond(), runCnt, runId, ci.continueOnError());
-            result = md->calculate(mci) && result;
-            if (!result && !ci.continueOnError())
-                goto _end_;
-
-            //set calculation results
-            mci.setResult(md->result());
-
-            //save calculation results
-            data->addCalculationInfo(mci);
-        }
-        //process pending events
-        QCoreApplication::processEvents();
-
-        //TODO
-        //if (nsec > 0)
-        //    QThread::sleep(nsec);
-
-        runId ++;
-    }
-
-_end_:
-    xInfo() << "---";
-    if (result)
-        xInfo() << tr("Calculation finished.");
-    else
-        xError() << tr("Calculation not finished. Some error(s) found");
+    if (dlg->exec() == QDialog::Accepted)
+        data->runCalculation(dlg->calculationInfo());
 }
 
 const CalculationList & KModelScene::calculationResults() const

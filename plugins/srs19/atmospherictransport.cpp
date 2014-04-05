@@ -1,31 +1,11 @@
-#include <QtCore/qmath.h>
 #include "atmospherictransport.h"
-#include "kport.h"
-#include "koutput.h"
 #include "symbol.h"
-#include "dialogatmospherictransport.h"
-#include "kgroup.h"
-#include "kstorage.h"
-#include "kradionuclide.h"
+#include "radcore.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////
 AtmosphericTransport::AtmosphericTransport(IModelFactory * fact, const KModelInfo& inf)
     : Transport(fact, inf)
 {
-    DataGroup dg1(QObject::tr("Dispersion parameters"));
-    dg1 << KData(&Srs19::FractionOfWind, 0.25)
-        << KData(&Srs19::GeometricMeanOfWindSpeed, 2)
-        << KData(&Srs19::BuildingHeight, 0)
-        << KData(&Srs19::CrossSectionalArea, 0)
-        << KData(&Srs19::DryDepositionCoeff, 500)
-        << KData(&Srs19::WetDepositionCoeff, 500);
-    _userInputs << dg1;
-
-    DataGroup dg2(QObject::tr("Cavity zone"));
-    dg2 << KData(&Srs19::BuildingWidth, 0)
-        << KData(&Srs19::OnSameBuilding, false);
-    _userInputs << dg2;
-
 }
 /**
  * @brief Create output ports
@@ -41,38 +21,54 @@ bool AtmosphericTransport::allocateIoPorts()
     return true;
 }
 
+void AtmosphericTransport::defineParameters()
+{
+    DataGroup dg1(QObject::tr("Dispersion parameters"));
+    dg1 << KData(&Srs19::FractionOfWind, 0.25)
+        << KData(&Srs19::GeometricMeanOfWindSpeed, 2)
+        << KData(&Srs19::BuildingHeight, 0)
+        << KData(&Srs19::CrossSectionalArea, 0)
+        << KData(&Srs19::DryDepositionCoeff, 500)
+        << KData(&Srs19::WetDepositionCoeff, 500);
+    _userInputs << dg1;
+
+    DataGroup dg2(QObject::tr("Cavity zone"));
+    dg2 << KData(&Srs19::BuildingWidth, 0)
+        << KData(&Srs19::OnSameBuilding, false);
+    _userInputs << dg2;
+}
+
 bool AtmosphericTransport::verify(int * oerr, int * owarn)
 {
     int err = 0, warn = 0;
 
     KLocationPort * lp = locationPort();
     if (lp == 0 || !lp->hasLocation()) {
-        xError() << *this << QObject::tr("Receptor location is not specified. Please double-click the port to specify location.");
+        KOutputProxy::errorReceptorNotSpecified(this);
         err ++;
     }
 
     //check wether input port is connected or not
-    if (!_inpPorts.first()->isConnected()) {
-        xError() << *this << QObject::tr("Input port is not connected.");
+    if (!_inpPorts.isConnected()) {
+        KOutputProxy::errorPortNotConnected(this);
         err ++;
     }
 
-    KDataArray daInput = this->_inpPorts.first()->result();
-    KData daH = daInput.find(Srs19::ReleaseHeight);
+    KData daH = _inpPorts.data(Srs19::ReleaseHeight);
     if (!daH.isValid() || daH.numericValue() <= 0) {
-        xError() << *this << QObject::tr("Release height not specified.");
+        KOutputProxy::errorNotSpecified(this, Srs19::ReleaseHeight);
         err++;
     }
 
     KData daPp = _userInputs.find(Srs19::FractionOfWind);
     if (!daPp.isValid() || daPp.numericValue() <= 0) {
-        xError() << *this << QObject::tr("Parameter [wind fraction] not set properly.");
+        KOutputProxy::errorNotSpecified(this, Srs19::FractionOfWind);
         err ++;
     }
 
     KData daUa = _userInputs.find(Srs19::GeometricMeanOfWindSpeed);
     if (!daUa.isValid() || daUa.numericValue() <= 0) {
-        xError() << *this << QObject::tr("Parameter [geometric mean of wind speed] not set properly.");
+        KOutputProxy::errorNotSpecified(this, Srs19::GeometricMeanOfWindSpeed);
         err ++;
     }
 
@@ -84,7 +80,7 @@ bool AtmosphericTransport::verify(int * oerr, int * owarn)
     //get building height
     KData daHB = _userInputs.find(Srs19::BuildingHeight);
     if (!daHB.isValid()) {
-        xError() << *this << QObject::tr("Building height not specified.");
+        KOutputProxy::errorNotSpecified(this, Srs19::BuildingHeight);
         err ++;
     }
     else {
@@ -92,7 +88,7 @@ bool AtmosphericTransport::verify(int * oerr, int * owarn)
         if (H <= 2.5 * HB) {
             KData daAB = _userInputs.find(Srs19::CrossSectionalArea);
             if (!daAB.isValid()) {
-                xError() << *this << QObject::tr("Building's cross sectional area not specified.");
+                KOutputProxy::errorNotSpecified(this, Srs19::CrossSectionalArea);
                 err++;
             }
 
@@ -101,17 +97,19 @@ bool AtmosphericTransport::verify(int * oerr, int * owarn)
                 //get flow rate and stack diameter
                 bool sameBuilding = _userInputs.valueOf(Srs19::OnSameBuilding).toBool();
                 if (sameBuilding) {
-                    KData daStack = daInput.find(Srs19::Diameter);
+                    //KData daStack = daInput.find(Srs19::Diameter);
+                    KData daStack = _inpPorts.data(Srs19::Diameter);
                     if (!daStack.isValid() || daStack.numericValue() <= 0) {
-                        xError() << *this << QObject::tr("Stack diameter not set properly for cavity zone calculation.");
+                        KOutputProxy::errorNotSpecified(this, Srs19::Diameter);
                         err++;
                     }
 
                     qreal sd = daStack.numericValue();
                     if (x <= 3 * sd) {
-                        KData daFlow = daInput.find(Srs19::AirFlowRate);
+                        //KData daFlow = daInput.find(Srs19::AirFlowRate);
+                        KData daFlow = _inpPorts.data(Srs19::AirFlowRate);
                         if (!daFlow.isValid() || daFlow.numericValue() <= 0) {
-                            xError() << *this << QObject::tr("Air flow rate not set properly for cavity zone calculation.");
+                            KOutputProxy::errorNotSpecified(this, Srs19::AirFlowRate);
                             err++;
                         }
                     }
@@ -122,17 +120,16 @@ bool AtmosphericTransport::verify(int * oerr, int * owarn)
 
     KData vf = _userInputs.find(Srs19::DryDepositionCoeff);
     if (!vf.isValid() || vf.numericValue() <= 0) {
-        xWarning() << *this << QObject::tr("Parameter [dry deposition coeff.] not set properly.");
+        KOutputProxy::warningNotProperlyDefined(this, Srs19::DryDepositionCoeff);
         warn ++;
     }
     vf = _userInputs.find(Srs19::WetDepositionCoeff);
     if (!vf.isValid() || vf.numericValue() <= 0) {
-        xWarning() << *this << QObject::tr("Parameter [wet deposition coeff.] not set properly.");
+        KOutputProxy::warningNotProperlyDefined(this, Srs19::WetDepositionCoeff);
         warn ++;
     }
 
-    xInfo() << tagName() << QString(QObject::tr(" -> %1 error(s), %2 warning(s)"))
-               .arg(err).arg(warn);
+    KOutputProxy::infoVerificationResult(this, err, warn);
 
     if (oerr)
         *oerr = err;
@@ -157,7 +154,7 @@ qreal AtmosphericTransport::calcModifiedConcentration(
     return f;
 }
 
-qreal AtmosphericTransport::calcSigmaZ(qreal x, qreal H)
+qreal AtmosphericTransport::calcSigmaZ(qreal x, qreal H, KDataArray * calcResult)
 {
     qreal sz, E, G;
 
@@ -170,7 +167,7 @@ qreal AtmosphericTransport::calcSigmaZ(qreal x, qreal H)
         G = 0.885;
         sz = E * qPow(x, G);
 
-        _dataList << KData(&Srs19::SigmaFitParameterE, E)
+        (*calcResult) << KData(&Srs19::SigmaFitParameterE, E)
                   << KData(&Srs19::SigmaFitParameterG, G);
     }
     else {
@@ -178,60 +175,60 @@ qreal AtmosphericTransport::calcSigmaZ(qreal x, qreal H)
         G = 0.818;
         sz = E * qPow(x, G);
 
-        _dataList << KData(&Srs19::SigmaFitParameterE, E)
+        (*calcResult) << KData(&Srs19::SigmaFitParameterE, E)
                   << KData(&Srs19::SigmaFitParameterG, G);
     }
-    _dataList << KData(&Srs19::VerticalDiffusionParameter, sz);
+    (*calcResult) << KData(&Srs19::VerticalDiffusionParameter, sz);
 
     return sz;
 }
 
-qreal AtmosphericTransport::calcF(qreal x, qreal H)
+qreal AtmosphericTransport::calcF(qreal x, qreal H, KDataArray * calcResult)
 {
     //vertical diffusion parameter
-    qreal sz = calcSigmaZ(x, H);
+    qreal sz = calcSigmaZ(x, H, calcResult);
 
     //SRS-19, page. 18, equation. 3
     qreal F = (12.0 * qExp(-(H*H)/(2*sz*sz))) / (x*sz*qSqrt(2*M_PI*M_PI*M_PI));
-    _dataList << KData(&Srs19::HeightGaussianDiffusionFactor, F);
+    (*calcResult) << KData(&Srs19::HeightGaussianDiffusionFactor, F);
 
     return F;
 }
-qreal AtmosphericTransport::calcB(qreal x, qreal H, qreal AB)
+qreal AtmosphericTransport::calcB(qreal x, qreal H, qreal AB, KDataArray * calcResult)
 {
     //eq. 6, page. 21
-    qreal sz = calcSigmaZ(x, H);
+    qreal sz = calcSigmaZ(x, H, calcResult);
     qreal Sz = qSqrt((sz*sz) + (AB/M_PI));
-    _dataList << KData(&Srs19::CorrectedVerticalDiffusionParameter, Sz);
+    (*calcResult) << KData(&Srs19::CorrectedVerticalDiffusionParameter, Sz);
 
     //eq. 5, page. 21
     qreal B = 12.0 / (x * sz * qSqrt(2 * M_PI * M_PI * M_PI));
-    _dataList << KData(&Srs19::LeeGaussianDiffusionFactor, B);
+    (*calcResult) << KData(&Srs19::LeeGaussianDiffusionFactor, B);
 
     return B;
 }
 
-void AtmosphericTransport::calcDisplacementZone(qreal x, qreal H, const KDataArray& inpQi)
+void AtmosphericTransport::calcDisplacementZone(qreal x, qreal H, KDataArray * calcResult)
 {
     qreal Pp = _userInputs.numericValueOf(Srs19::FractionOfWind);
     qreal ua = _userInputs.numericValueOf(Srs19::GeometricMeanOfWindSpeed);
     qreal Vd = _userInputs.numericValueOf(Srs19::DryDepositionCoeff);
     qreal Vw = _userInputs.numericValueOf(Srs19::WetDepositionCoeff);
-    qreal F = calcF(x, H);
-    const KData & qiA = inpQi.find(Srs19::AtmosphericDischargeRate);
+    qreal F = calcF(x, H, calcResult);
+    KData qiA = _inpPorts.data(Srs19::AtmosphericDischargeRate);
 
     qreal di;
-    QVector<KDataItem> diList;
+    DataItemArray diList;
 
     qreal f;
-    QVector<KDataItem> fList;
+    DataItemArray fList;
 
     //storing nuclide
     KRadionuclide nuclide;
 
     //calculate concentration
     //use SRS-19, Eq. 2 (page 18)
-    QVector<KDataItem> caList;
+    DataItemArray caList;
     for(int k = 0; k < qiA.count(); k++) {
         const KDataItem & qi = qiA.at(k);
         qreal ca = (Pp * F * qi.numericValue()) / ua;
@@ -240,56 +237,56 @@ void AtmosphericTransport::calcDisplacementZone(qreal x, qreal H, const KDataArr
         f = calcModifiedConcentration(qi.name(), x, ua, &nuclide);
         if (f < 1.0) {
             ca *= f;
-            fList << KDataItem(qi.name(), f);
+            fList << KDataItem(qi.name(), f, KData::Radionuclide);
         }
 
         //add to result
-        caList << KDataItem(qi.name(), ca);
+        caList << KDataItem(qi.name(), ca, KData::Radionuclide);
 
         //ground deposition rate
-        if (!nuclide.isNobleGas()) {
+        if (nuclide.isDepositedInGround()) {
             di = (Vd + Vw) * ca;
-            diList << KDataItem(qi.name(), di);
+            diList << KDataItem(qi.name(), di, KData::Radionuclide);
         }
     }
 
     //reduction factor
     if (!fList.isEmpty()) {
-        _dataList << KData(&Srs19::ReductionFactor, fList);
+        (*calcResult) << KData(&Srs19::ReductionFactor, fList);
     }
 
     //concentration
     if (!caList.isEmpty()) {
-        _dataList << KData(&Srs19::ConcentrationInAir, caList);
+        (*calcResult) << KData(&Srs19::ConcentrationInAir, caList);
     }
 
     //ground deposition rate
     if (!diList.isEmpty()) {
-        _dataList << KData(&Srs19::DailyDepositionRate, diList);
+        (*calcResult) << KData(&Srs19::DailyDepositionRate, diList);
     }
 }
 
-void AtmosphericTransport::calcWakeZone(qreal x, qreal H, qreal AB, const KDataArray& inpQi)
+void AtmosphericTransport::calcWakeZone(qreal x, qreal H, qreal AB, KDataArray * calcResult)
 {
     qreal Pp = _userInputs.numericValueOf(Srs19::FractionOfWind);
     qreal ua = _userInputs.numericValueOf(Srs19::GeometricMeanOfWindSpeed);
     qreal Vd = _userInputs.numericValueOf(Srs19::DryDepositionCoeff);
     qreal Vw = _userInputs.numericValueOf(Srs19::WetDepositionCoeff);
-    qreal B = calcB(x, H, AB);
-    const KData & qiA = inpQi.find(Srs19::AtmosphericDischargeRate);
+    qreal B = calcB(x, H, AB, calcResult);
+    KData  qiA = _inpPorts.data(Srs19::AtmosphericDischargeRate);
 
     qreal di;
-    QVector<KDataItem> diList;
+    DataItemArray diList;
 
     qreal f;
-    QVector<KDataItem> fList;
+    DataItemArray fList;
 
     //storing nuclide
     KRadionuclide nuclide;
 
     //calculate concentration
     //use SRS-19, Eq. 2 (page 18)
-    QVector<KDataItem> caList;
+    DataItemArray caList;
     for(int k = 0; k < qiA.count(); k++) {
         const KDataItem & qi = qiA.at(k);
         qreal ca = (Pp * B * qi.numericValue()) / ua;
@@ -298,36 +295,37 @@ void AtmosphericTransport::calcWakeZone(qreal x, qreal H, qreal AB, const KDataA
         f = calcModifiedConcentration(qi.name(), x, ua, &nuclide);
         if (f < 1.0) {
             ca *= f;
-            fList << KDataItem(qi.name(), f);
+            fList << KDataItem(qi.name(), f, KData::Radionuclide);
         }
 
         //add to result
-        caList << KDataItem(qi.name(), ca);
+        caList << KDataItem(qi.name(), ca, KData::Radionuclide);
 
         //ground deposition rate
-        if (!nuclide.isNobleGas()) {
+        if (nuclide.isDepositedInGround()) {
             di = (Vd + Vw) * ca;
-            diList << KDataItem(qi.name(), di);
+            diList << KDataItem(qi.name(), di, KData::Radionuclide);
         }
     }
 
     //reduction factor
     if (!fList.isEmpty()) {
-        _dataList << KData(&Srs19::ReductionFactor, fList);
+        (*calcResult) << KData(&Srs19::ReductionFactor, fList);
     }
 
     //concentration
     if (!caList.isEmpty()) {
-        _dataList << KData(&Srs19::ConcentrationInAir, caList);
+        (*calcResult) << KData(&Srs19::ConcentrationInAir, caList);
     }
 
     //ground deposition rate
     if (!diList.isEmpty()) {
-        _dataList << KData(&Srs19::DailyDepositionRate, diList);
+        (*calcResult) << KData(&Srs19::DailyDepositionRate, diList);
     }
 }
 
-void AtmosphericTransport::calcCavityZone(qreal x, qreal HB, bool onSameBuilding, const KDataArray& inpQi)
+void AtmosphericTransport::calcCavityZone(qreal x, qreal HB, bool onSameBuilding,
+                                          KDataArray * calcResult)
 {
     qreal Pp = _userInputs.numericValueOf(Srs19::FractionOfWind);
     qreal ua = _userInputs.numericValueOf(Srs19::GeometricMeanOfWindSpeed);
@@ -335,26 +333,26 @@ void AtmosphericTransport::calcCavityZone(qreal x, qreal HB, bool onSameBuilding
     qreal Vw = _userInputs.numericValueOf(Srs19::WetDepositionCoeff);
 
     qreal WB = _userInputs.numericValueOf(Srs19::BuildingWidth);
-    const KData & qiA = inpQi.find(Srs19::AtmosphericDischargeRate);
-    qreal d = inpQi.numericValueOf(Srs19::Diameter);
-    qreal V = inpQi.numericValueOf(Srs19::AirFlowRate);
+    KData qiA = _inpPorts.data(Srs19::AtmosphericDischargeRate);
+    qreal d = _inpPorts.data(Srs19::Diameter).numericValue();
+    qreal V = _inpPorts.data(Srs19::AirFlowRate).numericValue();
 
     //for eq. 8, select width or height
     HB = (WB > 0 && WB < HB) ? WB : HB;
     qreal K = 1;
 
     qreal di;
-    QVector<KDataItem> diList;
+    DataItemArray diList;
 
     qreal f, B0 = 0;
-    QVector<KDataItem> fList;
+    DataItemArray fList;
 
     //storing nuclide
     KRadionuclide nuclide;
 
     //calculate concentration
     //use SRS-19, Eq. 2 (page 18)
-    QVector<KDataItem> caList;
+    DataItemArray caList;
     for(int k = 0; k < qiA.count(); k++) {
         const KDataItem & qi = qiA.at(k);
         qreal ca;
@@ -370,7 +368,7 @@ void AtmosphericTransport::calcCavityZone(qreal x, qreal HB, bool onSameBuilding
                 //use eq. 7
                 if (B0 == 0) {
                     B0 = 30;
-                    _dataList << KData(&Srs19::AirConcentrationIncrease, B0);
+                    (*calcResult) << KData(&Srs19::AirConcentrationIncrease, B0);
                 }
                 ca = (B0 * qi.numericValue()) / (ua * x * x);
             }
@@ -384,56 +382,49 @@ void AtmosphericTransport::calcCavityZone(qreal x, qreal HB, bool onSameBuilding
         f = calcModifiedConcentration(qi.name(), x, ua, &nuclide);
         if (f < 1.0) {
             ca *= f;
-            fList << KDataItem(qi.name(), f);
+            fList << KDataItem(qi.name(), f, KData::Radionuclide);
         }
 
         //add to result
-        caList << KDataItem(qi.name(), ca);
+        caList << KDataItem(qi.name(), ca, KData::Radionuclide);
 
         //ground deposition rate
-        if (!nuclide.isNobleGas()) {
+        if (nuclide.isDepositedInGround()) {
             di = (Vd + Vw) * ca;
-            diList << KDataItem(qi.name(), di);
+            diList << KDataItem(qi.name(), di, KData::Radionuclide);
         }
     }
 
     //reduction factor
     if (!fList.isEmpty()) {
-        _dataList << KData(&Srs19::ReductionFactor, fList);
+        (*calcResult) << KData(&Srs19::ReductionFactor, fList);
     }
 
     //concentration
     if (!caList.isEmpty()) {
-        _dataList << KData(&Srs19::ConcentrationInAir, caList);
+        (*calcResult) << KData(&Srs19::ConcentrationInAir, caList);
     }
 
     //ground deposition rate
     if (!diList.isEmpty()) {
-        _dataList << KData(&Srs19::DailyDepositionRate, diList);
+        (*calcResult) << KData(&Srs19::DailyDepositionRate, diList);
     }
 }
 
-bool AtmosphericTransport::calculate(const KCalculationInfo& ci)
+bool AtmosphericTransport::calculate(const KCalculationInfo& ci, const KLocation& loc, KDataArray * calcResult)
 {
-    //clear results
-    _dataList.clear();
-
-    //check for distance
-    KLocationPort * lp = locationPort();
-    if (lp == 0)
-        return false;
-
-    KDataArray inpQi = ci.input();  //input parameter
+    Q_UNUSED(ci);
 
     //user input parameters
-    qreal x = lp->location().distance();
+    qreal x = loc.distance();
     bool onSameBuilding = _userInputs.valueOf(Srs19::OnSameBuilding).toBool();
     qreal HB = _userInputs.numericValueOf(Srs19::BuildingHeight);
     qreal AB = _userInputs.numericValueOf(Srs19::CrossSectionalArea);
-    qreal H = inpQi.numericValueOf(Srs19::ReleaseHeight);
+    qreal H = _inpPorts.data(Srs19::ReleaseHeight).numericValue();
 
     qreal HB25 = 2.5 * HB;
     qreal sqAB25 = 2.5 * qSqrt(AB);
+
     /*
     if (onSameBuilding || (H <= HB25 && x <= sqAB25)) {
         //cavity zone
@@ -449,37 +440,42 @@ bool AtmosphericTransport::calculate(const KCalculationInfo& ci)
     }
     */
 
+    //check same building
+    if (onSameBuilding && (H > HB25 || x > sqAB25)) {
+        //warning
+        xWarning() << *this << QObject::tr("Source and receptor are on the same building, but H > 2.5Hb or x > sqrt(Ab)");
+    }
+
     if (H > HB25) {
         //displacement zone
-        _dataList << KData(&Rad::CommentSymbol, QObject::tr("Dispersion in the lee of an isolated point source, "
+        (*calcResult) << KData(&Rad::CommentSymbol, QObject::tr("Dispersion in the lee of an isolated point source, "
                                                             "H > 2.5Hb (Refer to Eq. 2, pp. 18)"))
                   << KData(&Srs19::DownwindDistance, x);
-        calcDisplacementZone(x, H, inpQi);
+        calcDisplacementZone(x, H, calcResult);
     }
     else if (x > sqAB25) {
         //wake zone
-        _dataList << KData(&Rad::CommentSymbol, QObject::tr("Dispersion in the lee of a building inside the wake zone, "
+        (*calcResult) << KData(&Rad::CommentSymbol, QObject::tr("Dispersion in the lee of a building inside the wake zone, "
                                                             "H <= 2.5Hb and x > 2.5 sqrt(Ab) (Refer to Eq. 4, pp. 20)."))
                   << KData(&Srs19::DownwindDistance, x);
-        calcWakeZone(x, H, AB, inpQi);
+        calcWakeZone(x, H, AB, calcResult);
     }
     else {
         //cavity zone
         if (onSameBuilding) {
             //add comment
-            _dataList << KData(&Rad::CommentSymbol, QObject::tr("Dispersion in the lee of a building inside the cavity zone, "
+            (*calcResult) << KData(&Rad::CommentSymbol, QObject::tr("Dispersion in the lee of a building inside the cavity zone, "
                                                                 "H <= 2.5Hb and x <= sqrt(Ab), source and receptor on same "
                                                                 "building surface (Refer to Eq. 7, pp. 24)"));
         }
         else {
             //add comment
-            _dataList << KData(&Rad::CommentSymbol, QObject::tr("Dispersion in the lee of a building inside the cavity zone, "
+            (*calcResult) << KData(&Rad::CommentSymbol, QObject::tr("Dispersion in the lee of a building inside the cavity zone, "
                                                                 "H <= 2.5Hb and x <= sqrt(Ab), source and receptor *not* on same "
                                                                 "building surface (Refer to Eq. 8, pp. 24)"));
         }
-        _dataList << KData(&Srs19::DownwindDistance, x);
-
-        calcCavityZone(x, HB, onSameBuilding, inpQi);
+        (*calcResult) << KData(&Srs19::DownwindDistance, x);
+        calcCavityZone(x, HB, onSameBuilding, calcResult);
     }
 
     return true;
@@ -490,8 +486,8 @@ bool AtmosphericTransport::load(QIODevice * io)
     Q_UNUSED(io);
     return true;
 }
-bool AtmosphericTransport::save(QIODevice * i)
+bool AtmosphericTransport::save(QIODevice * io)
 {
-    Q_UNUSED(i);
+    Q_UNUSED(io);
     return true;
 }

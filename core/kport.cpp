@@ -6,7 +6,56 @@
 #include "kconnector.h"
 #include "koutput.h"
 
-KPort::KPort(IModel * m, const Symbol * sym, KPort::DataDirection dir)
+KData KPortList::data(const Quantity &sym) const
+{
+    for(int k = 0; k < this->size(); k++) {
+        KData d = this->at(k)->data(sym);
+        if (d.isValid())
+            return d;
+    }
+    return KData();
+}
+
+KData KPortList::data(int idx, const Quantity &sym) const
+{
+    if (idx < 0 || idx >= size())
+        return KData();
+
+    return this->at(idx)->data(sym);
+}
+
+KLocation KPortList::firstValidLocation() const
+{
+    for(int k = 0; k < this->size(); k++) {
+        KLocation loc = at(k)->firstValidLocation();
+        if (loc.isValid())
+            return loc;
+    }
+    return KLocation();
+}
+
+bool KPortList::isConnected(int idx) const
+{
+    if (idx < 0 || idx >= this->size())
+        return false;
+    return this->at(idx)->isConnected();
+}
+bool KPortList::isAllConnected() const
+{
+    for(int k = 0; k < size(); k++)
+        if (!at(k)->isConnected())
+            return false;
+    return !isEmpty();
+}
+bool KPortList::isAnyConnected() const
+{
+    for(int k = 0; k < size(); k++)
+        if (at(k)->isConnected())
+            return true;
+    return false;
+}
+
+KPort::KPort(IModel * m, const Quantity * sym, KPort::DataDirection dir)
     : QGraphicsItem(m), _model(m), _symbol(sym), _direction(dir)
 {
     //calculate position
@@ -22,7 +71,7 @@ IModel * KPort::model() const
     return _model;
 }
 
-const Symbol * KPort::symbol() const
+const Quantity * KPort::symbol() const
 {
     return _symbol;
 }
@@ -30,7 +79,7 @@ KPort::DataDirection KPort::direction() const
 {
     return _direction;
 }
-const PortList & KPort::connectedPorts() const
+const KPortList & KPort::connectedPorts() const
 {
     return _conPorts;
 }
@@ -38,16 +87,75 @@ ConnectorList KPort::connectors() const
 {
     return _conList;
 }
-KDataArray KPort::result() const
+KLocation KPort::firstValidLocation() const
+{
+    KLocation loc;
+    if ((direction() & KPort::Output) == KPort::Output)
+    {
+        IModel * model = this->model();
+        if (model)
+            loc = model->result().location();
+    }
+    else {
+        foreach(KPort * p, _conPorts) {
+            IModel * model = p->model();
+            if (model) {
+                loc = model->result().location();
+                if (loc.isValid())
+                    break;
+            }
+        }
+    }
+    return loc;
+}
+KDataArray KPort::data() const
 {
     KDataArray da;
-    foreach(KPort * p, _conPorts) {
-        IModel * model = p->model();
+    if ((direction() & KPort::Output) == KPort::Output)
+    {
+        IModel * model = this->model();
         if (model)
-            da << model->result();
+            da = model->result();
+    }
+    else {
+        foreach(KPort * p, _conPorts) {
+            IModel * model = p->model();
+            if (model)
+                da << model->result();
+        }
     }
     return da;
 }
+KData KPort::data(const Quantity &sym) const
+{
+    //for output port
+    //request data from the model
+    if ((direction() & KPort::Output) == KPort::Output)
+    {
+        IModel * model = this->model();
+        if (model)
+            return model->data(sym);
+    }
+
+    if ((direction() & KPort::Input) == KPort::Input) {
+        //for input port
+        //request data from connected model
+        //return when valid data found
+        foreach(KPort * p, _conPorts) {
+            IModel * model = p->model();
+            if (model) {
+                KData d = model->data(sym);
+                if (d.isValid())
+                    return d;
+            }
+        }
+    }
+
+    //if not any valid data found
+    //return invalid data
+    return KData();
+}
+
 
 bool KPort::isConnected() const
 {

@@ -2,25 +2,33 @@
 #define TRANSPORT_H
 
 #include "imodel.h"
+#include "klocation.h"
 
 class Transport : public IModel
 {
 protected:
     Transport(IModelFactory * fact, const KModelInfo& inf);
 public:
-    KDataArray result();
-    void refresh();
+    virtual KDataArray result() const;
+    virtual void refresh();
 
-    const PortList & outputs() const;
-    const PortList & inputs() const;
-    QString displayText() const;
-    KDataGroupArray * userInputs();
+    virtual const KPortList & outputs() const;
+    virtual const KPortList & inputs() const;
+    virtual QString displayText() const;
+    virtual KDataGroupArray * userInputs();
+    virtual bool calculate(const KCalculationInfo& ci);
 
 protected:
-    PortList        _outPorts;
-    PortList        _inpPorts;
-    KDataArray      _dataList;
+    KPortList        _outPorts;
+    KPortList        _inpPorts;
     KDataGroupArray _userInputs;
+
+    KDataGroupArray & toUserInputs(const KDataArray & da);
+    virtual KData modelData(const Quantity & sym) const;
+    virtual bool calculate(const KCalculationInfo& ci, const KLocation & loc, KDataArray * calResult) = 0;
+
+private:
+    KDataArray      _dataList;
 };
 
 #endif // TRANSPORT_H

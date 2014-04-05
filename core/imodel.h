@@ -5,7 +5,7 @@
 #include <QIODevice>
 #include <QIcon>
 #include <QGraphicsItem>
-#include "kdata.h"
+#include "kport.h"
 #include "kmodelinfo.h"
 #include "klocationport.h"
 #include "kreportport.h"
@@ -32,10 +32,15 @@ protected:
     virtual QVariant itemChange(GraphicsItemChange change, const QVariant &value);
     virtual IUserInput * createUserInputWidget(QWidget * parent = 0);
 
+    virtual bool needLocation() const;
+    virtual bool needReport() const;
+    virtual void defineParameters();
     virtual bool allocateIoPorts();
     virtual bool allocateLocationPorts();
     virtual bool allocateReportPorts();
     virtual void arrangePorts();
+    virtual bool promptUserInputs();
+    virtual void userInputsFinished(bool accepted);
     void setInfo(const KModelInfo& i);
     void setLocationPort(KLocationPort * port);
 
@@ -48,23 +53,23 @@ public:
 
     virtual bool verify(int * err = 0, int * warn = 0) = 0;
     virtual bool load(QIODevice * io) = 0;
-    virtual bool save(QIODevice * i) = 0;
-    virtual KDataArray result() = 0;
+    virtual bool save(QIODevice * io) = 0;
+    virtual KDataArray result() const = 0;
+    virtual KData modelData(const Quantity & sym) const = 0;
     virtual bool calculate(const KCalculationInfo& ci) = 0;
     //virtual SymbolList outputSymbols() = 0;
 
     virtual void generateReport();
     virtual void refresh();
-    virtual bool needLocation() const;
-    virtual bool needReport() const;
-    virtual void promptParameters();
-    virtual const PortList & inputs() const;
-    virtual const PortList & outputs() const;
+    virtual const KPortList & inputs() const;
+    virtual const KPortList & outputs() const;
     virtual QString displayText() const;
     virtual bool isSource() const;
     virtual IModel * copyTo(KModelScene * mscene) const;
 
     int type() const;
+    void askUserParameters();
+    KData data(const Quantity & sym) const;
     int tagId() const;
     void setTagId(int id);
     QString tagName(const QString& post="") const;
@@ -76,7 +81,7 @@ public:
     bool initialize();
     KLocation location() const;
     void removeConnections();
-    QList<KDataArray> inputResults() const;
+    DataArrayList inputResults() const;
 
     //visit
     int sourceDistance() const;
@@ -87,6 +92,23 @@ public:
     virtual QRectF modelRect() const;
     virtual QRectF boundingRect () const;
     virtual void paint(QPainter * painter, const QStyleOptionGraphicsItem * option, QWidget * widget = 0);
+
+    //check whether connected with
+    template <class T>
+    bool connectedWith() const
+    {
+        int sid = static_cast<T*>(0)->SerialId;
+        const KPortList & inpPorts = inputs();
+        for(int k = 0; k < inpPorts.size(); k++) {
+            IModel * m = inpPorts.at(k)->model();
+            if (m == 0)
+                continue;
+
+            if (sid == m->info().serialId())
+                return true;
+        }
+        return false;
+    }
 };
 
 

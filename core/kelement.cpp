@@ -242,7 +242,8 @@ static KElement * eElements[] = {
     &KElement::Y,
     &KElement::Yb,
     &KElement::Zn,
-    &KElement::Zr
+    &KElement::Zr,
+    0   //terminator
 };
 
 /**
@@ -299,12 +300,23 @@ bool KElement::operator!=(const KElement &other) const
     return (data->symbol != other.data->symbol);
 }
 
-KElement KElement::fromSymbol(const QString &symbol)
+KElement ** KElement::elements()
+{
+    return &eElements[0];
+}
+int KElement::elementCount()
 {
     int n = sizeof(eElements) / sizeof(KElement *);
-    for (int k = 0; k < n; k++) {
-        if (symbol == eElements[k]->symbol())
-            return *eElements[k];
+    return n - 1;
+}
+
+KElement KElement::fromSymbol(const QString &symbol)
+{
+    KElement * e;
+    int k = 0;
+    while ((e = eElements[k++]) != 0) {
+        if (symbol == e->symbol())
+            return *e;
     }
 
     return KElement::Empty;
@@ -314,10 +326,11 @@ KElement KElement::fromNuclide(const QString &nuclide)
     int np = nuclide.indexOf('-');
     if (np >= 0) {
         QString symbol = nuclide.left(np);
-        int n = sizeof(eElements) / sizeof(KElement *);
-        for (int k = 0; k < n; k++) {
-            if (symbol == eElements[k]->symbol())
-                return *eElements[k];
+        KElement * e;
+        int k = 0;
+        while ((e = eElements[k++]) != 0) {
+            if (symbol == e->symbol())
+                return *e;
         }
     }
 

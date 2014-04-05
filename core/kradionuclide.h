@@ -17,7 +17,7 @@ public:
     bool operator==(const KRadionuclide &other) const;
     bool operator!=(const KRadionuclide &other) const;
 
-    KElement element() const;
+    const KElement& element() const;
     QString nuclide() const;
     KHalfLife halfLife() const;
     int usage() const;
@@ -27,6 +27,11 @@ public:
     bool isValid() const;
     bool isVeryShortLived() const;
     bool isNobleGas() const;
+    bool isTritium() const;
+    bool isCarbon14() const;
+    bool isDepositedInGround() const;
+
+    static QString elementName(const QString &nuc);
 
 private:
     QSharedDataPointer<KRadionuclidePrivate> data;

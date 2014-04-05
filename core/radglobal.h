@@ -6,8 +6,9 @@
 #include <QtCore/qglobal.h>
 #include <QPair>
 #include <QDateTime>
-#include "kgroup.h"
 #include <limits>
+#include "kgroup.h"
+#include "radsymbol.h"
 
 #if defined(KCORE_LIBRARY)
 #  define K_CORE_EXPORT Q_DECL_EXPORT
@@ -17,6 +18,7 @@
 
 class KPort;
 class KData;
+class KDataItem;
 class KDataArray;
 class IModel;
 class KOutput;
@@ -32,20 +34,8 @@ class KCase;
 class KConnector;
 class KCalculationInfo;
 class KModelScene;
-
-/**
- * Default namespace
- */
-namespace Rad {
-    enum ValueType {
-        Real = 0,
-        NumText = 1,
-        Integer = 2,
-        Boolean = 3,
-        Text = 4,
-        Comment = 5
-    };
-}
+class KSettingManager;
+class KSymbolControl;
 
 struct _tagPM {
     int left;
@@ -54,54 +44,9 @@ struct _tagPM {
     int bottom;
 };
 
-/*!
- * Represent symbol to a variable or a numeric quantity
- */
-typedef struct _tagSymbol
-{
-    const unsigned int id;      ///< Identifier given to this symbol
-    const int type;             ///< Type of the symbol
-    const int decimal;          ///< Number of decimal point
-    const qreal minValue;       ///< Minimum value
-    const qreal maxValue;       ///< Maximum value
-    const qreal defaultValue;   ///< Default value
-    const QString symbol;       ///< Represented symbol
-    const QString rtSymbol;     ///< Symbol in rich-text format, for display purpose
-    const QString text;         ///< Short text description
-    const QString unit;         ///< Unit of the quantity
-    const QString rtUnit;       ///< Unit in rich-text format
-    const QString description;  ///< Description of the symbol
-
-    /*!
-     * \brief Compared two symbol.
-     * \param o - other symbol to be compared
-     * \return true if \a id and \a symbol is equal.
-     */
-    inline bool operator==(const struct _tagSymbol & o) const
-    {
-        return id == o.id && symbol == o.symbol;
-    }
-    inline bool operator!=(const struct _tagSymbol & o) const
-    {
-        return id != o.id || symbol != o.symbol;
-    }
-    inline bool isUnlimit() const
-    {
-        return maxValue < minValue;
-    }
-    inline QString defaultValueString(char fmt = 'g') const
-    {
-        return QString::number(defaultValue, fmt, decimal);
-    }
-    inline QString displayText() const
-    {
-        return QString("%1 (%2)").arg(text).arg(symbol);
-    }
-} Symbol;
-
-typedef QList<KPort *>                  PortList;
 typedef QList<KConnector *>             ConnectorList;
 typedef QList<KData>                    DataList;
+typedef QVector<KDataItem>              DataItemArray;
 typedef QList<IModel *>                 ModelList;
 typedef QList<IModelFactory *>          FactoryList;
 typedef QList<KModelInfo>               ModelInfoList;
@@ -111,7 +56,10 @@ typedef QList<KLocation>                LocationList;
 typedef QList<KCase>                    AssessmentList;
 typedef KGroup<KData>                   DataGroup;
 typedef QList<KCalculationInfo>         CalculationList;
-typedef QList<const Symbol *>           SymbolList;
+typedef QList<const Quantity *>           ConstSymbolList;
+typedef QList<Quantity *>                 SymbolList;
+typedef QList<KDataArray>               DataArrayList;
+typedef QList<KSymbolControl>           QuantityControlList;
 
 typedef struct _tagPM                   SMargin;
 typedef struct _tagPM                   SPadding;
@@ -154,27 +102,29 @@ typedef struct _tagPM                   SPadding;
 
 
 namespace Rad {
-extern const char LatinEndLine;
-extern const Symbol EmptySymbol;
-extern const Symbol ScalarInput;
-extern const Symbol ScalarInput1;
-extern const Symbol ScalarInput2;
-extern const Symbol ScalarInput3;
-extern const Symbol ScalarInput4;
-extern const Symbol ScalarInput5;
-extern const Symbol ScalarInput6;
-extern const Symbol ScalarInput7;
-extern const Symbol ScalarInput8;
-extern const Symbol ScalarInput9;
+    K_CORE_EXPORT extern const char LatinEndLine;
+    K_CORE_EXPORT extern const Quantity EmptySymbol;
+    K_CORE_EXPORT extern const Quantity ScalarInput;
+    K_CORE_EXPORT extern const Quantity ScalarInput1;
+    K_CORE_EXPORT extern const Quantity ScalarInput2;
+    K_CORE_EXPORT extern const Quantity ScalarInput3;
+    K_CORE_EXPORT extern const Quantity ScalarInput4;
+    K_CORE_EXPORT extern const Quantity ScalarInput5;
+    K_CORE_EXPORT extern const Quantity ScalarInput6;
+    K_CORE_EXPORT extern const Quantity ScalarInput7;
+    K_CORE_EXPORT extern const Quantity ScalarInput8;
+    K_CORE_EXPORT extern const Quantity ScalarInput9;
 
-extern const Symbol ScalarOutput;
-extern const Symbol ScalarOutput1;
-extern const Symbol ScalarOutput2;
-extern const Symbol ScalarOutput3;
-extern const Symbol ScalarOutput4;
-extern const Symbol ScalarOutput5;
+    K_CORE_EXPORT extern const Quantity ScalarOutput;
+    K_CORE_EXPORT extern const Quantity ScalarOutput1;
+    K_CORE_EXPORT extern const Quantity ScalarOutput2;
+    K_CORE_EXPORT extern const Quantity ScalarOutput3;
+    K_CORE_EXPORT extern const Quantity ScalarOutput4;
+    K_CORE_EXPORT extern const Quantity ScalarOutput5;
 
-extern const Symbol CommentSymbol;
+    K_CORE_EXPORT extern const Quantity CommentSymbol;
+    K_CORE_EXPORT extern const Quantity NameSymbol;
+    K_CORE_EXPORT extern const Quantity UseDefaultValue;
 }
 
 #endif // RADGLOBAL_H

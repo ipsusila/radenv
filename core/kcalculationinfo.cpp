@@ -27,7 +27,7 @@ public:
     int runId;
     bool continueOnError;
     QDateTime timestamp;
-    QList<KDataArray> inputs;
+    DataArrayList inputs;
     KDataArray result;
 };
 

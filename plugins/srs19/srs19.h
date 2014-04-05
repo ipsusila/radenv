@@ -9,5 +9,4 @@
 #  define SRS19_SHARED_EXPORT Q_DECL_IMPORT
 #endif
 
-
 #endif // SRS19_H

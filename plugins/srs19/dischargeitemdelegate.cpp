@@ -9,11 +9,20 @@
  */
 
 DischargeItemDelegate::DischargeItemDelegate(QWidget *parent) :
-    QStyledItemDelegate(parent)
+    QStyledItemDelegate(parent), _decimals(4)
 {
 }
 DischargeItemDelegate::~DischargeItemDelegate()
 {
+}
+
+void DischargeItemDelegate::setDecimals(int dec)
+{
+    this->_decimals = dec;
+}
+int DischargeItemDelegate::decimals() const
+{
+    return _decimals;
 }
 
 QWidget* DischargeItemDelegate::createEditor( QWidget *parent,
@@ -26,7 +35,7 @@ QWidget* DischargeItemDelegate::createEditor( QWidget *parent,
         cb->addItem("");
 
         //add radionuclide
-        const QList<KRadionuclide> * items = KStorage::storage()->radionuclides();
+        const RadionuclideList * items = KStorage::storage()->radionuclides();
         foreach(KRadionuclide nuc, *items) {
             cb->addItem(nuc.nuclide());
         }
@@ -34,7 +43,8 @@ QWidget* DischargeItemDelegate::createEditor( QWidget *parent,
     }
     else if (index.column() == 1) {
         QDoubleSpinBox * sb = new QDoubleSpinBox(parent);
-        sb->setMaximum(10000000000);
+        sb->setMaximum(99999999999);
+        sb->setDecimals(_decimals);
         return sb;
     }
     else

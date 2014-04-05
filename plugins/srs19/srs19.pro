@@ -9,19 +9,16 @@ QT       += core gui
 TARGET = srs19
 TEMPLATE = lib
 CONFIG += plugin
-win32:CONFIG(debug, debug|release): join(TARGET,,,d)
+win32:CONFIG(debug, debug|release):join(TARGET,,,d)
 
 DEFINES += SRS19_LIBRARY
 
 SOURCES += \
     srs19factory.cpp \
     discharge.cpp \
-    dialogatmosphericdischarge.cpp \
     dischargeitemdelegate.cpp \
     dischargeitemtable.cpp \
     symbol.cpp \
-    dialogwaterdischarge.cpp \
-    dialogsewagedischarge.cpp \
     transport.cpp \
     atmospherictransport.cpp \
     rivertransport.cpp \
@@ -29,18 +26,33 @@ SOURCES += \
     coastaltransport.cpp \
     smalllaketransport.cpp \
     largelaketransport.cpp \
-    dialogatmospherictransport.cpp
+    widgetatmosphericdischarge.cpp \
+    widgetwaterdischarge.cpp \
+    widgetsewagedischarge.cpp \
+    sedimenteffect.cpp \
+    distributioncoefficient.cpp \
+    constantvalue.cpp \
+    constantvaluetable.cpp \
+    constantvaluedelegate.cpp \
+    widgetconstantvalue.cpp \
+    irrigation.cpp \
+    vegetation.cpp \
+    transferfactor.cpp \
+    storedforage.cpp \
+    animalfeed.cpp \
+    animaltransport.cpp \
+    aquaticfoodtransport.cpp \
+    foodchain.cpp \
+    bioaccumulationfactor.cpp \
+    widgetvegetation.cpp
 
 HEADERS += $$PWD/../smeacore/imodelfactory.h\
     srs19.h\
     srs19factory.h \
     discharge.h \
-    dialogatmosphericdischarge.h \
     dischargeitemdelegate.h \
     dischargeitemtable.h \
     symbol.h \
-    dialogwaterdischarge.h \
-    dialogsewagedischarge.h \
     transport.h \
     atmospherictransport.h \
     rivertransport.h \
@@ -48,7 +60,25 @@ HEADERS += $$PWD/../smeacore/imodelfactory.h\
     coastaltransport.h \
     smalllaketransport.h \
     largelaketransport.h \
-    dialogatmospherictransport.h
+    widgetatmosphericdischarge.h \
+    widgetwaterdischarge.h \
+    widgetsewagedischarge.h \
+    sedimenteffect.h \
+    distributioncoefficient.h \
+    constantvalue.h \
+    constantvaluetable.h \
+    constantvaluedelegate.h \
+    widgetconstantvalue.h \
+    irrigation.h \
+    vegetation.h \
+    transferfactor.h \
+    storedforage.h \
+    animalfeed.h \
+    animaltransport.h \
+    aquaticfoodtransport.h \
+    foodchain.h \
+    bioaccumulationfactor.h \
+    widgetvegetation.h
 
 
 symbian {
@@ -83,7 +113,8 @@ RESOURCES += \
     srs19.qrc
 
 FORMS += \
-    dialogatmosphericdischarge.ui \
-    dialogwaterdischarge.ui \
-    dialogsewagedischarge.ui \
-    dialogatmospherictransport.ui
+    widgetatmosphericdischarge.ui \
+    widgetwaterdischarge.ui \
+    widgetsewagedischarge.ui \
+    widgetconstantvalue.ui \
+    widgetvegetation.ui

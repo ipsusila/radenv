@@ -20,6 +20,10 @@
 #include<QtCore/qmath.h>
 #include "khalflife.h"
 
+#ifndef M_LN2
+#define M_LN2		0.69314718055994530942	/* log_e 2 */
+#endif
+
 KHalfLife::KHalfLife(qreal t12, bool isDecay, UnitType t)
 {
     int nt = (int)t;
