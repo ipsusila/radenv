@@ -1,5 +1,5 @@
 #include "estuarinetransport.h"
-#include "symbol.h"
+#include "quantity.h"
 #include "radcore.h"
 
 EstuarineTransport::EstuarineTransport(IModelFactory * fact, const KModelInfo& inf)
@@ -15,7 +15,7 @@ void EstuarineTransport::defineParameters()
         << KData(&Srs19::FlowDepth, 0)
         << KData(&Srs19::LowRiverFlowRate, 0)
         << KData(&Srs19::NetFreshwaterVelocity, 0)
-        << KData(&Rad::CommentSymbol, QObject::tr("If U not known, value will be calculated with U=qr/BD."));
+        << KData(&Rad::CommentQuantity, QObject::tr("If U not known, value will be calculated with U=qr/BD."));
     _userInputs << dg1;
 
     DataGroup dg2(QObject::tr("Parameter estimation"));
@@ -37,13 +37,11 @@ void EstuarineTransport::defineParameters()
 
 bool EstuarineTransport::calculate(const KCalculationInfo& ci, const KLocation& loc, KDataArray * calcResult)
 {
-    Q_UNUSED(ci);
-
     //estimate parameter
     estimateParameters();
 
    //user input parameters
-    qreal x = loc.distance();
+    qreal x = loc.distance(ci);
     qreal B = _userInputs.numericValueOf(Srs19::RiverEstuaryWidth);
     qreal U = _userInputs.numericValueOf(Srs19::NetFreshwaterVelocity);
     qreal Ue = _userInputs.numericValueOf(Srs19::MaximumEbbVelocity);

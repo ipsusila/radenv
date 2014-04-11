@@ -10,6 +10,7 @@
 #include "kmodelscene.h"
 #include "koutput.h"
 #include "uiuserinput.h"
+#include "ksettingmanager.h"
 
 /**
  * @brief Empty Ports list.
@@ -238,10 +239,26 @@ bool IModel::promptUserInputs()
         vbox->addWidget(wUserInp);
         vbox->addWidget(bbox);
         dlg->setLayout(vbox);
-        dlg->setWindowTitle(QString("%1 - user input parameter(s)").arg(this->tagName()));
+        dlg->setWindowTitle(QString("Parameter(s) for %1 - %2")
+                            .arg(this->tagName())
+                            .arg(this->info().text()));
+
+        //set size
+        KSettingManager * setting = factory()->settingManager();
+        if (setting != 0) {
+            QRect rect = setting->geometry(this);
+            if (rect.isValid())
+                dlg->setGeometry(rect);
+        }
+
         if (dlg->exec() == QDialog::Accepted) {
             wUserInp->acceptValues();
             accepted = true;
+        }
+
+        //save size
+        if (setting != 0) {
+            setting->saveGeometry(this, dlg->geometry());
         }
 
         delete dlg;
@@ -261,16 +278,16 @@ void IModel::refresh()
     if (lp)
         lp->refresh();
 }
-KData IModel::data(const Quantity & sym) const
+KData IModel::data(const Quantity & qty) const
 {
     //get from this model
-    KData d = modelData(sym);
+    KData d = modelData(qty);
     if (d.isValid())
         return d;
 
     //if data not found,
     //ask from connected model
-    return inputs().data(sym);
+    return inputs().data(qty);
 }
 void IModel::generateReport()
 {

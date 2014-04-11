@@ -19,7 +19,7 @@ public:
     
 private slots:
 
-    void on_cbSymbols_currentIndexChanged(int index);
+    void on_cbQuantities_currentIndexChanged(int index);
 
 private:
     Ui::WidgetConstantValue *ui;

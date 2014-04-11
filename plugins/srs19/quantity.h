@@ -1,15 +1,15 @@
-#ifndef SYMBOL_H
-#define SYMBOL_H
+#ifndef QUANTITY_H
+#define QUANTITY_H
 
 #include "radglobal.h"
 
 namespace Srs19 {
-    ConstSymbolList availableSymbols();
-    SymbolList editableSymbols();
-    bool reloadSymbols(IModelFactory * factory);
-    bool saveSymbols(IModelFactory * factory);
+    ConstQuantityList availableQuantities();
+    QuantityList editableQuantities();
+    bool reloadQuantities(IModelFactory * factory);
+    bool saveQuantities(IModelFactory * factory);
 
-    //symbols
+    //quantities
     extern Quantity DischargePeriod;
     extern Quantity Diameter;
     extern Quantity NumOfServedPerson;
@@ -45,7 +45,7 @@ namespace Srs19 {
     extern Quantity ConcentrationInShoreSediment;
     extern Quantity ConcentrationInSuspendedSediment;
     extern Quantity OppositeBankMaxConcentration;
-    extern Quantity AverageConcentrationInSewage;
+    extern Quantity ConcentrationInDrySewage;
     extern Quantity ConcentrationInFilteredWater;
     extern Quantity TotalConcentrationInWater;
     extern Quantity FlowDepth;
@@ -158,9 +158,17 @@ namespace Srs19 {
 
     extern Quantity ConsDueDirectContamination;
     extern Quantity ConsDueIndirectProcess;
-    extern Quantity IsSmallAnimal;
     extern Quantity DailyFeedingAmount;
     extern Quantity ConsumptionDelay;
+
+    extern Quantity IsAnion;
+    extern Quantity IsShortLiveNuclide;
+    extern Quantity IncrementValue;
+    extern Quantity SolidMaterialConcentration;
+    extern Quantity PersonSludgeProduction;
+    extern Quantity SewageSludgeDensity;
+    extern Quantity SludgeContainerDepth;
+    extern Quantity ConcentrationInWetSewage;
 }
 
-#endif // SYMBOL_H
+#endif // QUANTITY_H

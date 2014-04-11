@@ -1,6 +1,6 @@
 #include "animalfeed.h"
 #include "radcore.h"
-#include "symbol.h"
+#include "quantity.h"
 
 AnimalFeed::AnimalFeed(IModelFactory * fact, const KModelInfo& inf)
     : FoodChain(fact, inf)
@@ -24,7 +24,7 @@ void AnimalFeed::defineParameters()
 {
     //define user inputs
     DataGroup dg1(QObject::tr("Vegetation"));
-    dg1 << KData(&Rad::NameSymbol, "Animal feed");
+    dg1 << KData(&Rad::NameQuantity, "Animal feed");
     _userInputs << dg1;
 
     DataGroup dg2(QObject::tr("Feeding parameters"));

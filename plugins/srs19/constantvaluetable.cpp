@@ -15,7 +15,7 @@ ConstantValueTable::ConstantValueTable(QWidget *parent) :
     this->setToolTip(tr("Double click cell to input value"));
 
     QStringList headers;
-    headers << tr("Symbol (unit)") << tr("Value") << tr("Remarks");
+    headers << tr("Quantity (unit)") << tr("Value") << tr("Remarks");
     setHorizontalHeaderLabels(headers);
 }
 ConstantValueTable::~ConstantValueTable()
@@ -28,11 +28,11 @@ void ConstantValueTable::setDecimals(int d)
     del->setDecimals(d);
 }
 
-void ConstantValueTable::setSymbols(const ConstSymbolList & sym)
+void ConstantValueTable::setQuantities(const ConstQuantityList & qty)
 {
     ConstantValueDelegate * del = qobject_cast<ConstantValueDelegate *>(this->itemDelegate());
     Q_ASSERT(del != 0);
-    del->setSymbols(sym);
+    del->setQuantities(qty);
 }
 
 void ConstantValueTable::setData(const KDataArray & da)
@@ -53,15 +53,15 @@ void ConstantValueTable::setData(const KDataArray & da)
             continue;
         }
 
-        const Quantity * sym = item.symbolPtr();
-        QTableWidgetItem * cell = new QTableWidgetItem(sym->displaySymbolWithUnit());
-        cell->setData(Qt::UserRole, qVariantFromValue((void*)sym));
+        const Quantity * qty = item.quantityPtr();
+        QTableWidgetItem * cell = new QTableWidgetItem(qty->displayQuantityWithUnit());
+        cell->setData(Qt::UserRole, qVariantFromValue((void*)qty));
         setItem(row, 0, cell);
 
         cell = new QTableWidgetItem(item.value().toString());
         setItem(row, 1, cell);
 
-        cell = new QTableWidgetItem(sym->description);
+        cell = new QTableWidgetItem(qty->description);
         setItem(row, 2, cell);
 
         row++;
@@ -88,8 +88,8 @@ KDataArray ConstantValueTable::data() const
             QVariant vSym = iSym->data(Qt::UserRole);
             if (!vSym.isValid() || !vSym.isNull()) {
                 qreal val = iVal->text().toDouble();
-                const Quantity * sym = static_cast<const Quantity *>(vSym.value<void*>());
-                result << KData(sym, val);
+                const Quantity * qty = static_cast<const Quantity *>(vSym.value<void*>());
+                result << KData(qty, val);
             }
         }
 

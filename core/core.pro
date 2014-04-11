@@ -46,9 +46,9 @@ SOURCES += \
     uiradionuclideitemdelegate.cpp \
     uiautorowtable.cpp \
     uiradionuclideitemtable.cpp \
-    ksymbolcontrol.cpp \
-    radsymbol.cpp \
-    ksettingmanager.cpp
+    ksettingmanager.cpp \
+    radquantity.cpp \
+    kquantitycontrol.cpp
 
 HEADERS +=\
     kradionuclide.hxx \
@@ -90,9 +90,9 @@ HEADERS +=\
     uiradionuclideitemdelegate.h \
     uiautorowtable.h \
     uiradionuclideitemtable.h \
-    ksymbolcontrol.h \
-    radsymbol.h \
-    ksettingmanager.h
+    ksettingmanager.h \
+    radquantity.h \
+    kquantitycontrol.h
 
 symbian {
     MMP_RULES += EXPORTUNFROZEN

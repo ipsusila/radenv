@@ -1,12 +1,64 @@
-#include "ksettingmanager.h"
 #include <QSharedData>
+#include <QMap>
+#include "ksettingmanager.h"
+#include "imodel.h"
+#include "kmodelinfo.h"
+#include "kstorage.h"
+
+static const char * __sizeSectionName = "Model Geometry";
+static const char * __sizeSectionDescription = "The geometry of user input for each model";
 
 class KSettingManagerPrivate : public QSharedData {
 public:
     IModelFactory * _factory;
+    QMap<int, QRect> _rectMaps;
 
     KSettingManagerPrivate(IModelFactory * f) : _factory(f)
     {
+        Q_ASSERT(f != 0);
+    }
+    inline void saveGeometry(IModel * model, const QRect& sz)
+    {
+        Q_ASSERT(model != 0);
+        _rectMaps[model->info().serialId()] = sz;
+    }
+    inline QRect geometry(IModel * model) const
+    {
+        Q_ASSERT(model != 0);
+        return _rectMaps[model->info().serialId()];
+    }
+
+    void save()
+    {
+        KStorage * storage = KStorage::storage();
+        KStorageContent content(QDateTime::currentDateTime());
+        content.setFactory(_factory);
+        content.setName(__sizeSectionName);
+        content.setDescription(__sizeSectionDescription);
+
+        //append content
+        QMap<int, QRect>::const_iterator iter = _rectMaps.constBegin();
+        QMap<int, QRect>::const_iterator end = _rectMaps.constEnd();
+        QDataStream stream(&content, QIODevice::WriteOnly);
+        while(iter != end) {
+            stream << iter.key() << iter.value();
+            iter++;
+        }
+        storage->save(content);
+    }
+    void load()
+    {
+        KStorage * storage = KStorage::storage();
+        KStorageContent  content = storage->load(__sizeSectionName, _factory);
+        if (!content.isEmpty()) {
+            int serId;
+            QRect rect;
+            QDataStream stream(content);
+            while(!stream.atEnd()) {
+                stream >> serId >> rect;
+                _rectMaps[serId] = rect;
+            }
+        }
     }
 };
 
@@ -32,10 +84,30 @@ KSettingManager::~KSettingManager()
 
 bool KSettingManager::save()
 {
-    return true;
+    data->save();
+    return doSave();
 }
 
 bool KSettingManager::load()
 {
+    data->load();
+    return doLoad();
+}
+bool KSettingManager::doSave()
+{
     return true;
+}
+
+bool KSettingManager::doLoad()
+{
+    return true;
+}
+void KSettingManager::saveGeometry(IModel * model, const QRect& rect)
+{
+    data->saveGeometry(model, rect);
+}
+
+QRect KSettingManager::geometry(IModel * model) const
+{
+    return data->geometry(model);
 }

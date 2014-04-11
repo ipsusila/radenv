@@ -1,5 +1,5 @@
-#ifndef RADSYMBOL_H
-#define RADSYMBOL_H
+#ifndef RADQUANTITY_H
+#define RADQUANTITY_H
 
 #include <QDataStream>
 
@@ -13,7 +13,8 @@ namespace Rad {
         Integer = 2,
         Boolean = 3,
         Text = 4,
-        Comment = 5
+        Comment = 5,
+        LongComment = 6
     };
 }
 
@@ -66,7 +67,7 @@ typedef struct _tagQuantity
             return text;
         return QString("%1 (%2)").arg(text).arg(symbol);
     }
-    inline QString displaySymbolWithUnit() const
+    inline QString displayQuantityWithUnit() const
     {
         if (unit.isEmpty())
             return symbol;
@@ -102,4 +103,4 @@ inline QDataStream & operator>>(QDataStream &s, Quantity & item)
     return s;
 }
 
-#endif // RADSYMBOL_H
+#endif // RADQUANTITY_H

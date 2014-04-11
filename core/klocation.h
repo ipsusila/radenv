@@ -55,6 +55,8 @@ public:
      */
     qreal distance() const;
 
+    qreal distance(const KCalculationInfo& ci) const;
+
     KLocation clone() const;
     qreal distanceBetween(const KLocation & loc) const;
 };

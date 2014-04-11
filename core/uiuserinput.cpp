@@ -1,7 +1,7 @@
 #include <QtGui>
 #include "uiuserinput.h"
 #include "uiradionuclideitemtable.h"
-#include "ksymbolcontrol.h"
+#include "kquantitycontrol.h"
 
 UiUserInput::UiUserInput(KDataGroupArray * ga, QWidget *parent) :
     IUserInput(parent), dataArray(ga)
@@ -20,21 +20,26 @@ void UiUserInput::on_quantityController_toggled(bool checked)
         KData * field = controlMaps[chkBox];
         Q_ASSERT(field != 0);
 
-        const Quantity * quantity = field->symbolPtr();
+        const Quantity * quantity = field->quantityPtr();
         controlQuantityInput(quantity, checked);
     }
 }
 void UiUserInput::controlQuantityInput(const Quantity * quantity, bool isSet)
 {
     for(int k = 0; k < quantityControls.size(); k++) {
-        const KSymbolControl & qc = quantityControls.at(k);
+        const KQuantityControl & qc = quantityControls.at(k);
         const Quantity * ctrl = qc.controller();
         if (ctrl != quantity)
             continue;
 
-        ConstSymbolList ctrlQuantity = qc.controlledSymbols();
+        ConstQuantityList ctrlQuantity = qc.controlledQuantities();
         for(int n = 0; n < ctrlQuantity.size(); n++) {
+            //get control associated with quantity
             QWidget * w = quantityMaps[ctrlQuantity.at(n)];
+            if (w == 0)
+                continue;
+
+            //enable/disable control
             if (qc.isEnabledOnSet())
                 w->setEnabled(isSet);
             else
@@ -52,6 +57,8 @@ void UiUserInput::createControls(KDataGroupArray *ga)
     KDataGroupArray::iterator beg = ga->begin();
     KDataGroupArray::iterator end = ga->end();
 
+    int width0 = 0, width2 = 0; //width of column 2
+    QList<QGridLayout *> gridList;
     QVBoxLayout * vbox = new QVBoxLayout();
     while (beg != end) {
         QString name = beg->name;
@@ -60,19 +67,24 @@ void UiUserInput::createControls(KDataGroupArray *ga)
             QGroupBox * gb = new QGroupBox(name, this);
             QGridLayout * grid = new QGridLayout();
             grid->setVerticalSpacing(3);
+            grid->setColumnStretch(0, 1);
+            grid->setColumnStretch(1, 2);
+            grid->setColumnStretch(2, 0);
+
+            gridList.append(grid);
             for (int k = 0; k < sz; k++) {
                 KData * d = beg->pointerAt(k);
 
                 //if array, allocate table
                 if (d->contains(KData::Array)) {
                     UiRadionuclideItemTable * table = new UiRadionuclideItemTable(gb);
-                    table->setSymbol(d->symbolPtr());
+                    table->setQuantity(d->quantityPtr());
                     table->setData(*d);
                     grid->addWidget(table, k, 0, 1, 3);
 
                     //add to control and quantity maps
                     controlMaps[table] = d;
-                    quantityMaps[d->symbolPtr()] = table;
+                    quantityMaps[d->quantityPtr()] = table;
                     continue;
                 }
 
@@ -81,93 +93,105 @@ void UiUserInput::createControls(KDataGroupArray *ga)
                 QSpinBox * inpInt;
                 QCheckBox * chkBox;
                 QDoubleSpinBox * inpReal;
-                const Quantity & sym = d->symbol();
+                const Quantity & qty = d->quantity();
 
                 //caption of the field
                 QLabel * label;
-                switch(sym.type) {
+                switch(qty.type) {
                 case Rad::NumText:
                 case Rad::Integer:
                 case Rad::Real:
                 case Rad::Text:
-                    label = new QLabel(sym.displayText(), gb);
-                    label->setMinimumWidth(170);
-                    label->setWordWrap(true);
+                    label = new QLabel(qty.displayText(), gb);
                     grid->addWidget(label, k, 0);
+                    label->adjustSize();
+
+                    width0 = qMax(width0, label->width());
                     break;
                 default:
                     break;
                 }
 
                 //add user input according to the type of symbol
-                switch(sym.type)
+                switch(qty.type)
                 {
                 case Rad::Text:
                     //create text input control
                     ed = new QLineEdit(gb);
-                    ed->setToolTip(sym.description);
+                    ed->setToolTip(qty.description);
                     ed->setText(d->value().toString());
                     grid->addWidget(ed, k, 1);
+
                     controlMaps[ed] = d;
-                    quantityMaps[d->symbolPtr()] = ed;
+                    quantityMaps[d->quantityPtr()] = ed;
                     break;
                 case Rad::NumText:
                     //create text input control for numeric
                     ed = new QLineEdit(gb);
-                    ed->setToolTip(sym.description);
+                    ed->setToolTip(qty.description);
                     ed->setText(QString::number(d->numericValue()));
                     grid->addWidget(ed, k, 1);
+
                     controlMaps[ed] = d;
-                    quantityMaps[d->symbolPtr()] = ed;
+                    quantityMaps[d->quantityPtr()] = ed;
                     break;
                 case Rad::Integer:
                     //create input control for integer value
                     inpInt = new QSpinBox(gb);
-                    inpInt->setToolTip(sym.description);
-                    inpInt->setMinimum(sym.minValue);
-                    inpInt->setMaximum(sym.maxValue);
+                    inpInt->setToolTip(qty.description);
+                    inpInt->setMinimum(qty.minValue);
+                    inpInt->setMaximum(qty.maxValue);
                     inpInt->setValue((int)d->numericValue());
                     grid->addWidget(inpInt, k, 1);
+
                     controlMaps[inpInt] = d;
-                    quantityMaps[d->symbolPtr()] = inpInt;
+                    quantityMaps[d->quantityPtr()] = inpInt;
                     break;
                 case Rad::Boolean:
                     //create input control for boolean value
-                    chkBox = new QCheckBox(sym.text, gb);
-                    chkBox->setToolTip(sym.description);
+                    chkBox = new QCheckBox(qty.text, gb);
+                    chkBox->setToolTip(qty.description);
                     chkBox->setChecked(d->value().toBool());
                     grid->addWidget(chkBox, k, 0, 1, 2);
+
                     controlMaps[chkBox] = d;
-                    quantityMaps[d->symbolPtr()] = chkBox;
+                    quantityMaps[d->quantityPtr()] = chkBox;
                     break;
                 case Rad::Real:
                     //create input control for numeric value
                     inpReal = new QDoubleSpinBox(gb);
-                    inpReal->setToolTip(sym.description);
-                    inpReal->setMinimum(sym.minValue);
-                    inpReal->setMaximum(sym.maxValue);
-                    inpReal->setDecimals(sym.decimal);
+                    inpReal->setToolTip(qty.description);
+                    inpReal->setMinimum(qty.minValue);
+                    inpReal->setMaximum(qty.maxValue);
+                    inpReal->setDecimals(qty.decimal);
                     inpReal->setValue(d->numericValue());
                     grid->addWidget(inpReal, k, 1);
+
                     controlMaps[inpReal] = d;
-                    quantityMaps[d->symbolPtr()] = inpReal;
+                    quantityMaps[d->quantityPtr()] = inpReal;
                     break;
                 case Rad::Comment:
+                case Rad::LongComment:
                     label = new QLabel(d->value().toString(), gb);
                     label->setWordWrap(true);
-                    grid->addWidget(label, k, 1, 1, 2);
+                    if (qty.type == Rad::LongComment)
+                        grid->addWidget(label, k, 0, 1, 3);
+                    else
+                        grid->addWidget(label, k, 1, 1, 2);
                     break;
                 default:
                     break;
                 }
 
                 //if quantity has unit, then create label for displaying unit
-                if (!sym.unit.isEmpty()) {
-                    QLabel * unit = new QLabel(sym.unit, gb);
-                    unit->setMinimumWidth(50);
-                    unit->setMaximumWidth(120);
-                    unit->setWordWrap(true);
+                if (!qty.unit.isEmpty()) {
+                    QLabel * unit = new QLabel(qty.unit, gb);
+                    unit->setWordWrap(false);
                     grid->addWidget(unit, k, 2);
+                    unit->adjustSize();
+
+                    //remember size
+                    width2 = qMax(width2, unit->width());
                 }
 
                 //TODO
@@ -180,6 +204,13 @@ void UiUserInput::createControls(KDataGroupArray *ga)
         beg++;
     }
 
+    //resize unit column
+    for(int k = 0; k < gridList.size(); k++) {
+        QGridLayout * grid = gridList.at(k);
+        grid->setColumnMinimumWidth(0, width0);
+        grid->setColumnMinimumWidth(2, width2);
+    }
+
     //set main layout
     this->setLayout(vbox);
 }
@@ -188,7 +219,7 @@ void UiUserInput::associateQuantityControllers(KDataGroupArray *ga)
 {
     quantityControls = ga->quantityControls();
     for(int k = 0; k < quantityControls.size(); k++) {
-        const KSymbolControl & qc = quantityControls.at(k);
+        const KQuantityControl & qc = quantityControls.at(k);
         const Quantity * ctrl = qc.controller();
 
         //connect controller signal
@@ -218,7 +249,7 @@ void UiUserInput::acceptValues()
 
         QLineEdit * ed = qobject_cast<QLineEdit *>(wInput);
         if (ed != 0) {
-            if (d->symbol().type == Rad::NumText)
+            if (d->quantity().type == Rad::NumText)
                 d->setValue(ed->text().toDouble());
             else
                 d->setValue(ed->text());

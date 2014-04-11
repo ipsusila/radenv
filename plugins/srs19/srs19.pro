@@ -18,7 +18,6 @@ SOURCES += \
     discharge.cpp \
     dischargeitemdelegate.cpp \
     dischargeitemtable.cpp \
-    symbol.cpp \
     transport.cpp \
     atmospherictransport.cpp \
     rivertransport.cpp \
@@ -28,23 +27,23 @@ SOURCES += \
     largelaketransport.cpp \
     widgetatmosphericdischarge.cpp \
     widgetwaterdischarge.cpp \
-    widgetsewagedischarge.cpp \
     sedimenteffect.cpp \
-    distributioncoefficient.cpp \
     constantvalue.cpp \
     constantvaluetable.cpp \
     constantvaluedelegate.cpp \
     widgetconstantvalue.cpp \
     irrigation.cpp \
     vegetation.cpp \
-    transferfactor.cpp \
     storedforage.cpp \
     animalfeed.cpp \
     animaltransport.cpp \
-    aquaticfoodtransport.cpp \
     foodchain.cpp \
-    bioaccumulationfactor.cpp \
-    widgetvegetation.cpp
+    quantity.cpp \
+    defaultvalues.cpp \
+    sludgetransport.cpp \
+    grounddeposition.cpp \
+    sewagedischarge.cpp \
+    aquaticfoodransport.cpp
 
 HEADERS += $$PWD/../smeacore/imodelfactory.h\
     srs19.h\
@@ -52,7 +51,6 @@ HEADERS += $$PWD/../smeacore/imodelfactory.h\
     discharge.h \
     dischargeitemdelegate.h \
     dischargeitemtable.h \
-    symbol.h \
     transport.h \
     atmospherictransport.h \
     rivertransport.h \
@@ -62,23 +60,24 @@ HEADERS += $$PWD/../smeacore/imodelfactory.h\
     largelaketransport.h \
     widgetatmosphericdischarge.h \
     widgetwaterdischarge.h \
-    widgetsewagedischarge.h \
     sedimenteffect.h \
-    distributioncoefficient.h \
     constantvalue.h \
     constantvaluetable.h \
     constantvaluedelegate.h \
     widgetconstantvalue.h \
     irrigation.h \
     vegetation.h \
-    transferfactor.h \
     storedforage.h \
     animalfeed.h \
     animaltransport.h \
-    aquaticfoodtransport.h \
     foodchain.h \
-    bioaccumulationfactor.h \
-    widgetvegetation.h
+    quantity.h \
+    defaultvaluetable.h \
+    defaultvalues.h \
+    sludgetransport.h \
+    grounddeposition.h \
+    sewagedischarge.h \
+    aquaticfoodtransport.h
 
 
 symbian {
@@ -115,6 +114,4 @@ RESOURCES += \
 FORMS += \
     widgetatmosphericdischarge.ui \
     widgetwaterdischarge.ui \
-    widgetsewagedischarge.ui \
-    widgetconstantvalue.ui \
-    widgetvegetation.ui
+    widgetconstantvalue.ui

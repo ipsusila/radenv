@@ -16,7 +16,7 @@ public:
     void onFinalized();
     IModel * createModel(const KModelInfo & info);
     const GroupInfoList & groups() const;
-    ConstSymbolList availableQuantities() const;
+    ConstQuantityList availableQuantities() const;
     QString name() const;
     QString author() const;
     QString version() const;

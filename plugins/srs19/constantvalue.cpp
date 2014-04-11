@@ -8,9 +8,9 @@ ConstantValue::ConstantValue(IModelFactory * fact, const KModelInfo& inf)
 {
 }
 
-KData ConstantValue::modelData(const Quantity &sym) const
+KData ConstantValue::modelData(const Quantity &qty) const
 {
-    return _dataList.find(sym);
+    return _dataList.find(qty);
 }
 
 KDataArray ConstantValue::result() const

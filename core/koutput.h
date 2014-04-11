@@ -14,18 +14,18 @@ class K_CORE_EXPORT KOutputProxy
 public:
     KOutputProxy();
 
-    static void errorNotSpecified(IModel * model, const Quantity& sym);
-    static void errorMessage(IModel * model, const Quantity& sym, const QString& msg);
+    static void errorNotSpecified(IModel * model, const Quantity& qty);
+    static void errorMessage(IModel * model, const Quantity& qty, const QString& msg);
     static void errorMessage(IModel * model, const QString& msg);
     static void errorPortNotConnected(IModel * model, KPort * port = 0);
     static void errorReceptorNotSpecified(IModel * model);
     static void errorLoadFailed(IModel * model, const QString & val);
-    static void errorLoadFailed(IModel * model, const Quantity & sym);
+    static void errorLoadFailed(IModel * model, const Quantity & qty);
     static void warningLocationNotSpecified(IModel * model);
-    static void warningNotProperlyDefined(IModel * model, const Quantity& sym);
+    static void warningNotProperlyDefined(IModel * model, const Quantity& qty);
     static void warningMessage(IModel * model, const QString& msg);
     static void infoVerificationResult(IModel * model, int err, int warn);
-    static void infoUseDefaultValue(IModel * model, const Quantity& sym);
+    static void infoUseDefaultValue(IModel * model, const Quantity& qty);
 };
 
 class K_CORE_EXPORT KOutput
@@ -65,7 +65,7 @@ public:
     KOutput & operator<<(const QRectF& r);
     KOutput & operator<<(const IModel & model);
     KOutput & operator<<(const KPort & port);
-    KOutput & operator<<(const Quantity & sym);
+    KOutput & operator<<(const Quantity & qty);
 
     static KOutput & handler();
     static void setupHandler(KOutput * h);

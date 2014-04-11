@@ -1,5 +1,5 @@
 #include "smalllaketransport.h"
-#include "symbol.h"
+#include "quantity.h"
 #include "radcore.h"
 
 SmallLakeTransport::SmallLakeTransport(IModelFactory * fact, const KModelInfo& inf)
@@ -66,6 +66,9 @@ bool SmallLakeTransport::calculate(const KCalculationInfo& ci, const KLocation &
     qreal V = _userInputs.numericValueOf(Srs19::LakeVolume);
     qreal di = _inpPorts.data(1, Srs19::DailyDepositionRate).numericValue();
     qreal T = _inpPorts.data(Srs19::DischargePeriod).numericValue();
+    if (T <= 0)
+        T = Srs19::DischargePeriod.defaultValue;
+
     qreal t = T * 365 * 24 * 60 * 60;
 
     qreal cw;
@@ -116,7 +119,7 @@ bool SmallLakeTransport::verify(int * oerr, int * owarn)
         err ++;
     }
     if (!_inpPorts.isConnected(1)) {
-        KOutputProxy::warningMessage(this, _inpPorts.at(1)->symbol()->symbol + QObject::tr(" not connected."));
+        KOutputProxy::warningMessage(this, _inpPorts.at(1)->quantity()->symbol + QObject::tr(" not connected."));
         warn++;
         //KOutputProxy::errorPortNotConnected(this, _inpPorts.at(1));
         //err ++;

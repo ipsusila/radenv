@@ -10,7 +10,7 @@ public:
     explicit ConstantValueTable(QWidget *parent = 0);
     ~ConstantValueTable();
     void setDecimals(int d);
-    void setSymbols(const ConstSymbolList & sym);
+    void setQuantities(const ConstQuantityList & qty);
 
     void setData(const KDataArray & da);
     KDataArray data() const;

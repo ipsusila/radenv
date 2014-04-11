@@ -1,5 +1,5 @@
 #include "largelaketransport.h"
-#include "symbol.h"
+#include "quantity.h"
 #include "radcore.h"
 
 LargeLakeTransport::LargeLakeTransport(IModelFactory * fact, const KModelInfo& inf)
@@ -28,10 +28,8 @@ void LargeLakeTransport::defineParameters()
 }
 bool LargeLakeTransport::calculate(const KCalculationInfo& ci, const KLocation & loc, KDataArray * calcResult)
 {
-    Q_UNUSED(ci);
-
     //user input parameters
-    qreal x = loc.distance();
+    qreal x = loc.distance(ci);
     qreal y0 = _userInputs.numericValueOf(Srs19::ReleaseToBeachDistance);
     qreal D = _userInputs.numericValueOf(Srs19::WaterDepth);
     qreal U = _userInputs.numericValueOf(Srs19::LakeFlowVelocity);

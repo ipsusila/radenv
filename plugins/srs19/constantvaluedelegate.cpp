@@ -1,27 +1,27 @@
 #include <QDoubleSpinBox>
 #include <QComboBox>
 #include "constantvaluedelegate.h"
-#include "symbol.h"
+#include "quantity.h"
 
 ConstantValueDelegate::ConstantValueDelegate(QWidget *parent) :
     QStyledItemDelegate(parent), _decimals(4)
 {
-    _symbols = Srs19::availableSymbols();
+    _quantities = Srs19::availableQuantities();
 }
 ConstantValueDelegate::~ConstantValueDelegate()
 {
 }
 
-void ConstantValueDelegate::setSymbols(const ConstSymbolList & sym)
+void ConstantValueDelegate::setQuantities(const ConstQuantityList & qty)
 {
-    _symbols = sym;
+    _quantities = qty;
 }
 
-const Quantity * ConstantValueDelegate::symbol(const QString &name) const
+const Quantity * ConstantValueDelegate::quantity(const QString &name) const
 {
-    foreach(const Quantity * sym, _symbols)
-        if (sym->symbol == name)
-            return sym;
+    foreach(const Quantity * qty, _quantities)
+        if (qty->symbol == name)
+            return qty;
     return 0;
 }
 
@@ -45,11 +45,11 @@ QWidget* ConstantValueDelegate::createEditor( QWidget *parent,
         //create combobox
         QComboBox * cb = new QComboBox(parent);
 
-        //add symbols
+        //add quantities
         cb->addItem("");
-        foreach(const Quantity * sym, _symbols) {
-            if (sym->isNumeric())
-                cb->addItem(sym->displaySymbolWithUnit(), qVariantFromValue((void*)sym));
+        foreach(const Quantity * qty, _quantities) {
+            if (qty->isNumeric())
+                cb->addItem(qty->displayQuantityWithUnit(), qVariantFromValue((void*)qty));
         }
 
         return cb;
@@ -104,10 +104,10 @@ void ConstantValueDelegate::setModelData ( QWidget *editor, QAbstractItemModel *
         // add the description at 3rd column
         QVariant vSym = cb->itemData(cb->currentIndex());
         if (vSym.isValid() && !vSym.isNull()) {
-            const Quantity * sym = static_cast<const Quantity *>(vSym.value<void*>());
+            const Quantity * qty = static_cast<const Quantity *>(vSym.value<void*>());
             model->setData(index, vSym, Qt::UserRole);
-            model->setData(idx2, sym->defaultValue, Qt::EditRole);
-            model->setData(idx3, sym->description, Qt::EditRole);
+            model->setData(idx2, qty->defaultValue, Qt::EditRole);
+            model->setData(idx3, qty->description, Qt::EditRole);
         }
         else {
             model->setData(idx2, 0, Qt::EditRole);

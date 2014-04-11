@@ -2,7 +2,7 @@
 #define VEGETATION_H
 
 #include "foodchain.h"
-#include "transferfactor.h"
+#include "defaultvalues.h"
 
 class Vegetation : public FoodChain
 {
@@ -11,18 +11,16 @@ public:
     bool load(QIODevice * io);
     bool save(QIODevice * io);
 
-   // IUserInput * createUserInputWidget(QWidget *parent);
-
 protected:
     TransferFactor _fvValues;
 
     Vegetation(IModelFactory * fact, const KModelInfo& inf);
     bool allocateIoPorts();
     bool calculate(const KCalculationInfo& ci, const KLocation & loc, KDataArray * calResult);
-    void calculate(const KDataItem& d1, const KDataItem& d2, qreal Fv, qreal a, qreal p,
-                   qreal lw, qreal ls, qreal te, qreal tb, qreal th, KDataArray * calcResult);
+    qreal calculate(const KDataItem& d1, const KDataItem& d2, qreal Fv, qreal a, qreal p,
+                   qreal lw, bool defLs, qreal te, qreal tb, qreal th, KDataArray * calcResult);
 
-    virtual TransferFactor::ValueType vegetationType() const = 0;
+    virtual int vegetationType() const = 0;
 };
 
 class Crop : public Vegetation
@@ -32,7 +30,7 @@ public:
 
     Crop(IModelFactory * fact, const KModelInfo& inf);
 protected:
-    TransferFactor::ValueType vegetationType() const;
+    int vegetationType() const;
     void defineParameters();
 };
 
@@ -43,7 +41,7 @@ public:
 
     Forage(IModelFactory * fact, const KModelInfo& inf);
 protected:
-    TransferFactor::ValueType vegetationType() const;
+    int vegetationType() const;
     void defineParameters();
 };
 

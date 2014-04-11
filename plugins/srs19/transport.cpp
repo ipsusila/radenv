@@ -16,12 +16,12 @@ KDataGroupArray & Transport::toUserInputs(const KDataArray & da)
     return _userInputs;
 }
 
-KData Transport::modelData(const Quantity &sym) const
+KData Transport::modelData(const Quantity &qty) const
 {
-    KData d = _dataList.find(sym);
+    KData d = _dataList.find(qty);
     if (d.isValid())
         return d;
-    return _userInputs.find(sym);
+    return _userInputs.find(qty);
 }
 
 KDataArray Transport::result() const

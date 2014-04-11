@@ -15,14 +15,14 @@ public:
     void setData(const KData& d);
     void setData(const KDataArray& list);
     void setData(const KDataGroupArray& list);
-    const Quantity * symbol() const;
-    void setSymbol(const Quantity * s);
+    const Quantity * quantity() const;
+    void setQuantity(const Quantity * s);
     QString firstColumnLabel() const;
     void setFirstColumnLabel(const QString& label);
 
 private:
     QString _firstColLabel;
-    const Quantity * _symbol;
+    const Quantity * _quantity;
     KData::ContentTypes _types;
 };
 

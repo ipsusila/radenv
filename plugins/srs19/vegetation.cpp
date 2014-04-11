@@ -1,6 +1,5 @@
 #include "vegetation.h"
-#include "widgetvegetation.h"
-#include "symbol.h"
+#include "quantity.h"
 #include "radcore.h"
 
 Vegetation::Vegetation(IModelFactory * fact, const KModelInfo& inf)
@@ -19,16 +18,6 @@ bool Vegetation::allocateIoPorts()
 
     return true;
 }
-/*
-IUserInput * Vegetation::createUserInputWidget(QWidget *parent)
-{
-    WidgetVegetation * w =
-            new WidgetVegetation(&_userInputs, parent);
-    return w;
-
-    return 0;
-}
-*/
 
 bool Vegetation::calculate(const KCalculationInfo &ci, const KLocation & loc, KDataArray * calResult)
 {
@@ -53,12 +42,19 @@ bool Vegetation::calculate(const KCalculationInfo &ci, const KLocation & loc, KD
     qreal a = _userInputs.numericValueOf(Srs19::MassInterceptionFactor);
     qreal lw = _userInputs.numericValueOf(Srs19::ReductionOnSurface);
     qreal te = _userInputs.numericValueOf(Srs19::CropExposedPeriod);
-    qreal ls = _userInputs.numericValueOf(Srs19::ReductionOnSoil);
     qreal p = _userInputs.numericValueOf(Srs19::SurfaceSoilDensity);
     qreal tb = _inpPorts.data(Srs19::DischargePeriod).numericValue() * 365;
     qreal th = _userInputs.numericValueOf(Srs19::IntervalAfterHarvest);
-    bool useDefaultFv = _userInputs.valueOf(Rad::UseDefaultValue).toBool();
+    bool useDefaultLs = _userInputs.valueOf(Rad::UseDefaultValue).toBool();
+    bool useDefaultFv = _userInputs.valueOf(Rad::UseDefaultValue2).toBool();
 
+    if (tb <= 0) {
+        tb = Srs19::DischargePeriod.defaultValue * 365;  //30 years
+        _userInputs.replace(KData(&Srs19::DischargePeriod, Srs19::DischargePeriod.defaultValue));
+    }
+
+    qreal ls;
+    DataItemArray lsItems;
     if (useDefaultFv) {
         DataItemArray fvItems;
         for(int k = 0; k < di1.count(); k++) {
@@ -66,7 +62,9 @@ bool Vegetation::calculate(const KCalculationInfo &ci, const KLocation & loc, KD
             const KDataItem & d2 = di2.at(d1.name());
             qreal Fv = _fvValues.value(d1.name(), vegetationType());
             fvItems << KDataItem(d1.name(), Fv, KData::Radionuclide);
-            calculate(d1, d2, Fv, a, p, lw, ls, te, tb, th, calResult);
+            ls = calculate(d1, d2, Fv, a, p, lw, useDefaultLs, te, tb, th, calResult);
+            if (useDefaultLs)
+                lsItems << KDataItem(d1.name(), ls, KData::Radionuclide);
         }
 
         _userInputs.replace(KData(&Srs19::UptakeConcentrationFactor, fvItems));
@@ -78,19 +76,44 @@ bool Vegetation::calculate(const KCalculationInfo &ci, const KLocation & loc, KD
             const KDataItem & d1 = di1.at(k);
             const KDataItem & d2 = di2.at(d1.name());
             qreal Fv = FvUser.numericValue(d1.name());
-            calculate(d1, d2, Fv, a, p, lw, ls, te, tb, th, calResult);
+            ls = calculate(d1, d2, Fv, a, p, lw, useDefaultLs, te, tb, th, calResult);
+            if (useDefaultLs)
+                lsItems << KDataItem(d1.name(), ls, KData::Radionuclide);
         }
+    }
+
+    if (!lsItems.isEmpty()) {
+        _userInputs.replace(KData(&Srs19::ReductionOnSoil, lsItems));
     }
 
     return true;
 }
 
-void Vegetation::calculate(const KDataItem& d1, const KDataItem& d2, qreal Fv, qreal a, qreal p,
-                           qreal lw, qreal ls, qreal te, qreal tb, qreal th, KDataArray * calcResult)
+qreal Vegetation::calculate(const KDataItem& d1, const KDataItem& d2, qreal Fv, qreal a, qreal p,
+                           qreal lw, bool defLs, qreal te, qreal tb, qreal th, KDataArray * calcResult)
 {
     QString nuc = d1.name();
     const KRadionuclide & rn = KStorage::storage()->radionuclide(nuc);
     qreal l = rn.halfLife().decayConstant(KHalfLife::Day);
+
+    //get ls value
+    qreal ls;
+    if (defLs) {
+        bool isAnion = _inpPorts.data(Srs19::IsAnion).value().toBool();
+        if (isAnion) {
+            ls = 0.0014;
+        }
+        else if (rn.element() == KElement::Sr || rn.element() == KElement::Cs)   {
+            ls = 0.00014;
+        }
+        else {
+            ls = 0;
+        }
+    }
+    else {
+        ls = _userInputs.find(Srs19::ReductionOnSoil).numericValue(nuc);
+    }
+
     qreal lEv = l + lw;
     qreal lEs = l + ls;
 
@@ -106,6 +129,8 @@ void Vegetation::calculate(const KDataItem& d1, const KDataItem& d2, qreal Fv, q
     calcResult->appendOrMerge(&Srs19::ConcentrationInDrySoil, nuc, Cs, KData::Radionuclide);
     calcResult->appendOrMerge(&Srs19::ConsDueIndirectProcess, nuc, Cvi2, KData::Radionuclide);
     calcResult->appendOrMerge(&Srs19::ConcentrationInVegetation, nuc, Cvi, KData::Radionuclide);
+
+    return ls;
 }
 
 bool Vegetation::verify(int * oerr, int * owarn)
@@ -133,11 +158,16 @@ bool Vegetation::verify(int * oerr, int * owarn)
         KOutputProxy::errorNotSpecified(this, Srs19::CropExposedPeriod);
         err++;
     }
-    qreal ls = _userInputs.numericValueOf(Srs19::ReductionOnSoil);
-    if (ls < 0) {
-        KOutputProxy::errorNotSpecified(this, Srs19::ReductionOnSoil);
-        err++;
+
+    bool useDefaultLs = _userInputs.valueOf(Rad::UseDefaultValue).toBool();
+    if (!useDefaultLs) {
+        const KData & ls = _userInputs.find(Srs19::ReductionOnSoil);
+        if (ls.isEmpty()) {
+            KOutputProxy::errorNotSpecified(this, Srs19::ReductionOnSoil);
+            err++;
+        }
     }
+
     qreal p = _userInputs.numericValueOf(Srs19::SurfaceSoilDensity);
     if (p < 0) {
         KOutputProxy::errorNotSpecified(this, Srs19::SurfaceSoilDensity);
@@ -150,9 +180,19 @@ bool Vegetation::verify(int * oerr, int * owarn)
         err++;
     }
 
-    if (!_fvValues.load(true)) {
-        KOutputProxy::errorLoadFailed(this, Srs19::UptakeConcentrationFactor);
-        err++;
+    bool useDefaultFv = _userInputs.valueOf(Rad::UseDefaultValue2).toBool();
+    if (useDefaultFv) {
+        if (!_fvValues.load(true)) {
+            KOutputProxy::errorLoadFailed(this, Srs19::UptakeConcentrationFactor);
+            err++;
+        }
+    }
+    else {
+        const KData& Fv = _userInputs.find(Srs19::UptakeConcentrationFactor);
+        if (Fv.isEmpty()) {
+            KOutputProxy::errorNotSpecified(this, Srs19::UptakeConcentrationFactor);
+            err++;
+        }
     }
 
     if (oerr)
@@ -179,38 +219,48 @@ bool Vegetation::save(QIODevice * io)
 Crop::Crop(IModelFactory *fact, const KModelInfo &inf) : Vegetation(fact, inf)
 {
 }
-TransferFactor::ValueType Crop::vegetationType() const
+int Crop::vegetationType() const
 {
     return TransferFactor::Crops;
 }
 void Crop::defineParameters()
 {
-
-    //TODO: loss-rate
     //define user inputs
     //default values from page 64-66
     //Peat (lahan gambut)
 
     //define user inputs
     DataGroup dg1(QObject::tr("Vegetation"));
-    dg1 << KData(&Rad::NameSymbol, "Crop");
+    dg1 << KData(&Rad::NameQuantity, "Crop");
     _userInputs << dg1;
 
     DataGroup dg2(QObject::tr("Transport parameter"));
     dg2 << KData(&Srs19::MassInterceptionFactor, 0.3)
         << KData(&Srs19::ReductionOnSurface, 0.05)
-        << KData(&Srs19::CropExposedPeriod, 60)
-        << KData(&Srs19::ReductionOnSoil, 0.0014)
-        << KData(&Rad::CommentSymbol, QObject::tr("Note: value for anions. For Cs and Sr use 0.00014 d-1 instead, all other nuclides set to 0 d-1."))
         << KData(&Srs19::SurfaceSoilDensity, 260)
-        << KData(&Rad::CommentSymbol, QObject::tr("Note: for peat soils use 100 kg/m2 instead."))
+        << KData(&Rad::CommentQuantity, QObject::tr("Note: for peat soils use 100 kg/m2 instead."))
+        << KData(&Srs19::CropExposedPeriod, 60)
         << KData(&Srs19::IntervalAfterHarvest, 14);
     _userInputs << dg2;
 
-    DataGroup dg3(QObject::tr("Transfer factor"));
+    DataGroup dg3(QObject::tr("Soil reduction"));
     dg3 << KData(&Rad::UseDefaultValue, true)
-        << KData(&Srs19::UptakeConcentrationFactor, KData::RadionuclideArray, QVariant());
+        << KData(&Srs19::ReductionOnSoil, KData::RadionuclideArray, QVariant());
     _userInputs << dg3;
+
+    DataGroup dg4(QObject::tr("Transfer factor"));
+    dg4 << KData(&Rad::UseDefaultValue2, true)
+        << KData(&Srs19::UptakeConcentrationFactor, KData::RadionuclideArray, QVariant());
+    _userInputs << dg4;
+
+    //parameter control
+    KQuantityControl qc3(&Rad::UseDefaultValue, false);
+    qc3.append(&Srs19::ReductionOnSoil);
+    _userInputs.addQuantityControl(qc3);
+
+    KQuantityControl qc4(&Rad::UseDefaultValue2, false);
+    qc4.append(&Srs19::UptakeConcentrationFactor);
+    _userInputs.addQuantityControl(qc4);
 }
 
 //////Forage
@@ -219,7 +269,7 @@ Forage::Forage(IModelFactory *fact, const KModelInfo &inf) : Vegetation(fact, in
 
 }
 
-TransferFactor::ValueType Forage::vegetationType() const
+int Forage::vegetationType() const
 {
     return TransferFactor::Forage;
 }
@@ -230,22 +280,35 @@ void Forage::defineParameters()
     //Peat (lahan gambut)
     //define user inputs
     DataGroup dg1(QObject::tr("Vegetation"));
-    dg1 << KData(&Rad::NameSymbol, "Forage");
+    dg1 << KData(&Rad::NameQuantity, "Forage");
     _userInputs << dg1;
 
     DataGroup dg2(QObject::tr("Transport parameters"));
     dg2 << KData(&Srs19::MassInterceptionFactor, 3)
         << KData(&Srs19::ReductionOnSurface, 0.05)
-        << KData(&Srs19::CropExposedPeriod, 30)
-        << KData(&Srs19::ReductionOnSoil, 0.0014)
-        << KData(&Rad::CommentSymbol, QObject::tr("Note: value for anions. For Cs and Sr use 0.00014 d-1 instead, all other nuclides set to 0 d-1."))
         << KData(&Srs19::SurfaceSoilDensity, 130)
-        << KData(&Rad::CommentSymbol, QObject::tr("Note: for peat soils use 50 kg/m2 instead."))
+        << KData(&Rad::CommentQuantity, QObject::tr("Note: for peat soils use 50 kg/m2 instead."))
+        << KData(&Srs19::CropExposedPeriod, 30)
         << KData(&Srs19::IntervalAfterHarvest, 0);
+    _userInputs << dg2;
 
-    DataGroup dg3(QObject::tr("Transfer factor"));
+    DataGroup dg3(QObject::tr("Soil reduction"));
     dg3 << KData(&Rad::UseDefaultValue, true)
-        << KData(&Srs19::UptakeConcentrationFactor, KData::RadionuclideArray, QVariant());
+        << KData(&Srs19::ReductionOnSoil, KData::RadionuclideArray, QVariant());
     _userInputs << dg3;
+
+    DataGroup dg4(QObject::tr("Transfer factor"));
+    dg4 << KData(&Rad::UseDefaultValue2, true)
+        << KData(&Srs19::UptakeConcentrationFactor, KData::RadionuclideArray, QVariant());
+    _userInputs << dg4;
+
+    //parameter control
+    KQuantityControl qc3(&Rad::UseDefaultValue, false);
+    qc3.append(&Srs19::ReductionOnSoil);
+    _userInputs.addQuantityControl(qc3);
+
+    KQuantityControl qc4(&Rad::UseDefaultValue2, false);
+    qc4.append(&Srs19::UptakeConcentrationFactor);
+    _userInputs.addQuantityControl(qc4);
 }
 

@@ -1,5 +1,5 @@
 #include "irrigation.h"
-#include "symbol.h"
+#include "quantity.h"
 #include "radcore.h"
 
 Irrigation::Irrigation(IModelFactory * fact, const KModelInfo& inf)
@@ -41,7 +41,7 @@ bool Irrigation::calculate(const KCalculationInfo& ci, const KLocation & loc, KD
     qreal wd = _userInputs.numericValueOf(Srs19::WaterDailyIrrigation);
     int Nd = _userInputs.valueOf(Srs19::IrrigationDays).toInt();
     int Td = _userInputs.valueOf(Srs19::AnnualIrrigationPeriod).toInt();
-    qreal Iw = wd * Nd / Td;
+    qreal Iw = wd * Nd / (Td * 1000);   //1000 is conversion from Litre to m^3
     qreal Iwa = Iw * Td / 365;
 
     calcResult->append(KData(&Srs19::IrrigationRate, Iw));

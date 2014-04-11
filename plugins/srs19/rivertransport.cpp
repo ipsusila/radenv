@@ -1,5 +1,5 @@
 #include "rivertransport.h"
-#include "symbol.h"
+#include "quantity.h"
 #include "radcore.h"
 
 RiverTransport::RiverTransport(IModelFactory * fact, const KModelInfo& inf)
@@ -28,7 +28,7 @@ void RiverTransport::defineParameters()
         << KData(&Srs19::FlowDepth, 0)
         << KData(&Srs19::LowRiverFlowRate, 0)
         << KData(&Srs19::NetFreshwaterVelocity, 0)
-        << KData(&Rad::CommentSymbol, QObject::tr("If U not known, value will be calculated with U=qr/BD."));
+        << KData(&Rad::CommentQuantity, QObject::tr("If U not known, value will be calculated with U=qr/BD."));
     _userInputs << dg1;
 
     DataGroup dg2(QObject::tr("Parameter estimation"));
@@ -68,13 +68,13 @@ void RiverTransport::estimateParameters()
         DataList::iterator iit = it->items.begin();
         DataList::iterator iend = it->items.end();
         while (iit != iend) {
-            if (iit->symbol() == Srs19::RiverEstuaryWidth)
+            if (iit->quantity() == Srs19::RiverEstuaryWidth)
                 iit->setValue(B);
-            else if (iit->symbol() == Srs19::LowRiverFlowRate)
+            else if (iit->quantity() == Srs19::LowRiverFlowRate)
                 iit->setValue(qr);
-            else if (iit->symbol() == Srs19::NetFreshwaterVelocity)
+            else if (iit->quantity() == Srs19::NetFreshwaterVelocity)
                 iit->setValue(U);
-            else if (iit->symbol() == Srs19::FlowDepth)
+            else if (iit->quantity() == Srs19::FlowDepth)
                 iit->setValue(D);
             iit++;
         }
@@ -110,13 +110,11 @@ void RiverTransport::calcualteConcentration(qreal x, qreal qr, qreal U, KDataArr
 
 bool RiverTransport::calculate(const KCalculationInfo& ci, const KLocation& loc, KDataArray * calcResult)
 {
-    Q_UNUSED(ci);
-
     //estimate parameter
     estimateParameters();
 
     //user input parameters
-    qreal x = loc.distance();
+    qreal x = loc.distance(ci);
     qreal B = _userInputs.numericValueOf(Srs19::RiverEstuaryWidth);
     qreal qr = _userInputs.numericValueOf(Srs19::LowRiverFlowRate);
     qreal D = _userInputs.numericValueOf(Srs19::FlowDepth);

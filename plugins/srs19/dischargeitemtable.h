@@ -3,7 +3,7 @@
 
 #include "uiautorowtable.h"
 #include "kdata.h"
-#include "symbol.h"
+#include "quantity.h"
 
 class DischargeItemTable : public UiAutoRowTable
 {

@@ -6,22 +6,22 @@
 #include "kconnector.h"
 #include "koutput.h"
 
-KData KPortList::data(const Quantity &sym) const
+KData KPortList::data(const Quantity &qty) const
 {
     for(int k = 0; k < this->size(); k++) {
-        KData d = this->at(k)->data(sym);
+        KData d = this->at(k)->data(qty);
         if (d.isValid())
             return d;
     }
     return KData();
 }
 
-KData KPortList::data(int idx, const Quantity &sym) const
+KData KPortList::data(int idx, const Quantity &qty) const
 {
     if (idx < 0 || idx >= size())
         return KData();
 
-    return this->at(idx)->data(sym);
+    return this->at(idx)->data(qty);
 }
 
 KLocation KPortList::firstValidLocation() const
@@ -55,8 +55,8 @@ bool KPortList::isAnyConnected() const
     return false;
 }
 
-KPort::KPort(IModel * m, const Quantity * sym, KPort::DataDirection dir)
-    : QGraphicsItem(m), _model(m), _symbol(sym), _direction(dir)
+KPort::KPort(IModel * m, const Quantity * qty, KPort::DataDirection dir)
+    : QGraphicsItem(m), _model(m), _quantity(qty), _direction(dir)
 {
     //calculate position
     this->setZValue(m->zValue()+1);
@@ -71,9 +71,9 @@ IModel * KPort::model() const
     return _model;
 }
 
-const Quantity * KPort::symbol() const
+const Quantity * KPort::quantity() const
 {
-    return _symbol;
+    return _quantity;
 }
 KPort::DataDirection KPort::direction() const
 {
@@ -126,7 +126,7 @@ KDataArray KPort::data() const
     }
     return da;
 }
-KData KPort::data(const Quantity &sym) const
+KData KPort::data(const Quantity &qty) const
 {
     //for output port
     //request data from the model
@@ -134,7 +134,7 @@ KData KPort::data(const Quantity &sym) const
     {
         IModel * model = this->model();
         if (model)
-            return model->data(sym);
+            return model->data(qty);
     }
 
     if ((direction() & KPort::Input) == KPort::Input) {
@@ -144,7 +144,7 @@ KData KPort::data(const Quantity &sym) const
         foreach(KPort * p, _conPorts) {
             IModel * model = p->model();
             if (model) {
-                KData d = model->data(sym);
+                KData d = model->data(qty);
                 if (d.isValid())
                     return d;
             }
@@ -212,7 +212,7 @@ bool KPort::canConnect(KPort * port) const
     //if direction is OK, then check type
     //this: input -> other: output, this: output -> other: input
     if ((tInp && oOut) || (tOut || oInp)) {
-        return (port->symbol() == this->symbol()) != 0;
+        return (port->quantity() == this->quantity()) != 0;
     }
     else {
         return false;
@@ -239,10 +239,10 @@ void KPort::paint(QPainter * painter, const QStyleOptionGraphicsItem * option, Q
     f.setPointSize(10);
     painter->setFont(f);
     if (xHas(this->direction(), KPort::Input)) {
-        painter->drawText(rect.right()+2, rect.top(), w, rect.height(), Qt::AlignLeft | Qt::AlignVCenter, _symbol->symbol);
+        painter->drawText(rect.right()+2, rect.top(), w, rect.height(), Qt::AlignLeft | Qt::AlignVCenter, _quantity->symbol);
     }
     else {
-        painter->drawText(rect.x() - w, rect.top(), w-2, rect.height(), Qt::AlignRight | Qt::AlignVCenter, _symbol->symbol);
+        painter->drawText(rect.x() - w, rect.top(), w-2, rect.height(), Qt::AlignRight | Qt::AlignVCenter, _quantity->symbol);
     }
 
     painter->restore();

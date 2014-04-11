@@ -67,7 +67,7 @@ QString KReport::toPlainText()
 void KReport::printData(const KData& d)
 {
     Q_ASSERT(_stream);
-    if (d.symbol() == Rad::CommentSymbol)
+    if (d.quantity() == Rad::CommentQuantity)
         (*_stream) << "//" << d.value().toString() << Rad::LatinEndLine;
     else if (d.isValid())
         (*_stream) << d.displayText() << Rad::LatinEndLine;

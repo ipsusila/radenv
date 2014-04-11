@@ -4,7 +4,7 @@
 #include <QVariant>
 #include <QSharedDataPointer>
 #include "klocation.h"
-#include "ksymbolcontrol.h"
+#include "kquantitycontrol.h"
 
 class KDataPrivate;
 class K_CORE_EXPORT KData
@@ -33,18 +33,18 @@ public:
     Q_DECLARE_FLAGS(ContentTypes, ContentType)
 
     KData();
-    explicit KData(const Quantity * sym);
-    explicit KData(const Quantity * var, const QVariant& v);
-    explicit KData(const Quantity * sym, ContentTypes types, const QVariant & v);
-    explicit KData(const Quantity * var, const QString& nm, const QVariant& v, ContentTypes f);
-    explicit KData(const Quantity * var, const DataItemArray & items);
+    explicit KData(const Quantity * qty);
+    explicit KData(const Quantity * qty, const QVariant& v);
+    explicit KData(const Quantity * qty, ContentTypes types, const QVariant & v);
+    explicit KData(const Quantity * qty, const QString& nm, const QVariant& v, ContentTypes f);
+    explicit KData(const Quantity * qty, const DataItemArray & items);
     KData(const KData&);
-    KData(const Quantity * sym, const KData& other);
+    KData(const Quantity * qty, const KData& other);
     KData &operator=(const KData&);
     virtual ~KData();
 
-    const Quantity & symbol() const;
-    const Quantity * symbolPtr() const;
+    const Quantity & quantity() const;
+    const Quantity * quantityPtr() const;
     ContentTypes contentTypes() const;
     bool contains(ContentType type) const;
     int count() const;
@@ -106,16 +106,16 @@ public:
 
     QVariant valueOf(const Quantity & v) const;
     qreal numericValueOf(const Quantity& v) const;
-    const KData & find(const QString& sym) const;
+    const KData & find(const QString& qty) const;
     const KData & find(const Quantity& v) const;
     QString displayText() const;
 
-    void appendOrMerge(const Quantity * sym, const QString& nm,
+    void appendOrMerge(const Quantity * qty, const QString& nm,
                        const QVariant& v, KData::ContentTypes t);
     void appendOrReplace(const KData& di);
     void setLocation(const KLocation& loc);
     KLocation location() const;
-    ConstSymbolList symbols() const;
+    ConstQuantityList quantities() const;
 
 private:
     KLocation _location;
@@ -129,11 +129,11 @@ public:
     const KData & find(const Quantity& v) const;
     qreal numericValueOf(const Quantity& v) const;
     QVariant valueOf(const Quantity & v) const;
-    ConstSymbolList symbols() const;
+    ConstQuantityList quantities() const;
     KDataArray toDataArray() const;
 
     void replace(const KData& di);
-    void addQuantityControl(const KSymbolControl & qc);
+    void addQuantityControl(const KQuantityControl & qc);
     const QuantityControlList & quantityControls() const;
 
 private:

@@ -7,20 +7,20 @@
 #include "kradionuclide.h"
 
 UiRadionuclideItemDelegate::UiRadionuclideItemDelegate(QObject *parent) :
-    QStyledItemDelegate(parent), _symbol(&Rad::EmptySymbol)
+    QStyledItemDelegate(parent), _quantity(&Rad::EmptyQuantity)
 {
 }
 UiRadionuclideItemDelegate::~UiRadionuclideItemDelegate()
 {
 }
 
-void UiRadionuclideItemDelegate::setSymbol(const Quantity * sym)
+void UiRadionuclideItemDelegate::setQuantity(const Quantity * qty)
 {
-    _symbol = sym;
+    _quantity = qty;
 }
-const Quantity * UiRadionuclideItemDelegate::symbol() const
+const Quantity * UiRadionuclideItemDelegate::quantity() const
 {
-    return _symbol;
+    return _quantity;
 }
 
 QWidget* UiRadionuclideItemDelegate::createEditor( QWidget *parent,
@@ -42,16 +42,19 @@ QWidget* UiRadionuclideItemDelegate::createEditor( QWidget *parent,
     else if (index.column() == 1) {
         QWidget * w = 0;
         QDoubleSpinBox * sb;
-        switch(_symbol->type) {
+        QCheckBox * chk;
+        switch(_quantity->type) {
         case Rad::Boolean:
-            w = new QCheckBox(parent);
+            chk = new QCheckBox(parent);
+            chk->setText(_quantity->text);
+            w = chk;
             break;
         case Rad::Integer:
         case Rad::Real:
             sb = new QDoubleSpinBox(parent);
-            sb->setMinimum(_symbol->minValue);
-            sb->setMaximum(_symbol->maxValue);
-            sb->setDecimals(_symbol->decimal);
+            sb->setMinimum(_quantity->minValue);
+            sb->setMaximum(_quantity->maxValue);
+            sb->setDecimals(_quantity->decimal);
             w = sb;
             break;
         default:
@@ -59,7 +62,7 @@ QWidget* UiRadionuclideItemDelegate::createEditor( QWidget *parent,
             break;
         }
         Q_ASSERT(w != 0);
-        w->setToolTip(_symbol->description);
+        w->setToolTip(_quantity->description);
         return w;
     }
     else
@@ -86,7 +89,7 @@ void UiRadionuclideItemDelegate::setEditorData ( QWidget *editor, const QModelIn
         if (data.isValid())
             sb->setValue(data.toDouble());
         else
-            sb->setValue(_symbol->defaultValue);
+            sb->setValue(_quantity->defaultValue);
         return;
     }
 
@@ -95,18 +98,22 @@ void UiRadionuclideItemDelegate::setEditorData ( QWidget *editor, const QModelIn
         QVariant data = index.data(Qt::EditRole);
         if (data.isValid())
             ed->setText(data.toString());
-        else if (_symbol->isNumeric())
-            ed->setText(QString::number(_symbol->defaultValue));
+        else if (_quantity->isNumeric())
+            ed->setText(QString::number(_quantity->defaultValue));
         return;
     }
 
     QCheckBox * chk = qobject_cast<QCheckBox *>(editor);
     if (chk) {
+        /*
         QVariant data = index.data(Qt::EditRole);
         if (data.isValid())
             chk->setChecked(data.toBool());
         else
-            chk->setChecked((bool)_symbol->defaultValue);
+            chk->setChecked((bool)_quantity->defaultValue);
+        */
+        QString dataStr = index.data(Qt::EditRole).toString();
+        chk->setChecked(stringToBoolean(_quantity, dataStr));
         return;
     }
 
@@ -133,12 +140,12 @@ void UiRadionuclideItemDelegate::setModelData ( QWidget *editor, QAbstractItemMo
     QLineEdit * ed = qobject_cast<QLineEdit *>(editor);
     if (ed) {
         QString str = ed->text();
-        if (_symbol->type == Rad::NumText) {
+        if (_quantity->isNumeric()) {
             qreal v = str.toDouble();
-            if (v < _symbol->minValue)
-                model->setData(index, _symbol->minValue, Qt::EditRole);
-            else if (v > _symbol->maxValue)
-                model->setData(index, _symbol->maxValue, Qt::EditRole);
+            if (v < _quantity->minValue)
+                model->setData(index, _quantity->minValue, Qt::EditRole);
+            else if (v > _quantity->maxValue)
+                model->setData(index, _quantity->maxValue, Qt::EditRole);
             else
                 model->setData(index, v, Qt::EditRole);
         }
@@ -150,10 +157,24 @@ void UiRadionuclideItemDelegate::setModelData ( QWidget *editor, QAbstractItemMo
 
     QCheckBox * chk = qobject_cast<QCheckBox *>(editor);
     if (chk) {
-        model->setData(index, chk->isChecked(), Qt::EditRole);
+        //model->setData(index, chk->isChecked(), Qt::EditRole);
+        if (chk->isChecked())
+            model->setData(index, chk->text() + " Yes", Qt::EditRole);
+        else
+            model->setData(index, chk->text() + " No", Qt::EditRole);
         return;
     }
 
     QStyledItemDelegate::setModelData(editor, model, index);
+}
+
+bool UiRadionuclideItemDelegate::stringToBoolean(const Quantity * qty, const QString & txt)
+{
+    if (txt.endsWith("Yes"))
+        return true;
+    else if (txt.endsWith("No"))
+        return false;
+    else
+        return qty->defaultValue;
 }
 

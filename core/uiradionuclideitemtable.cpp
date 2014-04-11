@@ -4,7 +4,7 @@
 
 UiRadionuclideItemTable::UiRadionuclideItemTable(QWidget * parent)
     : UiAutoRowTable(parent), _firstColLabel(tr("Radionuclides")),
-      _symbol(&Rad::EmptySymbol), _types(KData::Undefined)
+      _quantity(&Rad::EmptyQuantity), _types(KData::Undefined)
 {
     setColumnCount(2);
     setRowCount(1);
@@ -45,10 +45,18 @@ KData UiRadionuclideItemTable::data() const
                 continue;
 
             QString nuc = iNuc->text();
-            qreal rate = iVal->text().toDouble();
-
-            if (!nuc.isEmpty()) {
+            if (_quantity->type == Rad::Boolean) {
+                bool v = UiRadionuclideItemDelegate::stringToBoolean(_quantity, iVal->text());
+                KDataItem d(nuc, v, _types);
+                items.append(d);
+            }
+            else if (_quantity->isNumeric()) {
+                qreal rate = iVal->text().toDouble();
                 KDataItem d(nuc, rate, _types);
+                items.append(d);
+            }
+            else {
+                KDataItem d(nuc, iVal->text(), _types);
                 items.append(d);
             }
         }
@@ -57,7 +65,7 @@ KData UiRadionuclideItemTable::data() const
             return KData();
         }
         else {
-            return KData(_symbol, items);
+            return KData(_quantity, items);
         }
     }
     return KData();
@@ -82,27 +90,27 @@ void UiRadionuclideItemTable::setData(const KData& d)
 }
 void UiRadionuclideItemTable::setData(const KDataArray& list)
 {
-    const KData & qi = list.find(_symbol->symbol);
+    const KData & qi = list.find(_quantity->symbol);
     setData(qi);
 }
 void UiRadionuclideItemTable::setData(const KDataGroupArray& list)
 {
-    const KData & qi = list.find(*_symbol);
+    const KData & qi = list.find(*_quantity);
     setData(qi);
 }
 
-const Quantity * UiRadionuclideItemTable::symbol() const
+const Quantity * UiRadionuclideItemTable::quantity() const
 {
-    return _symbol;
+    return _quantity;
 }
-void UiRadionuclideItemTable::setSymbol(const Quantity * s)
+void UiRadionuclideItemTable::setQuantity(const Quantity * s)
 {
-    if (_symbol != s) {
-        _symbol = s;
+    if (_quantity != s) {
+        _quantity = s;
         UiRadionuclideItemDelegate * delegate =
                 qobject_cast<UiRadionuclideItemDelegate *>(this->itemDelegate());
         if (delegate != 0)
-            delegate->setSymbol(s);
+            delegate->setQuantity(s);
 
         //modify headers
         QStringList headers;

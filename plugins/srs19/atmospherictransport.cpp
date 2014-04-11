@@ -1,5 +1,5 @@
 #include "atmospherictransport.h"
-#include "symbol.h"
+#include "quantity.h"
 #include "radcore.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -23,19 +23,30 @@ bool AtmosphericTransport::allocateIoPorts()
 
 void AtmosphericTransport::defineParameters()
 {
-    DataGroup dg1(QObject::tr("Dispersion parameters"));
+    DataGroup dg1(QObject::tr("Wind parameters"));
     dg1 << KData(&Srs19::FractionOfWind, 0.25)
-        << KData(&Srs19::GeometricMeanOfWindSpeed, 2)
-        << KData(&Srs19::BuildingHeight, 0)
-        << KData(&Srs19::CrossSectionalArea, 0)
-        << KData(&Srs19::DryDepositionCoeff, 500)
-        << KData(&Srs19::WetDepositionCoeff, 500);
+        << KData(&Srs19::GeometricMeanOfWindSpeed, 2);
     _userInputs << dg1;
 
-    DataGroup dg2(QObject::tr("Cavity zone"));
-    dg2 << KData(&Srs19::BuildingWidth, 0)
-        << KData(&Srs19::OnSameBuilding, false);
+    DataGroup dg2(QObject::tr("Ground deposition"));
+    dg2 << KData(&Srs19::DryDepositionCoeff, 500)
+        << KData(&Srs19::WetDepositionCoeff, 500);
     _userInputs << dg2;
+
+    DataGroup dg3(QObject::tr("Building parameter"));
+    dg3 << KData(&Srs19::BuildingHeight, 0)
+        << KData(&Srs19::CrossSectionalArea, 0);
+    _userInputs << dg3;
+
+    DataGroup dg4(QObject::tr("Cavity zone"));
+    dg4 << KData(&Srs19::BuildingWidth, 0)
+        << KData(&Srs19::OnSameBuilding, false);
+    _userInputs << dg4;
+
+    //parameter control
+    KQuantityControl qc(&Srs19::OnSameBuilding, false);
+    qc.append(&Srs19::BuildingWidth);
+    _userInputs.addQuantityControl(qc);
 }
 
 bool AtmosphericTransport::verify(int * oerr, int * owarn)
@@ -146,7 +157,9 @@ qreal AtmosphericTransport::calcModifiedConcentration(
     //eq. 9, page. 26
     qreal f = 1.0;
     const KRadionuclide & nuclide = KStorage::storage()->radionuclide(nuc);
-    if (nuclide.isVeryShortLived()) {
+    //if (nuclide.isVeryShortLived()) {
+    bool isShortLived = _inpPorts.data(Srs19::IsShortLiveNuclide).value().toBool();
+    if (isShortLived) {
         qreal l = nuclide.halfLife().decayConstant();
         f = qExp((-l * x)/ua);
     }
@@ -413,10 +426,8 @@ void AtmosphericTransport::calcCavityZone(qreal x, qreal HB, bool onSameBuilding
 
 bool AtmosphericTransport::calculate(const KCalculationInfo& ci, const KLocation& loc, KDataArray * calcResult)
 {
-    Q_UNUSED(ci);
-
     //user input parameters
-    qreal x = loc.distance();
+    qreal x = loc.distance(ci);
     bool onSameBuilding = _userInputs.valueOf(Srs19::OnSameBuilding).toBool();
     qreal HB = _userInputs.numericValueOf(Srs19::BuildingHeight);
     qreal AB = _userInputs.numericValueOf(Srs19::CrossSectionalArea);
@@ -448,14 +459,14 @@ bool AtmosphericTransport::calculate(const KCalculationInfo& ci, const KLocation
 
     if (H > HB25) {
         //displacement zone
-        (*calcResult) << KData(&Rad::CommentSymbol, QObject::tr("Dispersion in the lee of an isolated point source, "
+        (*calcResult) << KData(&Rad::CommentQuantity, QObject::tr("Dispersion in the lee of an isolated point source, "
                                                             "H > 2.5Hb (Refer to Eq. 2, pp. 18)"))
                   << KData(&Srs19::DownwindDistance, x);
         calcDisplacementZone(x, H, calcResult);
     }
     else if (x > sqAB25) {
         //wake zone
-        (*calcResult) << KData(&Rad::CommentSymbol, QObject::tr("Dispersion in the lee of a building inside the wake zone, "
+        (*calcResult) << KData(&Rad::CommentQuantity, QObject::tr("Dispersion in the lee of a building inside the wake zone, "
                                                             "H <= 2.5Hb and x > 2.5 sqrt(Ab) (Refer to Eq. 4, pp. 20)."))
                   << KData(&Srs19::DownwindDistance, x);
         calcWakeZone(x, H, AB, calcResult);
@@ -464,13 +475,13 @@ bool AtmosphericTransport::calculate(const KCalculationInfo& ci, const KLocation
         //cavity zone
         if (onSameBuilding) {
             //add comment
-            (*calcResult) << KData(&Rad::CommentSymbol, QObject::tr("Dispersion in the lee of a building inside the cavity zone, "
+            (*calcResult) << KData(&Rad::CommentQuantity, QObject::tr("Dispersion in the lee of a building inside the cavity zone, "
                                                                 "H <= 2.5Hb and x <= sqrt(Ab), source and receptor on same "
                                                                 "building surface (Refer to Eq. 7, pp. 24)"));
         }
         else {
             //add comment
-            (*calcResult) << KData(&Rad::CommentSymbol, QObject::tr("Dispersion in the lee of a building inside the cavity zone, "
+            (*calcResult) << KData(&Rad::CommentQuantity, QObject::tr("Dispersion in the lee of a building inside the cavity zone, "
                                                                 "H <= 2.5Hb and x <= sqrt(Ab), source and receptor *not* on same "
                                                                 "building surface (Refer to Eq. 8, pp. 24)"));
         }

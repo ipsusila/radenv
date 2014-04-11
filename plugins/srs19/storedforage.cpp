@@ -1,6 +1,6 @@
 #include "storedforage.h"
 #include "radcore.h"
-#include "symbol.h"
+#include "quantity.h"
 
 StoredForage::StoredForage(IModelFactory * fact, const KModelInfo& inf)
     : FoodChain(fact, inf)
@@ -22,7 +22,7 @@ void StoredForage::defineParameters()
 {
     //define user inputs
     DataGroup dg1(QObject::tr("Vegetation"));
-    dg1 << KData(&Rad::NameSymbol, "Stored feed");
+    dg1 << KData(&Rad::NameQuantity, "Stored feed");
     _userInputs << dg1;
 
     DataGroup dg2(QObject::tr("Storing parameter"));

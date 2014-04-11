@@ -26,7 +26,7 @@ public:
 protected:
     bool allocateIoPorts();
     IUserInput * createUserInputWidget(QWidget *parent);
-    KData modelData(const Quantity & sym) const;
+    KData modelData(const Quantity & qty) const;
 
     KPortList        _outPorts;
     KDataArray      _dataList;

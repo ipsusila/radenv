@@ -2,6 +2,7 @@
 #define KSETTINGMANAGER_H
 
 #include <QSharedDataPointer>
+#include <QRect>
 #include "imodelfactory.h"
 
 class KSettingManagerPrivate;
@@ -13,8 +14,15 @@ public:
     KSettingManager &operator=(const KSettingManager &);
     virtual ~KSettingManager();
 
-    virtual bool save();
-    virtual bool load();
+    bool save();
+    bool load();
+
+    void saveGeometry(IModel * model, const QRect& rect);
+    QRect geometry(IModel * model) const;
+
+protected:
+    virtual bool doSave();
+    virtual bool doLoad();
     
 private:
     QSharedDataPointer<KSettingManagerPrivate> data;

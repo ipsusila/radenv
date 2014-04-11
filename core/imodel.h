@@ -55,9 +55,9 @@ public:
     virtual bool load(QIODevice * io) = 0;
     virtual bool save(QIODevice * io) = 0;
     virtual KDataArray result() const = 0;
-    virtual KData modelData(const Quantity & sym) const = 0;
+    virtual KData modelData(const Quantity & qty) const = 0;
     virtual bool calculate(const KCalculationInfo& ci) = 0;
-    //virtual SymbolList outputSymbols() = 0;
+    //virtual QuantityList outputQuantities() = 0;
 
     virtual void generateReport();
     virtual void refresh();
@@ -69,7 +69,7 @@ public:
 
     int type() const;
     void askUserParameters();
-    KData data(const Quantity & sym) const;
+    KData data(const Quantity & qty) const;
     int tagId() const;
     void setTagId(int id);
     QString tagName(const QString& post="") const;
@@ -92,23 +92,6 @@ public:
     virtual QRectF modelRect() const;
     virtual QRectF boundingRect () const;
     virtual void paint(QPainter * painter, const QStyleOptionGraphicsItem * option, QWidget * widget = 0);
-
-    //check whether connected with
-    template <class T>
-    bool connectedWith() const
-    {
-        int sid = static_cast<T*>(0)->SerialId;
-        const KPortList & inpPorts = inputs();
-        for(int k = 0; k < inpPorts.size(); k++) {
-            IModel * m = inpPorts.at(k)->model();
-            if (m == 0)
-                continue;
-
-            if (sid == m->info().serialId())
-                return true;
-        }
-        return false;
-    }
 };
 
 

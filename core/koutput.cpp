@@ -15,22 +15,22 @@ KOutputProxy::KOutputProxy()
 {
 }
 
-void KOutputProxy::errorNotSpecified(IModel * model, const Quantity& sym)
+void KOutputProxy::errorNotSpecified(IModel * model, const Quantity& qty)
 {
-    xError() << *model << ": " << sym << QObject::tr(" not specified.");
+    xError() << *model << ": " << qty << QObject::tr(" not specified.");
 }
 void KOutputProxy::errorMessage(IModel * model, const QString& msg)
 {
     xError() << *model << ": " << msg;
 }
-void KOutputProxy::errorMessage(IModel * model, const Quantity& sym, const QString& msg)
+void KOutputProxy::errorMessage(IModel * model, const Quantity& qty, const QString& msg)
 {
-    xError() << *model << ": " << sym << ", " << msg;
+    xError() << *model << ": " << qty << ", " << msg;
 }
 void KOutputProxy::errorPortNotConnected(IModel *model, KPort * port)
 {
     if (port)
-        xError() << *model << QObject::tr(": Port ") << port->symbol()->symbol << QObject::tr(" not connected.");
+        xError() << *model << QObject::tr(": Port ") << port->quantity()->symbol << QObject::tr(" not connected.");
     else
         xError() << *model << QObject::tr(": Port not connected.");
 }
@@ -42,9 +42,9 @@ void KOutputProxy::errorLoadFailed(IModel * model, const QString & val)
 {
     xError() << *model << QString(QObject::tr("Can not load default %1 values from database.")).arg(val);
 }
-void KOutputProxy::errorLoadFailed(IModel * model, const Quantity & sym)
+void KOutputProxy::errorLoadFailed(IModel * model, const Quantity & qty)
 {
-    xError() << *model << QObject::tr("Can not load default ") << sym
+    xError() << *model << QObject::tr("Can not load default ") << qty
              << QObject::tr(" values from database.");
 }
 
@@ -58,14 +58,14 @@ void KOutputProxy::warningMessage(IModel * model, const QString& msg)
     xWarning() << *model << ": " << msg;
 }
 
-void KOutputProxy::warningNotProperlyDefined(IModel * model, const Quantity& sym)
+void KOutputProxy::warningNotProperlyDefined(IModel * model, const Quantity& qty)
 {
-    xWarning() << *model << ": " << sym << QObject::tr(" value not defined.");
+    xWarning() << *model << ": " << qty << QObject::tr(" value not defined.");
 }
 
-void KOutputProxy::infoUseDefaultValue(IModel * model, const Quantity& sym)
+void KOutputProxy::infoUseDefaultValue(IModel * model, const Quantity& qty)
 {
-    xInfo() << *model << QObject::tr("Site specific value for ") << sym
+    xInfo() << *model << QObject::tr("Site specific value for ") << qty
             << " not provided. Default/estimated value will be used.";
 }
 
@@ -220,12 +220,12 @@ KOutput & KOutput::operator<<(const IModel & model)
 
 KOutput & KOutput::operator<<(const KPort & port)
 {
-    messageOutput(QString(" Port[%1] ").arg(port.symbol()->symbol));
+    messageOutput(QString(" Port[%1] ").arg(port.quantity()->symbol));
     return *this;
 }
-KOutput & KOutput::operator<<(const Quantity & sym)
+KOutput & KOutput::operator<<(const Quantity & qty)
 {
-    messageOutput(sym.displayText());
+    messageOutput(qty.displayText());
     return *this;
 }
 

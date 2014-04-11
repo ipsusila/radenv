@@ -1,5 +1,5 @@
 #include "coastaltransport.h"
-#include "symbol.h"
+#include "quantity.h"
 #include "radcore.h"
 
 CoastalTransport::CoastalTransport(IModelFactory * fact, const KModelInfo& inf)
@@ -31,10 +31,8 @@ void CoastalTransport::defineParameters()
 
 bool CoastalTransport::calculate(const KCalculationInfo& ci, const KLocation& loc, KDataArray * calcResult)
 {
-    Q_UNUSED(ci);
-
     //user input parameters
-    qreal x = loc.distance();
+    qreal x = loc.distance(ci);
     qreal y0 = _userInputs.numericValueOf(Srs19::ReleaseToBeachDistance);
     qreal D = _userInputs.numericValueOf(Srs19::WaterDepth);
     qreal U = _userInputs.numericValueOf(Srs19::CoastalCurrent);
@@ -171,10 +169,8 @@ void GenericCoastalTransport::defineParameters()
 
 bool GenericCoastalTransport::calculate(const KCalculationInfo& ci, const KLocation& loc, KDataArray * calcResult)
 {
-    Q_UNUSED(ci);
-
     //user input parameters
-    qreal x = loc.distance();
+    qreal x = loc.distance(ci);
     qreal y0 = _userInputs.numericValueOf(Srs19::ReleaseToBeachDistance);
     qreal y = _userInputs.numericValueOf(Srs19::DistanceFromShoreline);
     qreal D = _userInputs.numericValueOf(Srs19::WaterDepth);
@@ -196,7 +192,7 @@ bool GenericCoastalTransport::calculate(const KCalculationInfo& ci, const KLocat
     KData qiW = _inpPorts.data(Srs19::WaterDischargeRate);
     DataItemArray cwList;
     if (Ey > 0.0) {
-        (*calcResult) << KData(&Rad::CommentSymbol, QObject::tr("Using eq. VI-46, page 183."));
+        (*calcResult) << KData(&Rad::CommentQuantity, QObject::tr("Using eq. VI-46, page 183."));
         for(int k = 0; k < qiW.count(); k++) {
             const KDataItem & qi = qiW.at(k);
             const KRadionuclide & rn = KStorage::storage()->radionuclide(qi.name());
@@ -211,7 +207,7 @@ bool GenericCoastalTransport::calculate(const KCalculationInfo& ci, const KLocat
         }
     }
     else {
-        (*calcResult) << KData(&Rad::CommentSymbol, QObject::tr("Ey not available, using eq. VI-52, page 184."));
+        (*calcResult) << KData(&Rad::CommentQuantity, QObject::tr("Ey not available, using eq. VI-52, page 184."));
         for(int k = 0; k < qiW.count(); k++) {
             const KDataItem & qi = qiW.at(k);
             const KRadionuclide & rn = KStorage::storage()->radionuclide(qi.name());

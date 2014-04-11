@@ -1,10 +1,9 @@
 #include "discharge.h"
-#include "symbol.h"
+#include "quantity.h"
 #include "radcore.h"
 
 #include "widgetatmosphericdischarge.h"
 #include "widgetwaterdischarge.h"
-#include "widgetsewagedischarge.h"
 
 ///////////////////////////////////////////////////////////////////////////////
 Discharge::Discharge(IModelFactory * fact, const KModelInfo& inf)
@@ -12,9 +11,14 @@ Discharge::Discharge(IModelFactory * fact, const KModelInfo& inf)
 {
 }
 
-KData Discharge::modelData(const Quantity &sym) const
+KData Discharge::modelData(const Quantity &qty) const
 {
-    return _dataList.find(sym);
+    return _dataList.find(qty);
+}
+
+KDataGroupArray * Discharge::userInputs()
+{
+    return &_userInputs;
 }
 
 KDataArray Discharge::result() const
@@ -122,6 +126,12 @@ bool AirDischarge::verify(int * oerr, int * owarn)
         *owarn = warn;
 
     return err == 0;
+}
+
+bool AirDischarge::calculate(const KCalculationInfo& ci)
+{
+    Q_UNUSED(ci);
+    return !_dataList.isEmpty();
 }
 
 bool AirDischarge::load(QIODevice * io)
@@ -236,76 +246,3 @@ bool WaterDischarge::save(QIODevice * io)
     return true;
 }
 
-SewageDischarge::SewageDischarge(IModelFactory * fact, const KModelInfo& inf)
-    : Discharge(fact, inf)
-{
-}
-bool SewageDischarge::allocateIoPorts()
-{
-    _outPorts << new KPort(this, &Srs19::AverageConcentrationInSewage, KPort::Output);
-    return true;
-}
-IUserInput * SewageDischarge::createUserInputWidget(QWidget *parent)
-{
-    WidgetSewageDischarge * w =
-            new WidgetSewageDischarge(&_dataList, parent);
-    return w;
-}
-bool SewageDischarge::verify(int * oerr, int * owarn)
-{
-    int err = 0, warn = 0;
-
-    //discharge period
-    KData xd = _dataList.find(Srs19::DischargePeriod);
-    if (!xd.isValid() || xd.numericValue() <= 0.0) {
-        KOutputProxy::errorNotSpecified(this, Srs19::DischargePeriod);
-        err ++;
-    }
-
-    xd = _dataList.find(Srs19::SewageDischargeRate);
-    if (!xd.isValid() || xd.numericValue() <= 0.0) {
-        KOutputProxy::errorNotSpecified(this, Srs19::SewageDischargeRate);
-        err ++;
-    }
-
-    xd = _dataList.find(Srs19::AnnualSludgeProduction);
-    if (!xd.isValid() || xd.numericValue() <= 0.0) {
-        KOutputProxy::errorNotSpecified(this, Srs19::AnnualSludgeProduction);
-        err ++;
-    }
-
-    xd = _dataList.find(Srs19::NumOfServedPerson);
-    if (!xd.isValid() || xd.numericValue() <= 0.0) {
-        KOutputProxy::errorNotSpecified(this, Srs19::NumOfServedPerson);
-        err ++;
-    }
-
-    KLocationPort * lp = locationPort();
-    if (lp == 0 || !lp->hasLocation()) {
-        KOutputProxy::warningLocationNotSpecified(this);
-        warn ++;
-    }
-    else {
-        //assign location
-        _dataList.setLocation(lp->location());
-    }
-
-    KOutputProxy::infoVerificationResult(this, err, warn);
-    if (oerr)
-        *oerr = err;
-    if (owarn)
-        *owarn = warn;
-
-    return err == 0;
-}
-
-bool SewageDischarge::load(QIODevice * io)
-{
-    Q_UNUSED(io);
-    return true;
-}
-bool SewageDischarge::save(QIODevice * io)
-{
-    Q_UNUSED(io);
-    return true;
-}

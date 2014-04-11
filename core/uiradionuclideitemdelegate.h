@@ -14,11 +14,13 @@ public:
     virtual QWidget *createEditor(QWidget *parent, const QStyleOptionViewItem &option, const QModelIndex &index) const;
     virtual void setEditorData(QWidget *editor, const QModelIndex &index) const;
     virtual void setModelData(QWidget *editor, QAbstractItemModel *model, const QModelIndex &index) const;
-    void setSymbol(const Quantity * sym);
-    const Quantity * symbol() const;
+    void setQuantity(const Quantity * qty);
+    const Quantity * quantity() const;
+
+    static bool stringToBoolean(const Quantity * qty, const QString & txt);
 
 private:
-    const Quantity * _symbol;
+    const Quantity * _quantity;
 };
 
 #endif // UIRADIONUCLIDEITEMDELEGATE_H

@@ -1,7 +1,8 @@
 #include <QtDebug>
 #include "srs19factory.h"
-#include "symbol.h"
+#include "quantity.h"
 #include "discharge.h"
+#include "sewagedischarge.h"
 #include "iparamseditor.h"
 #include "kgroupinfo.h"
 #include "kstorage.h"
@@ -12,32 +13,23 @@
 #include "coastaltransport.h"
 #include "smalllaketransport.h"
 #include "largelaketransport.h"
-#include "distributioncoefficient.h"
-#include "transferfactor.h"
 #include "sedimenteffect.h"
 #include "constantvalue.h"
 #include "irrigation.h"
 #include "vegetation.h"
-#include "bioaccumulationfactor.h"
 #include "storedforage.h"
 #include "animalfeed.h"
 #include "animaltransport.h"
-
-#include <stdio.h>
-
+#include "sludgetransport.h"
+#include "grounddeposition.h"
+#include "aquaticfoodtransport.h"
+#include "defaultvalues.h"
 
 Q_EXPORT_PLUGIN2(srs19, Srs19Factory)
 
 Srs19Factory::~Srs19Factory()
 {
-    qDebug() << "~Srs19Factory";
-
-    //test
-    FILE * fp = fopen("/tmp/srs19.txt", "w");
-    if (fp) {
-        fprintf(fp, "SRS-19 factory destroyed. plugin unloaded");
-        fclose(fp);
-    }
+    //nothing todo
 }
 
 QString Srs19Factory::name() const
@@ -68,9 +60,9 @@ const GroupInfoList & Srs19Factory::groups() const
     return _groupInfos;
 }
 
-ConstSymbolList Srs19Factory::availableQuantities() const
+ConstQuantityList Srs19Factory::availableQuantities() const
 {
-    return Srs19::availableSymbols();
+    return Srs19::availableQuantities();
 }
 
 IParamsEditor * Srs19Factory::paramsEditor()
@@ -92,7 +84,8 @@ KSettingManager * Srs19Factory::settingManager()
 void Srs19Factory::onFinalized()
 {
     qDebug() << "Finalizing SRS-19 factory";
-    Srs19::saveSymbols(this);
+    Srs19::saveQuantities(this);
+    _settingManager->save();
 
     delete _paramsEditor;
     delete _settingManager;
@@ -110,14 +103,18 @@ bool Srs19Factory::initialize()
     BioAccumulationFactor bp(this);
     bp.load(true);
 
-    //reload symbols
-    Srs19::reloadSymbols(this);
+    ExternalDoseCoefficient edc(this);
+    edc.load(true);
+
+    //reload quantities
+    Srs19::reloadQuantities(this);
 
      //parameter editor
     _paramsEditor = 0;
 
     //setting manager
     _settingManager = new KSettingManager(this);
+    _settingManager->load();
 
     ModelInfoList mi;
     //model information
@@ -147,10 +144,16 @@ bool Srs19Factory::initialize()
                      tr("Radionuclide transport model through large lake pathway"), QIcon(":/srs19/transport.png"))
        << KModelInfo(GenericCoastalTransport::SerialId, "GCT", tr("Generic Large Lake/Coastal Water Pathway"),
                      tr("Radionuclide transport model through large lake/coastal water"), QIcon(":/srs19/transport.png"))
-       << KModelInfo(SedimentEffect::SerialId, "SE", tr("Sediment effect"),
-                     tr("Sediment effect to radionuclide"), QIcon(":/srs19/transport.png"))
+       << KModelInfo(FreshwaterSediment::SerialId, "FS", tr("Freshwater sediment"),
+                     tr("Sediment effect to radionuclide at freshwater"), QIcon(":/srs19/transport.png"))
+       << KModelInfo(CoastalSediment::SerialId, "CS", tr("Coastal sediment"),
+                     tr("Sediment effect to radionuclide at coastal"), QIcon(":/srs19/transport.png"))
        << KModelInfo(Irrigation::SerialId, "IR", tr("Irrigation"),
-                     tr("Effect of radionuclide by irrigation"), QIcon(":/srs19/transport.png"));
+                     tr("Effect of radionuclide by irrigation"), QIcon(":/srs19/transport.png"))
+       << KModelInfo(SludgeTransport::SerialId, "SL", tr("Surface sewage sludge"),
+                     tr("Surface concentration per unit area of sewage sludge"), QIcon(":/srs19/transport.png"))
+       << KModelInfo(GroundDeposition::SerialId, "GR", tr("Ground deposition"),
+                     tr("Deposition of radionuclide in surface soil"), QIcon(":/srs19/transport.png"));
     _groupInfos.append(KGroupInfo(QObject::tr("Transport"), mi));
 
     mi.clear();
@@ -165,7 +168,14 @@ bool Srs19Factory::initialize()
         << KModelInfo(MilkTransport::SerialId, "MT", tr("Milk"),
                     tr("Concentration of radionuclide in milk"), QIcon())
         << KModelInfo(MeatTransport::SerialId, "FT", tr("Meat"),
-                    tr("Concentration of radionuclide in meat"), QIcon());
+                    tr("Concentration of radionuclide in meat"), QIcon())
+        << KModelInfo(FreshwaterFishTransport::SerialId, "FW", tr("Freshwater fish"),
+                    tr("Concentration of radionuclide in freshwater fish"), QIcon())
+        << KModelInfo(MarineFishTransport::SerialId, "MF", tr("Marine fish"),
+                    tr("Concentration of radionuclide in marine fish"), QIcon())
+        << KModelInfo(MarineShellfishTransport::SerialId, "SF", tr("Marine shellfish"),
+                    tr("Concentration of radionuclide in marine shellfish"), QIcon()) ;
+
     _groupInfos.append(KGroupInfo(tr("Foods"), mi));
 
     return true;
@@ -197,10 +207,16 @@ IModel * Srs19Factory::createModel(const KModelInfo & info)
         return new SmallLakeTransport(this, info);
     case LargeLakeTransport::SerialId:
         return new LargeLakeTransport(this, info);
-    case SedimentEffect::SerialId:
-        return new SedimentEffect(this, info);
+    case FreshwaterSediment::SerialId:
+        return new FreshwaterSediment(this, info);
+    case CoastalSediment::SerialId:
+        return new CoastalSediment(this, info);
     case Irrigation::SerialId:
         return new Irrigation(this, info);
+    case SludgeTransport::SerialId:
+        return new SludgeTransport(this, info);
+    case GroundDeposition::SerialId:
+        return new GroundDeposition(this, info);
 
     case Crop::SerialId:
         return new Crop(this, info);
@@ -214,6 +230,12 @@ IModel * Srs19Factory::createModel(const KModelInfo & info)
         return new MilkTransport(this, info);
     case MeatTransport::SerialId:
         return new MeatTransport(this, info);
+    case FreshwaterFishTransport::SerialId:
+        return new FreshwaterFishTransport(this, info);
+    case MarineFishTransport::SerialId:
+        return new MarineFishTransport(this, info);
+    case MarineShellfishTransport::SerialId:
+        return new MarineShellfishTransport(this, info);
 
     default:
         return 0;

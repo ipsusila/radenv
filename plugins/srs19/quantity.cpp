@@ -1,24 +1,24 @@
 #include <QObject>
 #include <QtDebug>
-#include "symbol.h"
+#include "quantity.h"
 #include "radcore.h"
 
 namespace Srs19 {
-    static ConstSymbolList __constSymList;
-    static SymbolList __symList;
-    static const char * __symListName = "Symbol List";
-    static const char * __symListDescription = "List of all available symbols";
+    static ConstQuantityList __constQtyList;
+    static QuantityList __qtyList;
+    static const char * __qtyListName = "Quantity List";
+    static const char * __qtyListDescription = "List of all available quantities";
 
     /*
-     * For internal usage. Geenerate list of available symbols
+     * For internal usage. Geenerate list of available quantities.
      */
-    static void generateSymbolList()
+    static void generateQuantityList()
     {
         //if already generated, do not add to list
-        if (!__symList.isEmpty())
+        if (!__qtyList.isEmpty())
             return;
 
-        __symList << &DischargePeriod
+        __qtyList << &DischargePeriod
             << &Diameter
             << &NumOfServedPerson
 
@@ -53,7 +53,7 @@ namespace Srs19 {
             << &ConcentrationInShoreSediment
             << &ConcentrationInSuspendedSediment
             << &OppositeBankMaxConcentration
-            << &AverageConcentrationInSewage
+            << &ConcentrationInDrySewage
             << &ConcentrationInFilteredWater
             << &TotalConcentrationInWater
             << &FlowDepth
@@ -166,58 +166,66 @@ namespace Srs19 {
 
             << &ConsDueDirectContamination
             << &ConsDueIndirectProcess
-            << &IsSmallAnimal
+            << &IsAnion
             << &DailyFeedingAmount
-            << &ConsumptionDelay;
+            << &ConsumptionDelay
+            << &IsShortLiveNuclide
+            << &IncrementValue
+            << &SolidMaterialConcentration
+            << &PersonSludgeProduction
+            << &SewageSludgeDensity
+            << &SludgeContainerDepth
+            << &ConcentrationInWetSewage;
 
         //assign to const
-        for (int k = 0; k < __symList.size(); k++)
-            __constSymList.append(__symList.at(k));
+        for (int k = 0; k < __qtyList.size(); k++)
+            __constQtyList.append(__qtyList.at(k));
     }
 
-    bool reloadSymbols(IModelFactory * factory)
+    bool reloadQuantities(IModelFactory * factory)
     {
         //generate symbol list
-        generateSymbolList();
+        generateQuantityList();
 
         //load symbol from storage
-        KStorageContent  content = KStorage::storage()->load(__symListName, factory);
+        KStorageContent  content = KStorage::storage()->load(__qtyListName, factory);
         if (!content.isEmpty()) {
             QDataStream stream(content);
-            int nsize = __symList.size();
+            int nsize = __qtyList.size();
             for(int k = 0; k < nsize && !stream.atEnd(); k++) {
-                Quantity * sym = __symList.at(k);
-                stream >> *sym;
+                Quantity * qty = __qtyList.at(k);
+                stream >> *qty;
             }
+            return true;
         }
-        return true;
+        return false;
     }
 
-    bool saveSymbols(IModelFactory * factory)
+    bool saveQuantities(IModelFactory * factory)
     {
         KStorageContent content(QDateTime::currentDateTime());
         content.setFactory(factory);
-        content.setName(__symListName);
-        content.setDescription(__symListDescription);
+        content.setName(__qtyListName);
+        content.setDescription(__qtyListDescription);
 
         //append content
         QDataStream stream(&content, QIODevice::WriteOnly);
-        for (int k = 0; k < __symList.size(); k++)
-            stream << *__symList.at(k);
+        for (int k = 0; k < __qtyList.size(); k++)
+            stream << *__qtyList.at(k);
 
         return KStorage::storage()->save(content);
     }
 
-    ConstSymbolList availableSymbols()
+    ConstQuantityList availableQuantities()
     {
-        generateSymbolList();
-        return __constSymList;
+        generateQuantityList();
+        return __constQtyList;
     }
 
-    SymbolList editableSymbols()
+    QuantityList editableQuantities()
     {
-        generateSymbolList();
-        return __symList;
+        generateQuantityList();
+        return __qtyList;
     }
 
 //symbol definition
@@ -293,8 +301,8 @@ Quantity ConcentrationInSuspendedSediment =
     {32, Rad::Real, DIGIT_DEF, 0, MAX_REAL, 0, "Cs,w", "C_{s,w}", QObject::tr("Concentration in suspended sediment"), "Bq/kg", "Bq/kg", QObject::tr("Radionuclide concentration in suspended sediment")};
 Quantity OppositeBankMaxConcentration =
     {33, Rad::Real, DIGIT_DEF, 0, MAX_REAL, 0, "Ct", "C_{t}", QObject::tr("Opposite bank max concentration"), "Bq/m3", "Bq/m^3", QObject::tr("Maximum radionuclide concentration on the river bank opposite to the discharge point")};
-Quantity AverageConcentrationInSewage =
-    {34, Rad::Real, DIGIT_DEF, 0, MAX_REAL, 0, "Csl", "C_{sluldge}", QObject::tr("Concentration in sludge"), "Bq/kg", "Bq/kg", QObject::tr("Annual average radionuclide concentration in sewage sludge")};
+Quantity ConcentrationInDrySewage =
+    {34, Rad::Real, DIGIT_DEF, 0, MAX_REAL, 0, "Cdsl", "C_{sluldge}", QObject::tr("Concentration in sludge (dry weight)"), "Bq/kg", "Bq/kg", QObject::tr("Annual average radionuclide concentration in sewage sludge")};
 Quantity ConcentrationInFilteredWater =
     {35, Rad::Real, DIGIT_DEF, 0, MAX_REAL, 0, "Cw,s", "C_{w,s}", QObject::tr("Concentration in filtered water"), "Bq/m3", "Bq/m^3", QObject::tr("Radionuclide concentration in filtered water")};
 Quantity TotalConcentrationInWater =
@@ -394,7 +402,7 @@ Quantity ConcentrationInFoodstuff =
 Quantity ConcentrationInSedimentSurface =
     {82, Rad::Real, DIGIT_DEF, 0, MAX_REAL, 0, "Cs,s", "C_{s,s}", QObject::tr("Sediment surface concentration"), "Bq/m2", "Bq/m2", QObject::tr("Annual average sediment surface concentration")};
 Quantity SurfaceSludgeConcentration =
-    {83, Rad::Real, DIGIT_DEF, 0, MAX_REAL, 0, "Csl", "C_{sludge}", QObject::tr("Surface concentration in sludge"), "Bq/m2", "Bq/m2", QObject::tr("Surface concentration deposited in sewage sludge")};
+    {83, Rad::Real, DIGIT_DEF, 0, MAX_REAL, 0, "C'sl", "C'_{sludge}", QObject::tr("Surface concentration in sludge"), "Bq/m2", "Bq/m2", QObject::tr("Surface concentration deposited in sewage sludge")};
 Quantity SkinDoseCoeff =
     {84, Rad::Real, DIGIT_DEF, 0, MAX_REAL, 0, "DFs", "DF_s", QObject::tr("Skin dose coefficient"), "Sv/a per Bq/m3", "Sv/a per Bq/m3m", QObject::tr("Dose coefficient for skin from air immersion")};
 Quantity GroundExposureDoseCoeff =
@@ -518,13 +526,33 @@ Quantity ConsDueDirectContamination =
 Quantity ConsDueIndirectProcess =
     {138, Rad::Real, DIGIT_DEF, 0, MAX_REAL, 0, "Cv,i,2", "C_{v,i,2}", QObject::tr("Concentration due to indirect process"), "Bq/kg", "Bq/kg", QObject::tr("Concentration in vegetation arising from indirect process.")};
 
-Quantity IsSmallAnimal =
-    {139, Rad::Boolean, DIGIT_DEF, 0, MAX_REAL, 0, "sa", "sa", QObject::tr("Is small animal?"), "", "", QObject::tr("Small animal such as goats and sheeps")};
+Quantity IsAnion =
+    {139, Rad::Boolean, DIGIT_DEF, 0, MAX_REAL, 0, "an", "an", QObject::tr("Is anion?"), "", "", QObject::tr("Anionic radionuclide or not.")};
+
+Quantity ConsumptionDelay =
+    {140, Rad::Real, 2, 0, MAX_REAL, 0, "tfm", "f_fm", QObject::tr("Period after milking/slaughter"), "d", "d", QObject::tr("Time interval between slaughter/milking and consumption of the meat")};
 
 Quantity DailyFeedingAmount =
     {141, Rad::Real, DIGIT_DEF, 0, MAX_REAL, 0, "Qd", "Q_d", QObject::tr("Amount of daily feeding"), "kg/d", "kg/d", QObject::tr("Amount of feed consumed per da by a milk/meat producing animal")};
-Quantity ConsumptionDelay =
-    {71, Rad::Real, 2, 0, MAX_REAL, 0, "tfm", "f_fm", QObject::tr("Period after milking/slaughter"), "d", "d", QObject::tr("Time interval between slaughter/milking and consumption of the meat")};
+Quantity IsShortLiveNuclide =
+    {142, Rad::Boolean, DIGIT_DEF, 0, MAX_REAL, 0, "sl", "sl", QObject::tr("Is short lived radionuclide?"), "", "", QObject::tr("Flag for shortlived radionuclide.")};
+
+Quantity IncrementValue =
+    {143, Rad::Real, DIGIT_DEF, 0, MAX_REAL, 0, "Inc", "Inc", QObject::tr("Increment value"), "", "", QObject::tr("Increment value relative from base value.")};
+
+Quantity SolidMaterialConcentration =
+    {144, Rad::Real, 2, 0, 100, 0, "Ps", "Ps", QObject::tr("Solid material concentration"), "%", "%", QObject::tr("Solid material concentration in sewage sludge.")};
+
+Quantity PersonSludgeProduction =
+    {145, Rad::Real, 2, 0, 100000, 20, "Sp", "Sp", QObject::tr("Average sludge production"), "kg/a/person", "kg/a/person", QObject::tr("Average sludge production per person in dry weight.")};
+
+Quantity SewageSludgeDensity =
+    {146, Rad::Real, 2, 0, MAX_REAL, 1000, "p", "p", QObject::tr("Sewage sludge density"), "kg/m3", "kg/m3", QObject::tr("The density of sewage sludge.")};
+
+Quantity SludgeContainerDepth =
+    {147, Rad::Real, 2, 0, 100000, 1, "d", "d", QObject::tr("Sewage container depth"), "m", "m", QObject::tr("Depth of sewage sludge container.")};
+Quantity ConcentrationInWetSewage =
+    {148, Rad::Real, DIGIT_DEF, 0, MAX_REAL, 0, "Csl", "C_{sluldge}", QObject::tr("Concentration in sludge (wet weight)"), "Bq/kg", "Bq/kg", QObject::tr("Annual average radionuclide concentration in sewage sludge (wet weight)")};
 
 //end of symbol namespace
 }

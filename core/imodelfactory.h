@@ -33,10 +33,10 @@ public:
     virtual bool isTopLevel() const = 0;
 
     /**
-     * @brief List all available symbols in the plugins.
+     * @brief List all available quantities in the plugins.
      * @return
      */
-    virtual ConstSymbolList availableQuantities() const = 0;
+    virtual ConstQuantityList availableQuantities() const = 0;
 
     /**
      * @brief Get setting manager for the plugins.

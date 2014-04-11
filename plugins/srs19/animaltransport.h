@@ -2,7 +2,7 @@
 #define ANIMALTRANSPORT_H
 
 #include "foodchain.h"
-#include "transferfactor.h"
+#include "defaultvalues.h"
 
 class AnimalTransport : public FoodChain
 {
@@ -13,11 +13,10 @@ public:
 protected:
     TransferFactor _Fmf;
 
-    bool isSmallAnimal() const;
-    virtual const Quantity * feedingAmountSymbol() const = 0;
-    virtual const Quantity * consumptionDelaySymbol() const = 0;
-    virtual const Quantity * outSymbol() const = 0;
-    virtual const Quantity * uptakeRateSymbol() const = 0;
+    virtual const Quantity * feedingAmountQuantity() const = 0;
+    virtual const Quantity * consumptionDelayQuantity() const = 0;
+    virtual const Quantity * outQuantity() const = 0;
+    virtual const Quantity * uptakeRateQuantity() const = 0;
     bool allocateIoPorts();
     bool calculate(const KCalculationInfo& ci, const KLocation& loc, KDataArray * calcResult);
     void calculate(const KDataItem & CaItem, qreal cwi,  qreal Fmf, qreal Qmf, qreal Qw, qreal Tmf, KDataArray * result);
@@ -34,10 +33,10 @@ public:
 protected:
 
     void defineParameters();
-    virtual const Quantity * feedingAmountSymbol() const;
-    virtual const Quantity * consumptionDelaySymbol() const;
-    virtual const Quantity * outSymbol() const;
-    virtual const Quantity * uptakeRateSymbol() const;
+    virtual const Quantity * feedingAmountQuantity() const;
+    virtual const Quantity * consumptionDelayQuantity() const;
+    virtual const Quantity * outQuantity() const;
+    virtual const Quantity * uptakeRateQuantity() const;
 };
 
 class MeatTransport : public AnimalTransport
@@ -49,10 +48,10 @@ public:
 protected:
 
     void defineParameters();
-    virtual const Quantity * feedingAmountSymbol() const;
-    virtual const Quantity * consumptionDelaySymbol() const;
-    virtual const Quantity * outSymbol() const;
-    virtual const Quantity * uptakeRateSymbol() const;
+    virtual const Quantity * feedingAmountQuantity() const;
+    virtual const Quantity * consumptionDelayQuantity() const;
+    virtual const Quantity * outQuantity() const;
+    virtual const Quantity * uptakeRateQuantity() const;
 };
 
 #endif // ANIMALTRANSPORT_H

@@ -1,5 +1,5 @@
 #include "sedimenteffect.h"
-#include "symbol.h"
+#include "quantity.h"
 #include "radcore.h"
 #include "coastaltransport.h"
 
@@ -18,8 +18,8 @@ void SedimentEffect::defineParameters()
     //define user inputs
     DataGroup dg1(QObject::tr("Sediment parameters"));
     dg1 << KData(&Srs19::EffShoreAccumulationTime, 3.15e+7)
-        << KData(&Srs19::SuspendedSedimentConcentration)
-        << KData(&Rad::CommentSymbol, "If value of suspended sediment concentration not known, "
+        << KData(&Srs19::SuspendedSedimentConcentration, defaultSuspendedSedimentConcentration())
+        << KData(&Rad::LongCommentQuantity, "If value of suspended sediment concentration not known, "
                  "left it to 0. The value of 1x10^-2 kg/m3 for coastal water, 5x10^-2 kg/m3 for others "
                  "will be used for calculation.");
     _userInputs << dg1;
@@ -30,7 +30,7 @@ void SedimentEffect::defineParameters()
     _userInputs << dg2;
 
     //parameter control
-    KSymbolControl qc(&Rad::UseDefaultValue, false);
+    KQuantityControl qc(&Rad::UseDefaultValue, false);
     qc.append(&Srs19::SedimentDistributionCoeff);
     _userInputs.addQuantityControl(qc);
 }
@@ -65,15 +65,11 @@ bool SedimentEffect::calculate(const KCalculationInfo &ci, const KLocation & loc
     //add to input
     qreal Ss = _userInputs.numericValueOf(Srs19::SuspendedSedimentConcentration);
     qreal Te = _userInputs.numericValueOf(Srs19::EffShoreAccumulationTime);
-    bool isCoastal = connectedWith<CoastalTransport>() || connectedWith<GenericCoastalTransport>();
     bool useDefaultKd = _userInputs.valueOf(Rad::UseDefaultValue).toBool();
 
     //check for default value
     if (Ss <= 0) {
-        if (isCoastal)
-            Ss = 1e-2;
-        else
-            Ss = 5e-2;
+        Ss = defaultSuspendedSedimentConcentration();
         _userInputs.replace(KData(&Srs19::SuspendedSedimentConcentration, Ss));
     }
     if (Te <= 0) {
@@ -92,15 +88,11 @@ bool SedimentEffect::calculate(const KCalculationInfo &ci, const KLocation & loc
         DataItemArray kdItems;
         for(int k = 0; k < Cw.count(); k++) {
             const KDataItem & cwItem = Cw.at(k);
-            qreal Kd = _kdValues.value(cwItem.name(), isCoastal);
+            qreal Kd = _kdValues.value(cwItem.name(), waterType());
             calculate(cwItem, Ss, Te, Kd, calResult);
             kdItems << KDataItem(cwItem.name(), Kd, KData::Radionuclide);
         }
         _userInputs.replace(KData(&Srs19::SedimentDistributionCoeff, kdItems));
-
-        //assing userInputs
-        //_uInputs = KDataGroupArray(QObject::tr("User inputs"), _userInputs);
-        //_uInputs[0].add(KData(&Srs19::IsSaltWater, isCoastal));
     }
     else {
         const KData& KdList = _userInputs.find(Srs19::SedimentDistributionCoeff);
@@ -154,9 +146,21 @@ bool SedimentEffect::verify(int * oerr, int * owarn)
     }
 
     //load default kd from databases
-    if (!_kdValues.load(true)) {
-        KOutputProxy::errorLoadFailed(this, Srs19::SedimentDistributionCoeff);
-        err ++;
+    //TODO
+    //check default flag/no
+    bool useDefaultKd = _userInputs.valueOf(Rad::UseDefaultValue).toBool();
+    if (useDefaultKd) {
+        if (!_kdValues.load(true)) {
+            KOutputProxy::errorLoadFailed(this, Srs19::SedimentDistributionCoeff);
+            err ++;
+        }
+    }
+    else {
+        const KData & Kd = _userInputs.find(Srs19::SedimentDistributionCoeff);
+        if (Kd.isEmpty()) {
+            KOutputProxy::errorNotSpecified(this, Srs19::SedimentDistributionCoeff);
+            err++;
+        }
     }
 
 
@@ -180,3 +184,31 @@ bool SedimentEffect::save(QIODevice * io)
     Q_UNUSED(io);
     return true;
 }
+
+FreshwaterSediment::FreshwaterSediment(IModelFactory * fact, const KModelInfo& inf)
+    : SedimentEffect(fact, inf)
+{
+}
+
+qreal FreshwaterSediment::defaultSuspendedSedimentConcentration() const
+{
+    return 5e-2;
+}
+int FreshwaterSediment::waterType() const
+{
+    return DistributionCoefficient::Freshwater;
+}
+CoastalSediment::CoastalSediment(IModelFactory * fact, const KModelInfo& inf)
+    : SedimentEffect(fact, inf)
+{
+}
+
+qreal CoastalSediment::defaultSuspendedSedimentConcentration() const
+{
+    return 1e-2;
+}
+int CoastalSediment::waterType() const
+{
+    return DistributionCoefficient::SaltWater;
+}
+

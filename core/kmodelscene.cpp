@@ -469,7 +469,7 @@ void KModelScene::connectItem(QGraphicsItem * selItem, const QPointF& scPos)
             this->addItem(con);
             con->setPort(port);
 
-            xTrace() << "Connect port :" << port->symbol()->symbol;
+            xTrace() << "Connect port :" << port->quantity()->symbol;
         }
         else {
             //we have temporary connector
@@ -480,7 +480,7 @@ void KModelScene::connectItem(QGraphicsItem * selItem, const QPointF& scPos)
                 if (con->isConnected()) {
                     data->clearTempConnector();
                 }
-                xTrace() << "Close connection to port " << port->symbol()->symbol;
+                xTrace() << "Close connection to port " << port->quantity()->symbol;
             }
             else {
                 //add point

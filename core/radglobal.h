@@ -8,7 +8,7 @@
 #include <QDateTime>
 #include <limits>
 #include "kgroup.h"
-#include "radsymbol.h"
+#include "radquantity.h"
 
 #if defined(KCORE_LIBRARY)
 #  define K_CORE_EXPORT Q_DECL_EXPORT
@@ -35,7 +35,7 @@ class KConnector;
 class KCalculationInfo;
 class KModelScene;
 class KSettingManager;
-class KSymbolControl;
+class KQuantityControl;
 
 struct _tagPM {
     int left;
@@ -56,10 +56,10 @@ typedef QList<KLocation>                LocationList;
 typedef QList<KCase>                    AssessmentList;
 typedef KGroup<KData>                   DataGroup;
 typedef QList<KCalculationInfo>         CalculationList;
-typedef QList<const Quantity *>           ConstSymbolList;
-typedef QList<Quantity *>                 SymbolList;
+typedef QList<const Quantity *>         ConstQuantityList;
+typedef QList<Quantity *>               QuantityList;
 typedef QList<KDataArray>               DataArrayList;
-typedef QList<KSymbolControl>           QuantityControlList;
+typedef QList<KQuantityControl>           QuantityControlList;
 
 typedef struct _tagPM                   SMargin;
 typedef struct _tagPM                   SPadding;
@@ -103,7 +103,7 @@ typedef struct _tagPM                   SPadding;
 
 namespace Rad {
     K_CORE_EXPORT extern const char LatinEndLine;
-    K_CORE_EXPORT extern const Quantity EmptySymbol;
+    K_CORE_EXPORT extern const Quantity EmptyQuantity;
     K_CORE_EXPORT extern const Quantity ScalarInput;
     K_CORE_EXPORT extern const Quantity ScalarInput1;
     K_CORE_EXPORT extern const Quantity ScalarInput2;
@@ -122,9 +122,11 @@ namespace Rad {
     K_CORE_EXPORT extern const Quantity ScalarOutput4;
     K_CORE_EXPORT extern const Quantity ScalarOutput5;
 
-    K_CORE_EXPORT extern const Quantity CommentSymbol;
-    K_CORE_EXPORT extern const Quantity NameSymbol;
+    K_CORE_EXPORT extern const Quantity CommentQuantity;
+    K_CORE_EXPORT extern const Quantity NameQuantity;
     K_CORE_EXPORT extern const Quantity UseDefaultValue;
+    K_CORE_EXPORT extern const Quantity LongCommentQuantity;
+    K_CORE_EXPORT extern const Quantity UseDefaultValue2;
 }
 
 #endif // RADGLOBAL_H

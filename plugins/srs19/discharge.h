@@ -12,6 +12,7 @@ public:
     bool calculate(const KCalculationInfo& ci);
     void refresh();
     bool isSource() const;
+    KDataGroupArray * userInputs();
 
     const KPortList & outputs() const;
     QString displayText() const;
@@ -19,8 +20,9 @@ public:
 protected:
     KPortList        _outPorts;
     KDataArray       _dataList;
+    KDataGroupArray _userInputs;
 
-    KData modelData(const Quantity & sym) const;
+    KData modelData(const Quantity & qty) const;
 };
 
 class AirDischarge : public Discharge
@@ -30,6 +32,7 @@ public:
 
     AirDischarge(IModelFactory * fact, const KModelInfo& inf);
 
+    bool calculate(const KCalculationInfo& ci);
     bool verify(int * err = 0, int * warn = 0);
     bool load(QIODevice * io);
     bool save(QIODevice * io);
@@ -46,21 +49,6 @@ public:
     WaterDischarge(IModelFactory * fact, const KModelInfo& inf);
 
     bool calculate(const KCalculationInfo& ci);
-    bool verify(int * err = 0, int * warn = 0);
-    bool load(QIODevice * io);
-    bool save(QIODevice * io);
-protected:
-    bool allocateIoPorts();
-    IUserInput * createUserInputWidget(QWidget *parent);
-};
-
-class SewageDischarge : public Discharge
-{
-public:
-    enum { SerialId = 3};
-
-    SewageDischarge(IModelFactory * fact, const KModelInfo& inf);
-
     bool verify(int * err = 0, int * warn = 0);
     bool load(QIODevice * io);
     bool save(QIODevice * io);

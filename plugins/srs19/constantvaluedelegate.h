@@ -16,12 +16,12 @@ public:
     virtual void setModelData(QWidget *editor, QAbstractItemModel *model, const QModelIndex &index) const;
     void setDecimals(int dec);
     int decimals() const;
-    const Quantity * symbol(const QString& name) const;
-    void setSymbols(const ConstSymbolList & sym);
+    const Quantity * quantity(const QString& name) const;
+    void setQuantities(const ConstQuantityList & qty);
 
 private:
     int _decimals;
-    ConstSymbolList _symbols;
+    ConstQuantityList _quantities;
 };
 
 #endif // CONSTANTVALUEDELEGATE_H

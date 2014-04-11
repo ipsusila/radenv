@@ -10,7 +10,7 @@ bool FoodChain::needLocation() const
 }
 QString FoodChain::displayText() const
 {
-    KData data = this->modelData(Rad::NameSymbol);
+    KData data = this->modelData(Rad::NameQuantity);
     if (data.isValid())
         return data.value().toString();
     return "Food model";

@@ -1,15 +1,10 @@
 #include "animaltransport.h"
 #include "radcore.h"
-#include "symbol.h"
+#include "quantity.h"
 
 AnimalTransport::AnimalTransport(IModelFactory * fact, const KModelInfo& inf)
     : FoodChain(fact, inf), _Fmf(fact)
 {
-}
-
-bool AnimalTransport::isSmallAnimal() const
-{
-    return _userInputs.valueOf(Srs19::IsSmallAnimal).toBool();
 }
 
 
@@ -22,7 +17,7 @@ bool AnimalTransport::allocateIoPorts()
     _inpPorts << new KPort(this, &Srs19::ConcentrationInAnimalFeed, KPort::Input)
               << new KPort(this, &Srs19::ConcentrationInWater, KPort::Input);
 
-    _outPorts << new KPort(this, outSymbol(), KPort::Output);
+    _outPorts << new KPort(this, outQuantity(), KPort::Output);
 
     return true;
 }
@@ -36,8 +31,8 @@ bool AnimalTransport::calculate(const KCalculationInfo& ci, const KLocation & lo
     KData Cai = _inpPorts.data(0, Srs19::ConcentrationInAnimalFeed);
     KData Cwi = _inpPorts.data(1, Srs19::ConcentrationInWater);
     qreal Qw = _userInputs.numericValueOf(Srs19::WaterConsumption);
-    qreal Qmf = _userInputs.numericValueOf(*feedingAmountSymbol());
-    qreal Tmf = _userInputs.numericValueOf(*consumptionDelaySymbol());
+    qreal Qmf = _userInputs.numericValueOf(*feedingAmountQuantity());
+    qreal Tmf = _userInputs.numericValueOf(*consumptionDelayQuantity());
 
     if (useDefault) {
         DataItemArray FmItems;
@@ -46,7 +41,7 @@ bool AnimalTransport::calculate(const KCalculationInfo& ci, const KLocation & lo
             qreal cwi = Cwi.numericValue(CaItem.name());
             FvValue Fm = _Fmf.value(CaItem.name());
             qreal fmf;
-            if (feedingAmountSymbol() == &Srs19::MilkAnimalFeed) {
+            if (feedingAmountQuantity() == &Srs19::MilkAnimalFeed) {
                 fmf = Fm.milk;
             }
             else {
@@ -55,10 +50,10 @@ bool AnimalTransport::calculate(const KCalculationInfo& ci, const KLocation & lo
             FmItems << KDataItem(CaItem.name(), fmf, KData::Radionuclide);
             calculate(CaItem, cwi, fmf, Qmf, Qw, Tmf, calcResult);
         }
-        _userInputs.replace(KData(uptakeRateSymbol(), FmItems));
+        _userInputs.replace(KData(uptakeRateQuantity(), FmItems));
     }
     else {
-        const KData & Fm = _userInputs.find(*uptakeRateSymbol());
+        const KData & Fm = _userInputs.find(*uptakeRateQuantity());
         for (int k = 0; k < Cai.count(); k++) {
             const KDataItem & CaItem = Cai.at(k);
             qreal cwi = Cwi.numericValue(CaItem.name());
@@ -76,7 +71,7 @@ void AnimalTransport::calculate(const KDataItem & CaItem, qreal cwi,
     const KRadionuclide & rn = KStorage::storage()->radionuclide(CaItem.name());
     qreal l = rn.halfLife().decayConstant(KHalfLife::Day);
     qreal Cmf = Fmf * (CaItem.numericValue() * Qmf + cwi * Qw) * qExp(-l*Tmf);
-    result->appendOrMerge(this->outSymbol(), CaItem.name(), Cmf, KData::Radionuclide);
+    result->appendOrMerge(this->outQuantity(), CaItem.name(), Cmf, KData::Radionuclide);
 }
 
 bool AnimalTransport::verify(int * oerr, int * owarn)
@@ -89,21 +84,21 @@ bool AnimalTransport::verify(int * oerr, int * owarn)
         err ++;
     }
     if (!_inpPorts.isConnected(1)) {
-        KOutputProxy::warningMessage(this, _inpPorts.at(1)->symbol()->symbol + QObject::tr(" not connected."));
+        KOutputProxy::warningMessage(this, _inpPorts.at(1)->quantity()->symbol + QObject::tr(" not connected."));
         warn++;
         //KOutputProxy::war
         //err ++;
     }
 
-    qreal Qmf = _userInputs.numericValueOf(*feedingAmountSymbol());
+    qreal Qmf = _userInputs.numericValueOf(*feedingAmountQuantity());
     if (Qmf <= 0) {
-        KOutputProxy::errorNotSpecified(this, *feedingAmountSymbol());
+        KOutputProxy::errorNotSpecified(this, *feedingAmountQuantity());
         err++;
     }
 
-    qreal Tmf = _userInputs.numericValueOf(*consumptionDelaySymbol());
+    qreal Tmf = _userInputs.numericValueOf(*consumptionDelayQuantity());
     if (Tmf < 0) {
-        KOutputProxy::errorNotSpecified(this, *consumptionDelaySymbol());
+        KOutputProxy::errorNotSpecified(this, *consumptionDelayQuantity());
         err ++;
     }
 
@@ -114,9 +109,19 @@ bool AnimalTransport::verify(int * oerr, int * owarn)
     }
 
     //uptake rate
-    if (!_Fmf.load(true)) {
-        KOutputProxy::errorLoadFailed(this, *uptakeRateSymbol());
-        err ++;
+    bool useDefault = _userInputs.valueOf(Rad::UseDefaultValue).toBool();
+    if (useDefault) {
+        if (!_Fmf.load(true)) {
+            KOutputProxy::errorLoadFailed(this, *uptakeRateQuantity());
+            err ++;
+        }
+    }
+    else {
+        const KData & fmf = _userInputs.find(*uptakeRateQuantity());
+        if (fmf.isEmpty()) {
+            KOutputProxy::errorNotSpecified(this, *uptakeRateQuantity());
+            err++;
+        }
     }
 
     //TODO other verification
@@ -150,13 +155,14 @@ void MilkTransport::defineParameters()
 {
     //define user inputs
     DataGroup dg1(QObject::tr("Animal"));
-    dg1 << KData(&Rad::NameSymbol, "Milk animal")
-        << KData(&Srs19::IsSmallAnimal, false);
+    dg1 << KData(&Rad::NameQuantity, "Milk animal");
     _userInputs << dg1;
 
     DataGroup dg2(QObject::tr("Feeding parameters"));
     dg2 << KData(&Srs19::MilkAnimalFeed, 16)
-        << KData(&Srs19::WaterConsumption, 0.06);
+        << KData(&Srs19::WaterConsumption, 0.06)
+        << KData(&Rad::LongCommentQuantity, QObject::tr("For small animal suach as sheep and goats, "
+                                            "if specific value is unknown, 0.006 should be used."));
     _userInputs << dg2;
 
     DataGroup dg3(QObject::tr("Consumption parameter"));
@@ -169,25 +175,25 @@ void MilkTransport::defineParameters()
     _userInputs << dg4;
 
     //parameter control
-    KSymbolControl qc(&Rad::UseDefaultValue, false);
+    KQuantityControl qc(&Rad::UseDefaultValue, false);
     qc.append(&Srs19::FractionIntakeAtMilking);
     _userInputs.addQuantityControl(qc);
 }
 
-const Quantity * MilkTransport::feedingAmountSymbol() const
+const Quantity * MilkTransport::feedingAmountQuantity() const
 {
     return &Srs19::MilkAnimalFeed;
 }
 
-const Quantity * MilkTransport::consumptionDelaySymbol() const
+const Quantity * MilkTransport::consumptionDelayQuantity() const
 {
     return &Srs19::IntervalAfterMilking;
 }
-const Quantity * MilkTransport::outSymbol() const
+const Quantity * MilkTransport::outQuantity() const
 {
     return &Srs19::ConcentrationInMilk;
 }
-const Quantity * MilkTransport::uptakeRateSymbol() const
+const Quantity * MilkTransport::uptakeRateQuantity() const
 {
     return &Srs19::FractionIntakeAtMilking;
 }
@@ -203,13 +209,14 @@ void MeatTransport::defineParameters()
 {
     //define user inputs
     DataGroup dg1(QObject::tr("Animal"));
-    dg1 << KData(&Rad::NameSymbol, "Meat animal")
-        << KData(&Srs19::IsSmallAnimal, false);
+    dg1 << KData(&Rad::NameQuantity, "Meat animal");
     _userInputs << dg1;
 
     DataGroup dg2(QObject::tr("Feeding parameters"));
     dg2 << KData(&Srs19::MeatAnimalFeed, 12)
-        << KData(&Srs19::WaterConsumption, 0.04);
+        << KData(&Srs19::WaterConsumption, 0.04)
+        << KData(&Rad::LongCommentQuantity, QObject::tr("For small animal suach as sheep and goats, "
+                                        "if specific value is unknown, 0.004 should be used."));
     _userInputs << dg2;
 
     DataGroup dg3(QObject::tr("Consumption parameter"));
@@ -222,26 +229,26 @@ void MeatTransport::defineParameters()
     _userInputs << dg4;
 
     //parameter control
-    KSymbolControl qc(&Rad::UseDefaultValue, false);
-    qc.append(&Srs19::FractionIntakeAtMilking);
+    KQuantityControl qc(&Rad::UseDefaultValue, false);
+    qc.append(&Srs19::FractionIntakeAtSlaughter);
     _userInputs.addQuantityControl(qc);
 
 }
-const Quantity * MeatTransport::feedingAmountSymbol() const
+const Quantity * MeatTransport::feedingAmountQuantity() const
 {
     return &Srs19::MeatAnimalFeed;
 }
 
-const Quantity * MeatTransport::consumptionDelaySymbol() const
+const Quantity * MeatTransport::consumptionDelayQuantity() const
 {
     return &Srs19::IntervalAfterSlaughter;
 }
 
-const Quantity * MeatTransport::outSymbol() const
+const Quantity * MeatTransport::outQuantity() const
 {
     return &Srs19::ConcentrationInMeat;
 }
-const Quantity * MeatTransport::uptakeRateSymbol() const
+const Quantity * MeatTransport::uptakeRateQuantity() const
 {
     return &Srs19::FractionIntakeAtSlaughter;
 }

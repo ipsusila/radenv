@@ -5,7 +5,7 @@ namespace Rad {
 
 const char LatinEndLine = '\n';
 
-const Quantity EmptySymbol = {0, Rad::Real, 0, 0, 0, 0, "","","","","",""};
+const Quantity EmptyQuantity = {0, Rad::Real, 0, 0, 0, 0, "","","","","",""};
 const Quantity ScalarInput =
     {std::numeric_limits<unsigned int>::max(), Rad::Real, DIGIT_DEF, MIN_REAL, MAX_REAL, 0, "X","X",QObject::tr("Input"),"","","Arbitrary numeric value"};
 const Quantity ScalarInput1 =
@@ -40,12 +40,20 @@ const Quantity ScalarOutput4 =
 const Quantity ScalarOutput5 =
     {std::numeric_limits<unsigned int>::max() - 15, Rad::Real, DIGIT_DEF, MIN_REAL, MAX_REAL, 0, "Y5","Y5",QObject::tr("Output 5"),"","","Arbitrary numeric value"};
 
-const Quantity CommentSymbol =
+const Quantity CommentQuantity =
     {std::numeric_limits<unsigned int>::max() - 16, Rad::Comment, DIGIT_DEF, MIN_REAL, MAX_REAL, 0, "C","C",QObject::tr("Comment"),"","","Arbitrary comment"};
 
-const Quantity NameSymbol =
+const Quantity NameQuantity =
     {std::numeric_limits<unsigned int>::max() - 17, Rad::Text, DIGIT_DEF, MIN_REAL, MAX_REAL, 0, "","",QObject::tr("Name"),"","","Arbritrary name"};
 
 const Quantity UseDefaultValue =
     {std::numeric_limits<unsigned int>::max() - 18, Rad::Boolean, DIGIT_DEF, MIN_REAL, MAX_REAL, 0, "ud","ud",QObject::tr("Use predefined default value(s)"),"","","Use default value defined in software."};
+
+const Quantity LongCommentQuantity =
+    {std::numeric_limits<unsigned int>::max() - 19, Rad::LongComment, DIGIT_DEF, MIN_REAL, MAX_REAL, 0, "C","C",QObject::tr("Comment"),"","","Full row arbitrary comment"};
+
+const Quantity UseDefaultValue2 =
+    {std::numeric_limits<unsigned int>::max() - 20, Rad::Boolean, DIGIT_DEF, MIN_REAL, MAX_REAL, 0, "ud","ud",QObject::tr("Use predefined default value(s)"),"","","Use default value defined in software."};
+
+
 }

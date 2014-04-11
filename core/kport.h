@@ -7,8 +7,8 @@
 class KPortList : public QList<KPort *>
 {
 public:
-    KData data(const Quantity& sym) const;
-    KData data(int idx, const Quantity& sym) const;
+    KData data(const Quantity& qty) const;
+    KData data(int idx, const Quantity& qty) const;
     KLocation firstValidLocation() const;
     bool isConnected(int idx = 0) const;
     bool isAllConnected() const;
@@ -28,16 +28,16 @@ public:
     };
     Q_DECLARE_FLAGS(DataDirection, Direction)
 
-    KPort(IModel * m, const Quantity * sym, DataDirection dir);
+    KPort(IModel * m, const Quantity * qty, DataDirection dir);
     virtual ~KPort();
 
     bool isConnected() const;
-    const Quantity * symbol() const;
+    const Quantity * quantity() const;
     DataDirection direction() const;
     const KPortList & connectedPorts() const;
     ConnectorList connectors() const;
     KDataArray data() const;            //deprecated (will be removed)
-    KData data(const Quantity& sym) const;
+    KData data(const Quantity& qty) const;
     KLocation firstValidLocation() const;
 
     void removeConnections();
@@ -53,7 +53,7 @@ public:
 
 private:
     IModel *            _model;
-    const Quantity *      _symbol;
+    const Quantity *      _quantity;
     KPort::DataDirection _direction;
     KPortList            _conPorts;
     ConnectorList       _conList;

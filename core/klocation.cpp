@@ -1,6 +1,7 @@
 #include <QSharedData>
 #include <QtCore/qmath.h>
 #include "klocation.h"
+#include "kcalculationinfo.h"
 
 class KLocationPrivate : public QSharedData
 {
@@ -164,6 +165,14 @@ void KLocation::setDistance(const qreal & d)
 
 qreal KLocation::distance() const
 {
+    return data->distance();
+}
+qreal KLocation::distance(const KCalculationInfo& ci) const
+{
+    Q_UNUSED(ci);
+
+    //TODO
+    //handle multiple locations
     return data->distance();
 }
 

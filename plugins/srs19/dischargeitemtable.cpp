@@ -1,9 +1,9 @@
 #include "dischargeitemtable.h"
 #include "dischargeitemdelegate.h"
-#include "symbol.h"
+#include "quantity.h"
 
 DischargeItemTable::DischargeItemTable(QWidget *parent) :
-    UiAutoRowTable(parent), _variable(&Rad::EmptySymbol)
+    UiAutoRowTable(parent), _variable(&Rad::EmptyQuantity)
 {
     setColumnCount(2);
     setRowCount(1);
