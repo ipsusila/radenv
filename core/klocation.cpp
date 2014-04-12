@@ -1,5 +1,6 @@
 #include <QSharedData>
 #include <QtCore/qmath.h>
+#include <QStringList>
 #include "klocation.h"
 #include "kcalculationinfo.h"
 
@@ -12,7 +13,7 @@ private:
     qreal _angle;
     QString _name;
     QString _description;
-    qreal _distance;
+    QList<qreal> _distances;
     QImage _marker;
 
 public:
@@ -22,7 +23,6 @@ public:
         _angle = 0;
         _name = QString();
         _description = QString();
-        _distance = 0;
     }
 
     inline qreal latitude() const { return _latitude; }
@@ -56,9 +56,24 @@ public:
         _description = d;
     }
 
-    inline qreal distance() const { return _distance; }
-    inline void setDistance(const qreal& d) {
-        _distance = d;
+    inline const QList<qreal> & distances() const {
+        return _distances;
+    }
+    inline qreal distance() const {
+        return _distances.isEmpty() ? 0 : _distances.first();
+    }
+    inline qreal distance(const KCalculationInfo & ci) const {
+        return _distances.isEmpty() ? 0 : _distances.at(ci.runId());
+    }
+    inline void addDistance(const qreal& d) {
+        _distances.append(d);
+    }
+    inline void setDistance(const QString& strDistance, const QString& sep) {
+        QStringList dList = strDistance.split(sep, QString::SkipEmptyParts);
+        for(int k = 0; k < dList.count(); k++) {
+            qreal d = dList.at(k).toDouble();
+            _distances.append(d);
+        }
     }
 
     inline QImage marker() const { return _marker; }
@@ -71,6 +86,7 @@ public:
     }
 };
 
+const char * KLocation::Delimiter = ";";    //default delimiter
 KLocation::KLocation(const QString& c) : data(new KLocationPrivate(c))
 {
 }
@@ -158,9 +174,44 @@ QString KLocation::description() const
     return data->description();
 }
 
-void KLocation::setDistance(const qreal & d)
+void KLocation::setDistance(const QString& strDistance, const QString& sep)
 {
-    data->setDistance(d);
+    data->setDistance(strDistance, sep);
+}
+
+void KLocation::addDistance(const qreal & d)
+{
+    data->addDistance(d);
+}
+
+QString KLocation::distances(const QString& sep) const
+{
+    const QList<qreal> & dList = data->distances();
+    QList<qreal>::const_iterator iter = dList.constBegin();
+    QList<qreal>::const_iterator end = dList.constEnd();
+
+    qreal d;
+    QString strList;
+    if (iter != end) {
+        d = *(iter++);
+        if ((d - (int)d) == 0)
+            strList = QString::number(d, 'f', 0);
+        else
+            strList = QString::number(d, 'f', 2);
+    }
+    while(iter != end) {
+        d = *(iter++);
+        if ((d-(int)d) == 0)
+            strList += sep + QString::number(d, 'f', 0);
+        else
+            strList += sep + QString::number(*iter, 'f', 2);
+    }
+    return strList;
+}
+
+QList<qreal> KLocation::distances() const
+{
+    return data->distances();
 }
 
 qreal KLocation::distance() const
@@ -169,11 +220,7 @@ qreal KLocation::distance() const
 }
 qreal KLocation::distance(const KCalculationInfo& ci) const
 {
-    Q_UNUSED(ci);
-
-    //TODO
-    //handle multiple locations
-    return data->distance();
+    return data->distance(ci);
 }
 
 void KLocation::setMarker(const QString& path)

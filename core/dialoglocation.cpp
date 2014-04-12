@@ -56,7 +56,7 @@ void DialogLocation::on_cmdNew_clicked()
     ui->inpName->clear();
     ui->inpDescription->clear();
     ui->inpMarker->clear();
-    ui->numDistance->setValue(0);
+    ui->edDistances->setText(QString());
     ui->numDegree->setValue(0);
     ui->numLatitude->setValue(0);
     ui->numLongitude->setValue(0);
@@ -66,7 +66,8 @@ void DialogLocation::on_cmdSave_clicked()
 {
     KLocation loc(ui->inpCode->text());
     loc.setName(ui->inpName->text());
-    loc.setDistance(ui->numDistance->value());
+    //loc.addDistance(ui->numDistance->value());
+    loc.setDistance(ui->edDistances->text(), KLocation::Delimiter);
     loc.setAngle(ui->numDegree->value());
     loc.setLatitude(ui->numLatitude->value());
     loc.setLongitude(ui->numLongitude->value());
@@ -131,7 +132,8 @@ void DialogLocation::onSelectedRowChanged(const QModelIndex & current, const QMo
         ui->inpCode->setText(loc.code());
         ui->inpName->setText(loc.name());
         ui->inpDescription->setText(loc.description());
-        ui->numDistance->setValue(loc.distance());
+        //ui->numDistance->setValue(loc.distance());
+        ui->edDistances->setText(loc.distances(KLocation::Delimiter));
         ui->numDegree->setValue(loc.angle());
         ui->numLatitude->setValue(loc.latitude());
         ui->numLongitude->setValue(loc.longitude());

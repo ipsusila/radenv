@@ -69,5 +69,5 @@ const KPortList & Transport::outputs() const
 }
 QString Transport::displayText() const
 {
-    return _dataList.displayText();
+    return "";
 }

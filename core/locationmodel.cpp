@@ -78,7 +78,7 @@ QVariant LocationModel::data(const QModelIndex &index, int role /*= Qt::DisplayR
     case 2:
         return QVariant(loc.description());
     case 3:
-        return QVariant(loc.distance());
+        return QVariant(loc.distances(KLocation::Delimiter));
     case 4:
         return QVariant(loc.angle());
     }

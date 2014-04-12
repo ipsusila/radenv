@@ -157,18 +157,32 @@ bool KStorage::initialize()
     //check tables
     QSqlDatabase db = QSqlDatabase::database();
     QStringList tables = db.tables();
-    if (!tables.isEmpty())
-        return true;
 
     //create tables from SQL
-    xTrace() << QObject::tr("[Storage]: Storage is empty");
+    xTrace() << QObject::tr("[Storage]: Initializing storage");
 
-    bool result = initStorageTable();
-    result = initNuclideTable() && result;
-    result = initLocationTable() && result;
-    result = initAssessmentTable() && result;
+    /*
+     *#define RAD_STORAGEID                 "_x_smea_storage_"
+        #define RAD_RADIONUCLIDE              "x_smea_radionuclide"
+        #define RAD_STORAGE                   "x_smea_storage"
+        #define RAD_LOCATION                  "x_smea_location"
+        #define RAD_ASSESSMENT                "x_smea_assessment"
+        #define RAD_NULL_FACTORY              "__null__"
+        */
 
-    optimize();
+
+    bool result = true;
+    if (!tables.contains(RAD_STORAGE))
+        result = initStorageTable() && result;
+    if (!tables.contains(RAD_RADIONUCLIDE))
+        result = initNuclideTable() && result;
+    if (!tables.contains(RAD_LOCATION))
+        result = initLocationTable() && result;
+    if (!tables.contains(RAD_ASSESSMENT))
+        result = initAssessmentTable() && result;
+
+    //if (tables.size() < 4)
+        optimize();
 
     return result;
 }
@@ -274,7 +288,7 @@ bool KStorage::initLocationTable()
     QString sql = QString("CREATE TABLE %1 (code VARCHAR(32) NOT NULL, "
                           "name VARCHAR(255) NOT NULL, description VARCHAR(255), "
                           "latitude DOUBLE, longitude DOUBLE, angle DOUBLE, "
-                          "distance DOUBLE, size INTEGER, marker BLOB, "
+                          "distance TEXT, size INTEGER, marker BLOB, "
                           "PRIMARY KEY(code))")
             .arg(RAD_LOCATION);
     if (!query.exec(sql)) {
@@ -329,7 +343,8 @@ bool KStorage::save(const KLocation& loc)
     query.bindValue(3, loc.latitude());
     query.bindValue(4, loc.longitude());
     query.bindValue(5, loc.angle());
-    query.bindValue(6, loc.distance());
+    query.bindValue(6, loc.distances(KLocation::Delimiter));
+    //query.bindValue(6, loc.distance());
 
     QImage marker = loc.marker();
     if (marker.isNull()) {
@@ -610,7 +625,8 @@ LocationList KStorage::loadLocations()
         loc.setLatitude(query.value(3).toDouble());
         loc.setLongitude(query.value(4).toDouble());
         loc.setAngle(query.value(5).toDouble());
-        loc.setDistance(query.value(6).toDouble());
+        loc.setDistance(query.value(6).toString(), KLocation::Delimiter);
+        //loc.addDistance(query.value(6).toDouble());
 
         QByteArray ba = query.value(8).toByteArray();
         if (!ba.isEmpty()) {

@@ -39,6 +39,8 @@ MainWindow::MainWindow(XOutputView * vw, QWidget *parent) :
     setWindowTitle(tr("SMEA Dose Assessments"));
     setUnifiedTitleAndToolBarOnMac(true);
 
+    qDebug() << "Number: " << QString::number(1.0, 'f', 0) << ";" << QString::number(1.2, 'f', 2);
+
 }
 
 MainWindow::~MainWindow()

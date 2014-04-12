@@ -11,6 +11,8 @@ class K_CORE_EXPORT KLocation
 private:
     QExplicitlySharedDataPointer<KLocationPrivate> data;
 public:
+    static const char * Delimiter;
+
     KLocation(const QString& c = QString());
     KLocation(const KLocation&);
     KLocation &operator=(const KLocation&);
@@ -43,19 +45,22 @@ public:
     QString detailDisplayText() const;
     bool isValid() const;
 
+    void setDistance(const QString& strDistance, const QString& sep);
+
     /**
      * @brief Set distance (in metre)
      * @param d - distance in metre
      */
-    void setDistance(const qreal & d);
+    void addDistance(const qreal & d);
 
     /**
      * @brief Get distance from discharge source
      * @return distance in metre (m)
      */
     qreal distance() const;
-
+    QList<qreal> distances() const;
     qreal distance(const KCalculationInfo& ci) const;
+    QString distances(const QString& sep) const;
 
     KLocation clone() const;
     qreal distanceBetween(const KLocation & loc) const;
