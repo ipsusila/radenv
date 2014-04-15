@@ -4,6 +4,7 @@
 #include <QDialog>
 #include <QDialogButtonBox>
 #include <QLayout>
+#include "dialoguserinput.h"
 #include "kport.h"
 #include "imodel.h"
 #include "klocationport.h"
@@ -227,38 +228,10 @@ bool IModel::promptUserInputs()
     //create default user input dialogs
     IUserInput * wUserInp = createUserInputWidget();
     if (wUserInp != 0) {
-        QDialog * dlg = new QDialog();
-        QDialogButtonBox * bbox = new QDialogButtonBox(dlg);
-        QVBoxLayout * vbox = new QVBoxLayout();
-
-        bbox->addButton(QDialogButtonBox::Ok);
-        bbox->addButton(QDialogButtonBox::Cancel);
-        bbox->setCenterButtons(true);
-        QObject::connect(bbox, SIGNAL(accepted()), dlg, SLOT(accept()));
-        QObject::connect(bbox, SIGNAL(rejected()), dlg, SLOT(reject()));
-        vbox->addWidget(wUserInp);
-        vbox->addWidget(bbox);
-        dlg->setLayout(vbox);
-        dlg->setWindowTitle(QString("Parameter(s) for %1 - %2")
-                            .arg(this->tagName())
-                            .arg(this->info().text()));
-
-        //set size
-        KSettingManager * setting = factory()->settingManager();
-        if (setting != 0) {
-            QRect rect = setting->geometry(this);
-            if (rect.isValid())
-                dlg->setGeometry(rect);
-        }
-
+        QDialog * dlg = new DialogUserInput(this, wUserInp);
         if (dlg->exec() == QDialog::Accepted) {
             wUserInp->acceptValues();
             accepted = true;
-        }
-
-        //save size
-        if (setting != 0) {
-            setting->saveGeometry(this, dlg->geometry());
         }
 
         delete dlg;

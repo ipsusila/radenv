@@ -17,8 +17,18 @@ public:
     KConnectorPrivate(KConnector * it) : connector(it), input(0), output(0), tempPoint(QPointF()) {
 
     }
+    inline bool canConnect(KPort * p) const {
+        if (p == 0 || isConnected())
+            return false;
+        else if (input != 0)
+            return input->canConnect(p);
+        else if (output != 0)
+            return output->canConnect(p);
+        return true;
+    }
+
     void setPort(KPort * p) {
-        if (p == 0)
+        if (p == 0 || !canConnect(p))
             return;
 
         //assign port

@@ -45,6 +45,10 @@ WidgetConstantValue::~WidgetConstantValue()
 {
     delete ui;
 }
+bool WidgetConstantValue::validate()
+{
+    return true;
+}
 
 void WidgetConstantValue::acceptValues()
 {

@@ -31,6 +31,11 @@ QSize WidgetWaterDischarge::sizeHint() const
 {
     return QSize(400, 300);
 }
+bool WidgetWaterDischarge::validate()
+{
+    return true;
+}
+
 void WidgetWaterDischarge::acceptValues()
 {
     Q_ASSERT(userParameter != 0);

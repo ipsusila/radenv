@@ -47,6 +47,11 @@ QSize WidgetAtmosphericDischarge::sizeHint() const
 {
     return QSize(400, 400);
 }
+bool WidgetAtmosphericDischarge::validate()
+{
+    return true;
+}
+
 void WidgetAtmosphericDischarge::acceptValues()
 {
     Q_ASSERT(userParameter != 0);

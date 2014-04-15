@@ -17,6 +17,7 @@ public:
     ~WidgetAtmosphericDischarge();
 
     virtual void acceptValues();
+    bool validate();
     QSize sizeHint() const;
     
 private:

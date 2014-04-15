@@ -43,12 +43,13 @@ SOURCES += \
     kmath.cpp \
     kmodelrunner.cpp \
     uiuserinput.cpp \
-    uiradionuclideitemdelegate.cpp \
     uiautorowtable.cpp \
-    uiradionuclideitemtable.cpp \
     ksettingmanager.cpp \
     radquantity.cpp \
-    kquantitycontrol.cpp
+    kquantitycontrol.cpp \
+    dialoguserinput.cpp \
+    uiarrayitemtable.cpp \
+    uiarrayitemdelegate.cpp
 
 HEADERS +=\
     kradionuclide.hxx \
@@ -87,12 +88,13 @@ HEADERS +=\
     radglobal.h \
     kmodelrunner.h \
     uiuserinput.h \
-    uiradionuclideitemdelegate.h \
     uiautorowtable.h \
-    uiradionuclideitemtable.h \
     ksettingmanager.h \
     radquantity.h \
-    kquantitycontrol.h
+    kquantitycontrol.h \
+    dialoguserinput.h \
+    uiarrayitemtable.h \
+    uiarrayitemdelegate.h
 
 symbian {
     MMP_RULES += EXPORTUNFROZEN

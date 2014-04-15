@@ -1,7 +1,8 @@
 #include <QtGui>
 #include "uiuserinput.h"
-#include "uiradionuclideitemtable.h"
+#include "uiarrayitemtable.h"
 #include "kquantitycontrol.h"
+#include "koutput.h"
 
 UiUserInput::UiUserInput(KDataGroupArray * ga, QWidget *parent) :
     IUserInput(parent), dataArray(ga)
@@ -11,6 +12,60 @@ UiUserInput::UiUserInput(KDataGroupArray * ga, QWidget *parent) :
 }
 UiUserInput::~UiUserInput()
 {
+}
+void UiUserInput::setEnabled(const Quantity * qty, bool en)
+{
+    QWidget * w = quantityMaps[qty];
+    if (w != 0)
+        w->setEnabled(en);
+}
+
+void UiUserInput::onQuantityChanged(const Quantity * qty, const QVariant & val)
+{
+    Q_UNUSED(qty);
+    Q_UNUSED(val);
+}
+
+void UiUserInput::quantityChanged(const Quantity * qty, const QVariant & val)
+{
+    valueMaps[qty] = val;
+    onQuantityChanged(qty, val);
+}
+
+void UiUserInput::on_textValue_changed(const QString & txt)
+{
+    QWidget * w = qobject_cast<QWidget *>(QObject::sender());
+    KData * d = controlMaps[w];
+    if (d != 0) {
+        quantityChanged(d->quantityPtr(), QVariant(txt));
+    }
+}
+
+void UiUserInput::on_intValue_changed(int val)
+{
+    QWidget * w = qobject_cast<QWidget *>(QObject::sender());
+    KData * d = controlMaps[w];
+    if (d != 0) {
+        quantityChanged(d->quantityPtr(), QVariant(val));
+    }
+}
+
+void UiUserInput::on_realValue_changed(double val)
+{
+    QWidget * w = qobject_cast<QWidget *>(QObject::sender());
+    KData * d = controlMaps[w];
+    if (d != 0) {
+        quantityChanged(d->quantityPtr(), QVariant(val));
+    }
+}
+
+void UiUserInput::on_boolValue_changed(int state)
+{
+    QWidget * w = qobject_cast<QWidget *>(QObject::sender());
+    KData * d = controlMaps[w];
+    if (d != 0) {
+        quantityChanged(d->quantityPtr(), QVariant(state));
+    }
 }
 
 void UiUserInput::on_quantityController_toggled(bool checked)
@@ -48,6 +103,136 @@ void UiUserInput::controlQuantityInput(const Quantity * quantity, bool isSet)
     }
 }
 
+void UiUserInput::createCaption(const KData * d, int row, int * width0,
+                                QGridLayout * grid, QWidget * p)
+{
+    QLabel * label;
+    const Quantity & qty = d->quantity();
+    if (d->contains(KData::Mandatory))
+        label = new QLabel(qty.displayText()+"**", p);
+    else if (d->contains(KData::ConditionalMandatory))
+        label = new QLabel(qty.displayText()+"*", p);
+    else
+        label = new QLabel(qty.displayText(), p);
+    grid->addWidget(label, row, 0);
+
+    label->adjustSize();
+    *width0 = qMax(*width0, label->width());
+}
+void UiUserInput::createLineEdit(KData * d, int row, QGridLayout * grid, QWidget * p)
+{
+    const Quantity & qty = d->quantity();
+    //create text input control
+    QLineEdit * ed = new QLineEdit(p);
+    ed->setToolTip(qty.description);
+    ed->setText(d->value().toString());
+    grid->addWidget(ed, row, 1);
+    connect(ed, SIGNAL(textChanged(QString)), this, SLOT(on_textValue_changed(QString)));
+
+    controlMaps[ed] = d;
+    quantityMaps[d->quantityPtr()] = ed;
+    valueMaps[d->quantityPtr()] = d->value();
+}
+void UiUserInput::createIntInput(KData * d, int row, QGridLayout * grid, QWidget * p)
+{
+    const Quantity & qty = d->quantity();
+    //create input control for integer value
+    QSpinBox * inpInt = new QSpinBox(p);
+    inpInt->setToolTip(qty.description);
+    inpInt->setMinimum(qty.minValue);
+    inpInt->setMaximum(qty.maxValue);
+    inpInt->setValue((int)d->numericValue());
+    grid->addWidget(inpInt, row, 1);
+    connect(inpInt, SIGNAL(valueChanged(int)), this, SLOT(on_intValue_changed(int)));
+
+    controlMaps[inpInt] = d;
+    quantityMaps[d->quantityPtr()] = inpInt;
+    valueMaps[d->quantityPtr()] = d->value();
+}
+
+void UiUserInput::createRealInput(KData * d, int row, QGridLayout * grid, QWidget * p)
+{
+    const Quantity & qty = d->quantity();
+    //create input control for numeric value
+    QDoubleSpinBox * inpReal = new QDoubleSpinBox(p);
+    inpReal->setToolTip(qty.description);
+    inpReal->setMinimum(qty.minValue);
+    inpReal->setMaximum(qty.maxValue);
+    inpReal->setDecimals(qty.decimal);
+    inpReal->setValue(d->numericValue());
+    grid->addWidget(inpReal, row, 1);
+    connect(inpReal, SIGNAL(valueChanged(double)), this, SLOT(on_realValue_changed(double)));
+
+    controlMaps[inpReal] = d;
+    quantityMaps[d->quantityPtr()] = inpReal;
+    valueMaps[d->quantityPtr()] = d->value();
+}
+void UiUserInput::createCheckBox(KData * d, int row, QGridLayout * grid, QWidget * p)
+{
+    const Quantity & qty = d->quantity();
+    //create input control for boolean value
+    QCheckBox * chkBox = new QCheckBox(qty.text, p);
+    chkBox->setToolTip(qty.description);
+    chkBox->setChecked(d->value().toBool());
+    grid->addWidget(chkBox, row, 0, 1, 2);
+    connect(chkBox, SIGNAL(stateChanged(int)), this, SLOT(on_boolValue_changed(int)));
+
+    controlMaps[chkBox] = d;
+    quantityMaps[d->quantityPtr()] = chkBox;
+    valueMaps[d->quantityPtr()] = d->value();
+}
+void UiUserInput::createComment(KData * d, int row, QGridLayout * grid, QWidget * p)
+{
+    QLabel * label = new QLabel(d->value().toString(), p);
+    label->setWordWrap(true);
+    if (d->quantity().type == Rad::LongComment)
+        grid->addWidget(label, row, 0, 1, 3);
+    else
+        grid->addWidget(label, row, 1, 1, 2);
+}
+void UiUserInput::createUnit(const KData * d, int row, int * width2,
+                             QGridLayout * grid, QWidget * p)
+{
+    //if quantity has unit, then create label for displaying unit
+    const Quantity & qty = d->quantity();
+    if (!qty.unit.isEmpty()) {
+        QLabel * unit = new QLabel(qty.unit, p);
+        unit->setWordWrap(false);
+        grid->addWidget(unit, row, 2);
+        unit->adjustSize();
+
+        //remember size
+        *width2 = qMax(*width2, unit->width());
+    }
+}
+bool UiUserInput::createTableInput(KData *d, int row, QGridLayout *grid, QWidget *p)
+{
+    if (d->contains(KData::Array)) {
+        UiArrayItemTable * table = new UiArrayItemTable(p);
+        table->setQuantity(d->quantityPtr(), d->contentTypes());
+        table->setData(*d);
+        grid->addWidget(table, row, 0, 1, 3);
+
+        //add to control and quantity maps
+        controlMaps[table] = d;
+        quantityMaps[d->quantityPtr()] = table;
+        return true;
+    }
+    return false;
+}
+
+QWidget * UiUserInput::createInputControl(const KData * d, int row, QGridLayout * grid, QWidget * p)
+{
+    Q_UNUSED(d);
+    Q_UNUSED(row);
+    Q_UNUSED(grid);
+    Q_UNUSED(p);
+
+    //how to associate quantity changed
+
+    return 0;
+}
+
 void UiUserInput::createControls(KDataGroupArray *ga)
 {
     if (ga == 0)
@@ -73,129 +258,50 @@ void UiUserInput::createControls(KDataGroupArray *ga)
 
             gridList.append(grid);
             for (int k = 0; k < sz; k++) {
+                //get data
                 KData * d = beg->pointerAt(k);
 
-                //if array, allocate table
-                if (d->contains(KData::Array)) {
-                    UiRadionuclideItemTable * table = new UiRadionuclideItemTable(gb);
-                    table->setQuantity(d->quantityPtr());
-                    table->setData(*d);
-                    grid->addWidget(table, k, 0, 1, 3);
-
-                    //add to control and quantity maps
-                    controlMaps[table] = d;
-                    quantityMaps[d->quantityPtr()] = table;
+                //call create widget (overridable)
+                QWidget * w = createInputControl(d, k, grid, gb);
+                if (w != 0) {
+                    controlMaps[w] = d;
+                    quantityMaps[d->quantityPtr()] = w;
+                    valueMaps[d->quantityPtr()] = d->value();
                     continue;
                 }
 
-                //create controls according to symbol
-                QLineEdit * ed;
-                QSpinBox * inpInt;
-                QCheckBox * chkBox;
-                QDoubleSpinBox * inpReal;
-                const Quantity & qty = d->quantity();
+                //if array, allocate table
+                if (createTableInput(d, k, grid, gb))
+                    continue;
 
-                //caption of the field
-                QLabel * label;
-                switch(qty.type) {
-                case Rad::NumText:
-                case Rad::Integer:
-                case Rad::Real:
-                case Rad::Text:
-                    label = new QLabel(qty.displayText(), gb);
-                    grid->addWidget(label, k, 0);
-                    label->adjustSize();
-
-                    width0 = qMax(width0, label->width());
-                    break;
-                default:
-                    break;
-                }
-
-                //add user input according to the type of symbol
-                switch(qty.type)
+                //add user input according to the type of quantity
+                switch(d->quantity().type)
                 {
                 case Rad::Text:
-                    //create text input control
-                    ed = new QLineEdit(gb);
-                    ed->setToolTip(qty.description);
-                    ed->setText(d->value().toString());
-                    grid->addWidget(ed, k, 1);
-
-                    controlMaps[ed] = d;
-                    quantityMaps[d->quantityPtr()] = ed;
-                    break;
                 case Rad::NumText:
-                    //create text input control for numeric
-                    ed = new QLineEdit(gb);
-                    ed->setToolTip(qty.description);
-                    ed->setText(QString::number(d->numericValue()));
-                    grid->addWidget(ed, k, 1);
-
-                    controlMaps[ed] = d;
-                    quantityMaps[d->quantityPtr()] = ed;
+                    createCaption(d, k, &width0, grid, gb);
+                    createLineEdit(d, k, grid, gb);
                     break;
                 case Rad::Integer:
-                    //create input control for integer value
-                    inpInt = new QSpinBox(gb);
-                    inpInt->setToolTip(qty.description);
-                    inpInt->setMinimum(qty.minValue);
-                    inpInt->setMaximum(qty.maxValue);
-                    inpInt->setValue((int)d->numericValue());
-                    grid->addWidget(inpInt, k, 1);
-
-                    controlMaps[inpInt] = d;
-                    quantityMaps[d->quantityPtr()] = inpInt;
+                    createCaption(d, k, &width0, grid, gb);
+                    createIntInput(d, k, grid, gb);
                     break;
                 case Rad::Boolean:
-                    //create input control for boolean value
-                    chkBox = new QCheckBox(qty.text, gb);
-                    chkBox->setToolTip(qty.description);
-                    chkBox->setChecked(d->value().toBool());
-                    grid->addWidget(chkBox, k, 0, 1, 2);
-
-                    controlMaps[chkBox] = d;
-                    quantityMaps[d->quantityPtr()] = chkBox;
+                    createCheckBox(d, k, grid, gb);
                     break;
                 case Rad::Real:
-                    //create input control for numeric value
-                    inpReal = new QDoubleSpinBox(gb);
-                    inpReal->setToolTip(qty.description);
-                    inpReal->setMinimum(qty.minValue);
-                    inpReal->setMaximum(qty.maxValue);
-                    inpReal->setDecimals(qty.decimal);
-                    inpReal->setValue(d->numericValue());
-                    grid->addWidget(inpReal, k, 1);
-
-                    controlMaps[inpReal] = d;
-                    quantityMaps[d->quantityPtr()] = inpReal;
+                    createCaption(d, k, &width0, grid, gb);
+                    createRealInput(d, k, grid, gb);
                     break;
                 case Rad::Comment:
                 case Rad::LongComment:
-                    label = new QLabel(d->value().toString(), gb);
-                    label->setWordWrap(true);
-                    if (qty.type == Rad::LongComment)
-                        grid->addWidget(label, k, 0, 1, 3);
-                    else
-                        grid->addWidget(label, k, 1, 1, 2);
+                    createComment(d, k, grid, gb);
                     break;
                 default:
                     break;
                 }
-
-                //if quantity has unit, then create label for displaying unit
-                if (!qty.unit.isEmpty()) {
-                    QLabel * unit = new QLabel(qty.unit, gb);
-                    unit->setWordWrap(false);
-                    grid->addWidget(unit, k, 2);
-                    unit->adjustSize();
-
-                    //remember size
-                    width2 = qMax(width2, unit->width());
-                }
-
-                //TODO
-                //add indicator for optional, conditional mandatory and mandatory fields
+                //create unit
+                createUnit(d, k, &width2, grid, gb);
             }
 
             gb->setLayout(grid);
@@ -204,7 +310,7 @@ void UiUserInput::createControls(KDataGroupArray *ga)
         beg++;
     }
 
-    //resize unit column
+    //resize caption and unit column
     for(int k = 0; k < gridList.size(); k++) {
         QGridLayout * grid = gridList.at(k);
         grid->setColumnMinimumWidth(0, width0);
@@ -232,6 +338,80 @@ void UiUserInput::associateQuantityControllers(KDataGroupArray *ga)
         }
     }
 }
+bool UiUserInput::assignData(KData * d, QWidget * wInput) const
+{
+    Q_UNUSED(d);
+    Q_UNUSED(wInput);
+    return false;
+}
+
+KData UiUserInput::data(const Quantity * qty) const
+{
+    QWidget * w = quantityMaps[qty];
+    if (w != 0) {
+        KData * d = controlMaps[w];
+        if (d != 0) {
+            KData dout = *d;
+            if (assignData(&dout, w)) {
+                return dout;
+            }
+            else if (d->contains(KData::Array)) {
+                UiArrayItemTable * table =
+                        qobject_cast<UiArrayItemTable *>(w);
+                return table->data();
+            }
+            else {
+                return KData(qty, d->contentTypes(), valueMaps[qty]);
+            }
+        }
+    }
+    return KData();
+}
+QVariant UiUserInput::value(const Quantity * qty) const
+{
+    QWidget * w = quantityMaps[qty];
+    if (w != 0) {
+        KData * d = controlMaps[w];
+        if (d != 0) {
+            KData dout = *d;
+            if (assignData(&dout, w)) {
+                return dout.value();
+            }
+            else if (d->contains(KData::Array)) {
+                return QVariant();
+            }
+            else {
+                return valueMaps[qty];
+            }
+        }
+    }
+    return QVariant();
+}
+bool UiUserInput::validate()
+{
+    bool result = true;
+
+    //add validation for mandatory, min-max values
+    QMap<QWidget *, KData *>::iterator beg = controlMaps.begin();
+    QMap<QWidget *, KData *>::iterator end = controlMaps.end();
+    while (beg != end) {
+        KData * d = beg.value();
+        QWidget * wInput = beg.key();
+        beg++;
+
+        result = validate(d, wInput) && result;
+    }
+
+    return result;
+}
+bool UiUserInput::validate(KData * d, QWidget * wInput)
+{
+    Q_UNUSED(d);
+    Q_UNUSED(wInput);
+
+    //TODO
+    return true;
+}
 
 void UiUserInput::acceptValues()
 {
@@ -246,6 +426,10 @@ void UiUserInput::acceptValues()
 
         QWidget * wInput = beg.key();
         beg++;
+
+        //call overrideable data setter
+        if (assignData(d, wInput))
+            continue;
 
         QLineEdit * ed = qobject_cast<QLineEdit *>(wInput);
         if (ed != 0) {
@@ -274,7 +458,7 @@ void UiUserInput::acceptValues()
             continue;
         }
 
-        UiRadionuclideItemTable * table = qobject_cast<UiRadionuclideItemTable *>(wInput);
+        UiArrayItemTable * table = qobject_cast<UiArrayItemTable *>(wInput);
         if (table != 0) {
             KData td = table->data();
             if (td.isValid())

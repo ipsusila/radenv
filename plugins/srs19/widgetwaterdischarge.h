@@ -17,6 +17,7 @@ public:
     ~WidgetWaterDischarge();
 
     virtual void acceptValues();
+    bool validate();
     QSize sizeHint() const;
     
 private:

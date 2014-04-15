@@ -15,6 +15,8 @@ class WidgetConstantValue : public IUserInput
 public:
     explicit WidgetConstantValue(KDataArray * up, QWidget *parent = 0);
     ~WidgetConstantValue();
+
+    bool validate();
     void acceptValues();
     
 private slots:

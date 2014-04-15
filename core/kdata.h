@@ -24,10 +24,18 @@ public:
         Source = 0x20,
         Radionuclide = 0x40 | Numeric,
         Receptor = 0x80 | Numeric,
+        Element = 0x100 | Numeric,
+
         RadionuclideArray = Array | Radionuclide,
         RadionuclideSource = Radionuclide | Source,
         RadionuclideSourceArray = RadionuclideSource | Array,
+
         ReceptorArray = Receptor | Array,
+        ElementArray = Array | Element,
+
+        Mandatory = 0x200,
+        ConditionalMandatory = 0x400,
+
         Any = 0xFFFFFFFF
     };
     Q_DECLARE_FLAGS(ContentTypes, ContentType)

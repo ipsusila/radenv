@@ -13,7 +13,10 @@ Discharge::Discharge(IModelFactory * fact, const KModelInfo& inf)
 
 KData Discharge::modelData(const Quantity &qty) const
 {
-    return _dataList.find(qty);
+    KData d = _dataList.find(qty);
+    if (d.isValid())
+        return d;
+    return _userInputs.find(qty);
 }
 
 KDataGroupArray * Discharge::userInputs()

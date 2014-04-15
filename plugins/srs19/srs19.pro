@@ -43,7 +43,8 @@ SOURCES += \
     sludgetransport.cpp \
     grounddeposition.cpp \
     sewagedischarge.cpp \
-    aquaticfoodransport.cpp
+    aquaticfoodransport.cpp \
+    doseestimation.cpp
 
 HEADERS += $$PWD/../smeacore/imodelfactory.h\
     srs19.h\
@@ -77,7 +78,8 @@ HEADERS += $$PWD/../smeacore/imodelfactory.h\
     sludgetransport.h \
     grounddeposition.h \
     sewagedischarge.h \
-    aquaticfoodtransport.h
+    aquaticfoodtransport.h \
+    doseestimation.h
 
 
 symbian {

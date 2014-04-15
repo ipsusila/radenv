@@ -476,6 +476,7 @@ void KModelScene::connectItem(QGraphicsItem * selItem, const QPointF& scPos)
             if (port != 0) {
                 //assign port
                 //make connection if needed
+
                 con->setPort(port);
                 if (con->isConnected()) {
                     data->clearTempConnector();

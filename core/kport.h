@@ -38,6 +38,7 @@ public:
     ConnectorList connectors() const;
     KDataArray data() const;            //deprecated (will be removed)
     KData data(const Quantity& qty) const;
+    KData data(int idx) const;
     KLocation firstValidLocation() const;
 
     void removeConnections();

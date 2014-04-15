@@ -24,18 +24,18 @@ bool AtmosphericTransport::allocateIoPorts()
 void AtmosphericTransport::defineParameters()
 {
     DataGroup dg1(QObject::tr("Wind parameters"));
-    dg1 << KData(&Srs19::FractionOfWind, 0.25)
-        << KData(&Srs19::GeometricMeanOfWindSpeed, 2);
+    dg1 << KData(&Srs19::FractionOfWind, KData::Numeric | KData::Mandatory, 0.25)
+        << KData(&Srs19::GeometricMeanOfWindSpeed, KData::Numeric | KData::Mandatory, 2);
     _userInputs << dg1;
 
     DataGroup dg2(QObject::tr("Ground deposition"));
-    dg2 << KData(&Srs19::DryDepositionCoeff, 500)
-        << KData(&Srs19::WetDepositionCoeff, 500);
+    dg2 << KData(&Srs19::DryDepositionCoeff, KData::Numeric | KData::Mandatory, 500)
+        << KData(&Srs19::WetDepositionCoeff, KData::Numeric | KData::Mandatory, 500);
     _userInputs << dg2;
 
     DataGroup dg3(QObject::tr("Building parameter"));
-    dg3 << KData(&Srs19::BuildingHeight, 0)
-        << KData(&Srs19::CrossSectionalArea, 0);
+    dg3 << KData(&Srs19::BuildingHeight, KData::Numeric | KData::ConditionalMandatory, 0)
+        << KData(&Srs19::CrossSectionalArea, KData::Numeric | KData::ConditionalMandatory, 0);
     _userInputs << dg3;
 
     DataGroup dg4(QObject::tr("Cavity zone"));

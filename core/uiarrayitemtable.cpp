@@ -1,35 +1,34 @@
 #include <QHeaderView>
-#include "uiradionuclideitemtable.h"
-#include "uiradionuclideitemdelegate.h"
+#include "uiarrayitemtable.h"
+#include "uiarrayitemdelegate.h"
 
-UiRadionuclideItemTable::UiRadionuclideItemTable(QWidget * parent)
-    : UiAutoRowTable(parent), _firstColLabel(tr("Radionuclides")),
-      _quantity(&Rad::EmptyQuantity), _types(KData::Undefined)
+UiArrayItemTable::UiArrayItemTable(QWidget * parent)
+    : UiAutoRowTable(parent), _firstColLabel(tr("Radionuclides"))
 {
     setColumnCount(2);
     setRowCount(1);
     setColumnWidth(0, 120);
 
-    UiRadionuclideItemDelegate * itemDelegate = new UiRadionuclideItemDelegate(this);
+    UiArrayItemDelegate * itemDelegate = new UiArrayItemDelegate(this);
     this->setItemDelegate(itemDelegate);
     this->setToolTip(tr("Double click cell to input radionuclide and associated value"));
 }
-UiRadionuclideItemTable::~UiRadionuclideItemTable()
+UiArrayItemTable::~UiArrayItemTable()
 {
     //delete
 }
 
-QString UiRadionuclideItemTable::firstColumnLabel() const
+QString UiArrayItemTable::firstColumnLabel() const
 {
     return _firstColLabel.isEmpty() ? tr("Radionuclides") : _firstColLabel;
 }
 
-void UiRadionuclideItemTable::setFirstColumnLabel(const QString& label)
+void UiArrayItemTable::setFirstColumnLabel(const QString& label)
 {
     _firstColLabel = label;
 }
 
-KData UiRadionuclideItemTable::data() const
+KData UiArrayItemTable::data() const
 {
     //convert to data
     if (rowCount() >= 1) {
@@ -38,6 +37,8 @@ KData UiRadionuclideItemTable::data() const
             return KData();
 
         DataItemArray items;
+        const Quantity * qty = quantity();
+        KData::ContentTypes types = contentTypes();
         for (int k = 0; k < rowCount(); k++) {
             QTableWidgetItem * iNuc = item(k, 0);
             QTableWidgetItem * iVal = item(k, 1);
@@ -45,18 +46,18 @@ KData UiRadionuclideItemTable::data() const
                 continue;
 
             QString nuc = iNuc->text();
-            if (_quantity->type == Rad::Boolean) {
-                bool v = UiRadionuclideItemDelegate::stringToBoolean(_quantity, iVal->text());
-                KDataItem d(nuc, v, _types);
+            if (qty->type == Rad::Boolean) {
+                bool v = UiArrayItemDelegate::stringToBoolean(qty, iVal->text());
+                KDataItem d(nuc, v, types);
                 items.append(d);
             }
-            else if (_quantity->isNumeric()) {
+            else if (qty->isNumeric()) {
                 qreal rate = iVal->text().toDouble();
-                KDataItem d(nuc, rate, _types);
+                KDataItem d(nuc, rate, types);
                 items.append(d);
             }
             else {
-                KDataItem d(nuc, iVal->text(), _types);
+                KDataItem d(nuc, iVal->text(), types);
                 items.append(d);
             }
         }
@@ -65,16 +66,13 @@ KData UiRadionuclideItemTable::data() const
             return KData();
         }
         else {
-            return KData(_quantity, items);
+            return KData(qty, items);
         }
     }
     return KData();
 }
-void UiRadionuclideItemTable::setData(const KData& d)
+void UiArrayItemTable::setData(const KData& d)
 {
-    //remember types
-    _types |= d.contentTypes();
-
     //set row count
     this->setRowCount(d.count()+1);
 
@@ -88,29 +86,41 @@ void UiRadionuclideItemTable::setData(const KData& d)
         setItem(k, 1, cell);
     }
 }
-void UiRadionuclideItemTable::setData(const KDataArray& list)
+void UiArrayItemTable::setData(const KDataArray& list)
 {
-    const KData & qi = list.find(_quantity->symbol);
+    const KData & qi = list.find(quantity()->symbol);
     setData(qi);
 }
-void UiRadionuclideItemTable::setData(const KDataGroupArray& list)
+void UiArrayItemTable::setData(const KDataGroupArray& list)
 {
-    const KData & qi = list.find(*_quantity);
+    const KData & qi = list.find(*quantity());
     setData(qi);
 }
 
-const Quantity * UiRadionuclideItemTable::quantity() const
+const Quantity * UiArrayItemTable::quantity() const
 {
-    return _quantity;
+    UiArrayItemDelegate * delegate =
+            qobject_cast<UiArrayItemDelegate *>(this->itemDelegate());
+    if (delegate != 0)
+        return delegate->quantity();
+    return &Rad::EmptyQuantity;
 }
-void UiRadionuclideItemTable::setQuantity(const Quantity * s)
+KData::ContentTypes UiArrayItemTable::contentTypes() const
 {
-    if (_quantity != s) {
-        _quantity = s;
-        UiRadionuclideItemDelegate * delegate =
-                qobject_cast<UiRadionuclideItemDelegate *>(this->itemDelegate());
+    UiArrayItemDelegate * delegate =
+            qobject_cast<UiArrayItemDelegate *>(this->itemDelegate());
+    if (delegate != 0)
+        return delegate->contentTypes();
+    return KData::Undefined;
+}
+void UiArrayItemTable::setQuantity(const Quantity * s, KData::ContentTypes types)
+{
+    const Quantity * qty = quantity();
+    if (qty != s) {
+        UiArrayItemDelegate * delegate =
+                qobject_cast<UiArrayItemDelegate *>(this->itemDelegate());
         if (delegate != 0)
-            delegate->setQuantity(s);
+            delegate->setQuantity(s, types);
 
         //modify headers
         QStringList headers;

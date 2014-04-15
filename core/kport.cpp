@@ -108,6 +108,7 @@ KLocation KPort::firstValidLocation() const
     }
     return loc;
 }
+
 KDataArray KPort::data() const
 {
     KDataArray da;
@@ -126,6 +127,7 @@ KDataArray KPort::data() const
     }
     return da;
 }
+
 KData KPort::data(const Quantity &qty) const
 {
     //for output port
@@ -148,6 +150,27 @@ KData KPort::data(const Quantity &qty) const
                 if (d.isValid())
                     return d;
             }
+        }
+    }
+
+    //if not any valid data found
+    //return invalid data
+    return KData();
+}
+KData KPort::data(int idx) const
+{
+    if (xHas(direction(), KPort::Output))
+    {
+        IModel * m = model();
+        if (m != 0)
+            return m->data(*quantity());
+    }
+    else if (xHas(direction(), KPort::Input)) {
+        if (idx >= 0 && idx < _conPorts.size()) {
+            KPort * p = _conPorts.at(idx);
+            IModel * m = p->model();
+            if (m != 0)
+                return m->data(*(p->quantity()));
         }
     }
 
@@ -211,8 +234,11 @@ bool KPort::canConnect(KPort * port) const
 
     //if direction is OK, then check type
     //this: input -> other: output, this: output -> other: input
-    if ((tInp && oOut) || (tOut || oInp)) {
-        return (port->quantity() == this->quantity()) != 0;
+    if ((tInp && oOut) || (tOut && oInp)) {
+        //return (port->quantity() == this->quantity()) != 0;
+        //TODO
+        //validate quantity
+        return true;
     }
     else {
         return false;
@@ -239,10 +265,12 @@ void KPort::paint(QPainter * painter, const QStyleOptionGraphicsItem * option, Q
     f.setPointSize(10);
     painter->setFont(f);
     if (xHas(this->direction(), KPort::Input)) {
-        painter->drawText(rect.right()+2, rect.top(), w, rect.height(), Qt::AlignLeft | Qt::AlignVCenter, _quantity->symbol);
+        painter->drawText(rect.right()+2, rect.top(), w, rect.height(),
+                          Qt::AlignLeft | Qt::AlignVCenter, _quantity->symbol);
     }
     else {
-        painter->drawText(rect.x() - w, rect.top(), w-2, rect.height(), Qt::AlignRight | Qt::AlignVCenter, _quantity->symbol);
+        painter->drawText(rect.x() - w, rect.top(), w-2, rect.height(),
+                          Qt::AlignRight | Qt::AlignVCenter, _quantity->symbol);
     }
 
     painter->restore();

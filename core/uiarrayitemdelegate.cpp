@@ -2,42 +2,64 @@
 #include <QComboBox>
 #include <QCheckBox>
 #include <QLineEdit>
-#include "uiradionuclideitemdelegate.h"
+#include "uiarrayitemdelegate.h"
 #include "kstorage.h"
 #include "kradionuclide.h"
+#include "kelement.h"
 
-UiRadionuclideItemDelegate::UiRadionuclideItemDelegate(QObject *parent) :
-    QStyledItemDelegate(parent), _quantity(&Rad::EmptyQuantity)
+UiArrayItemDelegate::UiArrayItemDelegate(QObject *parent) :
+    QStyledItemDelegate(parent), _quantity(&Rad::EmptyQuantity), _types(KData::Undefined)
 {
 }
-UiRadionuclideItemDelegate::~UiRadionuclideItemDelegate()
+UiArrayItemDelegate::~UiArrayItemDelegate()
 {
 }
 
-void UiRadionuclideItemDelegate::setQuantity(const Quantity * qty)
+void UiArrayItemDelegate::setQuantity(const Quantity * qty, KData::ContentTypes types)
 {
     _quantity = qty;
+    _types = types;
 }
-const Quantity * UiRadionuclideItemDelegate::quantity() const
+const Quantity * UiArrayItemDelegate::quantity() const
 {
     return _quantity;
 }
+KData::ContentTypes UiArrayItemDelegate::contentTypes() const
+{
+    return _types;
+}
 
-QWidget* UiRadionuclideItemDelegate::createEditor( QWidget *parent,
+QWidget* UiArrayItemDelegate::createEditor( QWidget *parent,
                                               const QStyleOptionViewItem &option, const QModelIndex &index ) const
 {
-    // ComboBox at item 1, QDoubleSpinBox at item 2
+    // ComboBox at item 1, QDoubleSpinBox/QLineEdit/QCheckBox at item 2
     if(index.column() == 0) {
-        //create combobox
-        QComboBox * cb = new QComboBox(parent);
-        cb->addItem("");
-
-        //add radionuclide
-        const RadionuclideList * items = KStorage::storage()->radionuclides();
-        foreach(KRadionuclide nuc, *items) {
-            cb->addItem(nuc.nuclide());
+        if (xHas(_types, KData::Radionuclide)) {
+            //create combobox
+            QComboBox * cb = new QComboBox(parent);
+            cb->addItem("");
+            //add radionuclide
+            const RadionuclideList * items = KStorage::storage()->radionuclides();
+            foreach(KRadionuclide nuc, *items) {
+                cb->addItem(nuc.nuclide());
+            }
+            return cb;
         }
-        return cb;
+        else if (xHas(_types, KData::Element)) {
+            //create combobox
+            QComboBox * cb = new QComboBox(parent);
+            cb->addItem("");
+            KElement ** e = KElement::elements();
+            while (*e != 0) {
+                cb->addItem((*e)->name());
+                e++;
+            }
+            return cb;
+        }
+        else {
+            QLineEdit * ed = new QLineEdit(parent);
+            return ed;
+        }
     }
     else if (index.column() == 1) {
         QWidget * w = 0;
@@ -70,7 +92,7 @@ QWidget* UiRadionuclideItemDelegate::createEditor( QWidget *parent,
 }
 
 
-void UiRadionuclideItemDelegate::setEditorData ( QWidget *editor, const QModelIndex &index ) const
+void UiArrayItemDelegate::setEditorData (QWidget *editor, const QModelIndex &index) const
 {
     QComboBox *cb = qobject_cast<QComboBox *>(editor);
     if(cb) {
@@ -122,7 +144,7 @@ void UiRadionuclideItemDelegate::setEditorData ( QWidget *editor, const QModelIn
 }
 
 
-void UiRadionuclideItemDelegate::setModelData ( QWidget *editor, QAbstractItemModel *model, const QModelIndex &index ) const
+void UiArrayItemDelegate::setModelData ( QWidget *editor, QAbstractItemModel *model, const QModelIndex &index ) const
 {
     QComboBox *cb = qobject_cast<QComboBox *>(editor);
     if(cb) {
@@ -168,7 +190,7 @@ void UiRadionuclideItemDelegate::setModelData ( QWidget *editor, QAbstractItemMo
     QStyledItemDelegate::setModelData(editor, model, index);
 }
 
-bool UiRadionuclideItemDelegate::stringToBoolean(const Quantity * qty, const QString & txt)
+bool UiArrayItemDelegate::stringToBoolean(const Quantity * qty, const QString & txt)
 {
     if (txt.endsWith("Yes"))
         return true;
