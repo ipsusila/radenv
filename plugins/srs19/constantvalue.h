@@ -12,7 +12,6 @@ public:
     KDataArray result() const;
     bool calculate(const KCalculationInfo& ci);
     void refresh();
-    bool isSource() const;
     bool needLocation() const;
     QRectF modelRect() const;
 

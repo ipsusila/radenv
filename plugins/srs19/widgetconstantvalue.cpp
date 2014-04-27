@@ -45,6 +45,10 @@ WidgetConstantValue::~WidgetConstantValue()
 {
     delete ui;
 }
+bool WidgetConstantValue::isEmpty() const
+{
+    return false;
+}
 bool WidgetConstantValue::validate()
 {
     return true;

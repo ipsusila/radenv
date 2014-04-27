@@ -28,11 +28,6 @@ void ConstantValue::refresh()
     //todo
 }
 
-bool ConstantValue::isSource() const
-{
-    return true;
-}
-
 bool ConstantValue::needLocation() const
 {
     return false;

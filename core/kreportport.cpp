@@ -9,6 +9,7 @@ static KReport __defaultReport;
 
 KReportPort::KReportPort(IModel *parent) : QGraphicsItem(parent), _report(0)
 {
+    setVisible(false);
     setFlags(QGraphicsItem::ItemIsSelectable);
     setReport(&__defaultReport);
 }
@@ -21,7 +22,7 @@ int KReportPort::type() const
 }
 QRectF KReportPort::boundingRect () const
 {
-    return QRectF(-12, -10, 24, 20);
+    return QRectF(-10, -8, 20, 16);
 }
 void KReportPort::paint(QPainter * painter, const QStyleOptionGraphicsItem * option, QWidget * widget)
 {

@@ -5,6 +5,7 @@
 #include <QIODevice>
 #include <QIcon>
 #include <QGraphicsItem>
+#include <QSharedDataPointer>
 #include "kport.h"
 #include "kmodelinfo.h"
 #include "klocationport.h"
@@ -12,39 +13,14 @@
 #include "iuserinput.h"
 #include "kcalculationinfo.h"
 
+class IModelPrivate;
+
 /**
  * @brief Base class for generic models
  */
 class K_CORE_EXPORT IModel : public QGraphicsItem
 {
-private:
-    int _tagId;
-    KLocationPort * _locPort;
-    KReportPort * _repPort;
-    KModelInfo _info;
-    int _sourceDistance;
-    IModel * _visitor;
-    IModelFactory * _factory;
-
-    IModel(const IModel& model);
-protected:
-    virtual void mouseDoubleClickEvent (QGraphicsSceneMouseEvent * event);
-    virtual QVariant itemChange(GraphicsItemChange change, const QVariant &value);
-    virtual IUserInput * createUserInputWidget(QWidget * parent = 0);
-
-    virtual bool needLocation() const;
-    virtual bool needReport() const;
-    virtual void defineParameters();
-    virtual bool allocateIoPorts();
-    virtual bool allocateLocationPorts();
-    virtual bool allocateReportPorts();
-    virtual void arrangePorts();
-    virtual bool promptUserInputs();
-    virtual void userInputsFinished(bool accepted);
-    void setInfo(const KModelInfo& i);
-    void setLocationPort(KLocationPort * port);
-
-    IModel(IModelFactory * fact, const KModelInfo& inf);
+    friend class IModelPrivate;
 public:
     enum { Type = UserType + TYPE_MODEL};
     static SPadding Padding;    ///< Padding between bounding rect and this item
@@ -59,13 +35,16 @@ public:
     virtual bool calculate(const KCalculationInfo& ci) = 0;
     //virtual QuantityList outputQuantities() = 0;
 
+    virtual void connectionModified(KPort * port, KConnector * con, bool connected);
     virtual void generateReport();
     virtual void refresh();
     virtual const KPortList & inputs() const;
     virtual const KPortList & outputs() const;
     virtual QString displayText() const;
     virtual bool isSource() const;
+    virtual bool isSink() const;
     virtual IModel * copyTo(KModelScene * mscene) const;
+    virtual void copyDataTo(IModel * model) const;
 
     int type() const;
     void askUserParameters();
@@ -82,6 +61,8 @@ public:
     KLocation location() const;
     void removeConnections();
     DataArrayList inputResults() const;
+    ModelList connectedOutputModels() const;
+    ConnectorList outputConnectors() const;
 
     //visit
     int sourceDistance() const;
@@ -92,6 +73,38 @@ public:
     virtual QRectF modelRect() const;
     virtual QRectF boundingRect () const;
     virtual void paint(QPainter * painter, const QStyleOptionGraphicsItem * option, QWidget * widget = 0);
+
+protected:
+    virtual void mouseDoubleClickEvent (QGraphicsSceneMouseEvent * event);
+    virtual void hoverEnterEvent(QGraphicsSceneHoverEvent *event);
+    virtual void hoverLeaveEvent(QGraphicsSceneHoverEvent *event);
+    virtual QVariant itemChange(GraphicsItemChange change, const QVariant &value);
+    virtual IUserInput * createUserInputWidget(QWidget * parent = 0);
+
+    virtual QImage * image() const;
+    virtual void tagIdChange(int oldId, int newId);
+    virtual void tagIdChanged(int oldId, int newId);
+    virtual bool needLocation() const;
+    virtual bool needReport() const;
+    virtual void defineParameters();
+    virtual bool allocateIoPorts();
+    virtual bool allocateLocationPorts();
+    virtual bool allocateReportPorts();
+    virtual void arrangePorts();
+    virtual bool promptUserInputs();
+    virtual void userInputsFinished(bool accepted);
+    void setInfo(const KModelInfo& i);
+    void setLocationPort(KLocationPort * port);
+    void setLocation(const KLocation & loc);
+    void setReport(KReport * rep);
+    void notifyConnectionsChanged(bool connected);
+    void setPortsVisible(bool v);
+
+    explicit IModel(IModelFactory * fact, const KModelInfo& inf);
+
+private:
+    Q_DISABLE_COPY(IModel)
+    QSharedDataPointer<IModelPrivate> dptr;
 };
 
 

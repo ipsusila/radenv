@@ -23,7 +23,7 @@ int KLocationPort::type() const
 }
 QRectF KLocationPort::boundingRect () const
 {
-    return QRectF(-10, -10, 20, 20);
+    return QRectF(-9, -9, 18, 18);
 }
 void KLocationPort::paint(QPainter * painter, const QStyleOptionGraphicsItem * option, QWidget * widget)
 {

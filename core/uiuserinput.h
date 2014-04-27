@@ -13,6 +13,7 @@ public:
     virtual ~UiUserInput();
     virtual void acceptValues();
     virtual bool validate();
+    virtual bool isEmpty() const;
 
 protected slots:
     void on_quantityController_toggled(bool checked);

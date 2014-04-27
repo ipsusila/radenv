@@ -25,7 +25,7 @@ public:
     IModelFactory * factory(int idx) const;
     FactoryList factories() const;
     IModel * createModel(IModelFactory * factory, const KModelInfo& info);
-    void copyTo(KModelScene * mscene) const;
+    int copyTo(KModelScene * mscene, bool all) const;
     void clearModels();
     void refresh();
     void verify();
@@ -46,9 +46,10 @@ public:
     void generateReport();
     EditMode editMode() const;
     void setEditMode(EditMode mode);
-    void removeModel(IModel * m);
+    void removeModel(IModel * model, bool redraw);
     void removeConnector(KConnector * con);
     void reannotateModels();
+    ModelList models() const;
 
     void connectItem(QGraphicsItem * selItem, const QPointF& scPos);
     void cancelConnection();

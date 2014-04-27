@@ -40,6 +40,8 @@ public:
     KData data(const Quantity& qty) const;
     KData data(int idx) const;
     KLocation firstValidLocation() const;
+    void setIndex(int idx);
+    int index() const;
 
     void removeConnections();
     void connectTo(KPort * dest, KConnector * con);
@@ -53,11 +55,12 @@ public:
     void rearrangeConnectors(const QPointF& oldPos, const QPointF& newPos);
 
 private:
-    IModel *            _model;
-    const Quantity *      _quantity;
-    KPort::DataDirection _direction;
-    KPortList            _conPorts;
-    ConnectorList       _conList;
+    IModel *                _model;
+    const Quantity *        _quantity;
+    KPort::DataDirection    _direction;
+    int                     _index;
+    KPortList               _conPorts;
+    ConnectorList           _conList;
 };
 
 

@@ -23,10 +23,12 @@ public:
     KPort * inputPort() const;
     KPort * outputPort() const;
     KPort * oppositePort(KPort * port) const;
+    void movePos(KPort * p, const QPointF & oldPos, const QPointF & newPos);
 
     bool isConnected() const;
     void connect();
     void disconnect();
+    void copyTo(KConnector * con, KPort * out, KPort * inp) const;
 
     int type() const;
     virtual QRectF boundingRect () const;

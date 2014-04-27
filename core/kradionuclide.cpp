@@ -62,8 +62,9 @@ bool KRadionuclide::isVeryShortLived() const
 }
 bool KRadionuclide::isNobleGas() const
 {
-    //TODO
-    return false;
+    const KElement & e = this->element();
+    return (e == KElement::He || e == KElement::Ne || e == KElement::Ar ||
+            e == KElement::Kr || e == KElement::Xe || e == KElement::Rn);
 }
 bool KRadionuclide::isTritium() const
 {

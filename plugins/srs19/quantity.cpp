@@ -175,7 +175,9 @@ namespace Srs19 {
             << &PersonSludgeProduction
             << &SewageSludgeDensity
             << &SludgeContainerDepth
-            << &ConcentrationInWetSewage;
+            << &ConcentrationInWetSewage
+            << &Concentration
+            << &TotalDose;
 
         //assign to const
         for (int k = 0; k < __qtyList.size(); k++)
@@ -414,7 +416,7 @@ Quantity IngestionDoseCoeff =
 Quantity InhalationDoseCoeff =
     {88, Rad::Real, DIGIT_DEF, 0, MAX_REAL, 0, "DFinh", "DF_{inh}", QObject::tr("Inhalation dose coefficient"), "Sv/Bq", "Sv/Bq", QObject::tr("Dose coefficient for inhalation of radionuclides")};
 Quantity DustLoadingFactor =
-    {89, Rad::Real, DIGIT_DEF, 0, MAX_REAL, 0, "DL", "DL", QObject::tr("Dust loading factor"), "kg/m3", "kg/m3", QObject::tr("Dust loading factor")};
+    {89, Rad::NumText, DIGIT_DEF, 0, MAX_REAL, 0, "DL", "DL", QObject::tr("Dust loading factor"), "kg/m3", "kg/m3", QObject::tr("Dust loading factor")};
 Quantity GroundExposureDoseRate=
     {90, Rad::Real, DIGIT_DEF, 0, MAX_REAL, 0, "Egr", "E_{gr}", QObject::tr("Ground exposure dose rate"), "Sv/a", "Sv/a", QObject::tr("External dose rate from ground deposits after a 30 year discharge to the atmosphere")};
 Quantity InhalationDoseRate =
@@ -553,6 +555,12 @@ Quantity SludgeContainerDepth =
     {147, Rad::Real, 2, 0, 100000, 1, "d", "d", QObject::tr("Sewage container depth"), "m", "m", QObject::tr("Depth of sewage sludge container.")};
 Quantity ConcentrationInWetSewage =
     {148, Rad::Real, DIGIT_DEF, 0, MAX_REAL, 0, "Csl", "C_{sluldge}", QObject::tr("Concentration in sludge (wet weight)"), "Bq/kg", "Bq/kg", QObject::tr("Annual average radionuclide concentration in sewage sludge (wet weight)")};
+
+Quantity Concentration =
+    {149, Rad::Real, DIGIT_DEF, 0, MAX_REAL, 0, "C", "C", QObject::tr("Concentration"), "", "", QObject::tr("Radionuclide concentration")};
+
+Quantity TotalDose =
+    {150, Rad::Real, DIGIT_DEF, 0, MAX_REAL, 0, "E", "E", QObject::tr("Total dose"), "Sv/a", "Sv/a", QObject::tr("Total dose rate")};
 
 //end of symbol namespace
 }

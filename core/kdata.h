@@ -32,6 +32,7 @@ public:
 
         ReceptorArray = Receptor | Array,
         ElementArray = Array | Element,
+        NumericArray = Array | Numeric,
 
         Mandatory = 0x200,
         ConditionalMandatory = 0x400,
@@ -46,6 +47,7 @@ public:
     explicit KData(const Quantity * qty, ContentTypes types, const QVariant & v);
     explicit KData(const Quantity * qty, const QString& nm, const QVariant& v, ContentTypes f);
     explicit KData(const Quantity * qty, const DataItemArray & items);
+    explicit KData(const Quantity * qty, const QMap<QString, qreal> & items, ContentTypes f);
     KData(const KData&);
     KData(const Quantity * qty, const KData& other);
     KData &operator=(const KData&);
@@ -65,6 +67,7 @@ public:
     void setValue(const QVariant &v);
     void setValue(int idx, const QVariant& v);
     void append(const QString& nm, const QVariant& v, ContentTypes t);
+    void remove(const QString& nm);
 
     const KDataItem & at(int idx) const;
     const KDataItem & at(const QString& name) const;
@@ -129,18 +132,22 @@ private:
     KLocation _location;
 };
 
-class K_CORE_EXPORT KDataGroupArray : public QVector<DataGroup >
+class K_CORE_EXPORT KDataGroupArray : public QVector<DataGroup>
 {
 public:
     KDataGroupArray();
     explicit KDataGroupArray(const QString& name, const KDataArray & da);
-    const KData & find(const Quantity& v) const;
-    qreal numericValueOf(const Quantity& v) const;
-    QVariant valueOf(const Quantity & v) const;
+
+    KData * findPtr(const Quantity& v, int gid = DataGroup::DefaultId);
+    const KData & find(const Quantity& v, int gid = DataGroup::DefaultId) const;
+    qreal numericValueOf(const Quantity& v, int gid = DataGroup::DefaultId) const;
+    QVariant valueOf(const Quantity & v, int gid = DataGroup::DefaultId) const;
     ConstQuantityList quantities() const;
     KDataArray toDataArray() const;
 
-    void replace(const KData& di);
+    void removeQuantity(const Quantity & v, int gid);
+    void appendOrReplace(const KData& di, int gid);
+    void replace(const KData& di, int gid = DataGroup::DefaultId);
     void addQuantityControl(const KQuantityControl & qc);
     const QuantityControlList & quantityControls() const;
 

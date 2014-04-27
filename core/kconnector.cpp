@@ -4,17 +4,21 @@
 #include <QPainter>
 #include "kport.h"
 #include "kconnector.h"
+#include "imodel.h"
 
 class KConnectorPrivate : public QSharedData {
     KConnector * connector;
 public:
+    KPort * firstPort;
     KPort * input;
     KPort * output;
     QPointF tempPoint;
     QVector<QPointF> points;
     QRectF rect;
 
-    KConnectorPrivate(KConnector * it) : connector(it), input(0), output(0), tempPoint(QPointF()) {
+    KConnectorPrivate(KConnector * it) : connector(it), firstPort(0),
+        input(0), output(0), tempPoint(QPointF())
+    {
 
     }
     inline bool canConnect(KPort * p) const {
@@ -50,6 +54,7 @@ public:
         if (modified) {
             if (points.isEmpty()) {
                 //first time connected
+                firstPort = p;
                 points.append(QPointF(0,0));
                 connector->setPos(p->scenePos());
                 connector->setZValue(p->zValue()-1);
@@ -61,6 +66,7 @@ public:
 
                 //now connect
                 this->connect();
+                connector->setZValue(p->model()->zValue()-1);
             }
         }
     }
@@ -107,6 +113,12 @@ public:
     inline void disconnect() {
         if (isConnected()) {
             input->disconnectFrom(output, connector);
+
+            //notify model
+            if (input->model())
+                input->model()->connectionModified(input, connector, false);
+            if (output->model())
+                output->model()->connectionModified(output, connector, false);
         }
         input = 0;
         output = 0;
@@ -114,7 +126,39 @@ public:
     inline void connect() {
         if (isConnected()) {
             input->connectTo(output, connector);
+
+            //notify model
+            if (input->model())
+                input->model()->connectionModified(input, connector, true);
+            if (output->model())
+                output->model()->connectionModified(output, connector, true);
         }
+    }
+    inline void copyTo(KConnectorPrivate * d, KPort * out, KPort * inp) const {
+        d->input = inp;
+        d->output = out;
+        d->points = this->points;
+        d->rect = this->rect;
+    }
+    void recalculateRect()
+    {
+        if (!points.isEmpty()) {
+            rect = rectWith(points.first());
+        }
+    }
+    void moveByPort(KPort * p, const QPointF & oldPos, const QPointF & newPos)
+    {
+        if (p == firstPort) {
+            QPointF & pt = points.first();
+            pt.setX(pt.x() + newPos.x() - oldPos.x());
+            pt.setY(pt.y() + newPos.y() - oldPos.y());
+        }
+        else {
+            QPointF & pt = points.last();
+            pt.setX(pt.x() + newPos.x() - oldPos.x());
+            pt.setY(pt.y() + newPos.y() - oldPos.y());
+        }
+        recalculateRect();
     }
 };
 
@@ -139,6 +183,10 @@ KConnector &KConnector::operator=(const KConnector &rhs)
 KConnector::~KConnector()
 {
     qDebug() << "Connector removed";
+}
+void KConnector::copyTo(KConnector * con, KPort * out, KPort * inp) const
+{
+    data->copyTo(con->data, out, inp);
 }
 void KConnector::disconnect()
 {
@@ -169,7 +217,7 @@ void KConnector::setPort(KPort * p)
 
 KPort * KConnector::inputPort() const
 {
-    return data->output;
+    return data->input;
 }
 KPort * KConnector::outputPort() const
 {
@@ -182,6 +230,11 @@ KPort * KConnector::oppositePort(KPort *port) const
     else if (data->output == port)
         return data->input;
     return 0;
+}
+void KConnector::movePos(KPort * p, const QPointF & oldPos, const QPointF & newPos)
+{
+    prepareGeometryChange();
+    data->moveByPort(p, oldPos, newPos);
 }
 
 bool KConnector::isConnected() const
@@ -220,6 +273,10 @@ void KConnector::paint(QPainter * painter, const QStyleOptionGraphicsItem * opti
     if (!data->tempPoint.isNull()) {
         painter->drawLine(pt1, data->tempPoint);
     }
+
+    //test
+    //QRectF r = data->rect.adjusted(0, 0, -1, -1);
+    //painter->drawRect(r);
 
 //    QRectF r = data->rect.adjusted(0, 0, -1, -1);
 //    painter->drawRect(r);

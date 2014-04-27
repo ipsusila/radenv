@@ -11,6 +11,7 @@ public :
     virtual ~IUserInput() {}
     virtual void acceptValues() = 0;
     virtual bool validate() = 0;
+    virtual bool isEmpty() const = 0;
 };
 
 #endif // IUSERINPUT_H

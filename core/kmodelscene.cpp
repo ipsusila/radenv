@@ -113,7 +113,7 @@ public:
         model->setTagId(_modelNames.count(name));
     }
 
-    inline void clearModels()
+    inline void clearModelData()
     {
         _modelNames.clear();
         _verifiedNodes.clear();
@@ -122,12 +122,15 @@ public:
 
     inline void stopCalculation(int wms = 2000)
     {
-        if (_modelRunner != 0) {
-            if (_modelRunner->isRunning()) {
-                _modelRunner->stop();
-                _modelRunner->wait(wms);
-            }
+        if (isRunning()) {
+            _modelRunner->stop();
+            _modelRunner->wait(wms);
         }
+
+    }
+    inline bool isRunning() const
+    {
+        return (_modelRunner != 0 && _modelRunner->isRunning());
     }
 
     void runCalculation(const KCalculationInfo & ci)
@@ -141,17 +144,14 @@ public:
         _modelRunner = new KModelRunner(&_verifiedNodes, ci);
         _modelRunner->start();
     }
-    void stop() {
-        if (_modelRunner != 0)
-           _modelRunner->stop();
-    }
+
     void pause() {
-        if (_modelRunner != 0)
+        if (isRunning())
             _modelRunner->pause();
     }
 
     void resume() {
-        if (_modelRunner)
+        if (_modelRunner != 0)
             _modelRunner->resume();
     }
 };
@@ -168,34 +168,50 @@ KModelScene::~KModelScene()
     qDebug() << "Scene destroyed";
 }
 
-void KModelScene::copyTo(KModelScene * mscene) const
+int KModelScene::copyTo(KModelScene * mscene, bool all) const
 {
     Q_ASSERT(mscene);
 
-    //copy list
-    QList<QPair<IModel *, IModel *> > copyList;
-
+    //copy selected/all models
+    QMap<IModel *, IModel *> copiedModels;
     QList<QGraphicsItem*> list = items();
     foreach(QGraphicsItem * item, list) {
         IModel * src = qgraphicsitem_cast<IModel *>(item);
-        if (src && src->isSelected()) {
+        if (src && (all || src->isSelected())) {
             IModel * dest = src->copyTo(mscene);
-            copyList << qMakePair(src, dest);
+            copiedModels[src] = dest;
         }
     }
 
-    //TODO
     //copy connection
-    for(int k = 0; k < copyList.size(); k++) {
-        IModel * src = copyList[k].first;
-        IModel * dest = copyList[k].second;
+    QMap<IModel *, IModel *>::iterator it = copiedModels.begin();
+    QMap<IModel *, IModel *>::iterator end = copiedModels.end();
+    while (it != end) {
+        IModel * src = it.key();        //model which was copied
+        IModel * cpy = it.value();      //copy model
+        it++;
 
-        //check connections
+        //check connections to output of the model
+        //dealing with output ports is enough
+        ConnectorList connectors = src->outputConnectors();
+        foreach(KConnector * con, connectors) {
+            //if connected model is not being copied, ignore connection
+            IModel * dest = copiedModels[con->outputPort()->model()];
+            if (dest == 0)
+                continue;
+
+            //get the port index
+            int idxOut = con->outputPort()->index();
+            int idxInp = con->inputPort()->index();
+
+            //create connection between cpy and dest
+            KConnector * copyCon = new KConnector();
+            con->copyTo(copyCon, cpy->outputs().at(idxOut), dest->inputs().at(idxInp));
+            mscene->addItem(copyCon);
+        }
     }
 
-
-    //verify (visit)
-
+    return copiedModels.size();
 }
 
 void KModelScene::addFactory(IModelFactory *factory)
@@ -214,6 +230,17 @@ FactoryList KModelScene::factories() const
 {
     return data->factories();
 }
+ModelList KModelScene::models() const
+{
+    ModelList list;
+    for(int k = 0; k < items().size(); k++) {
+        QGraphicsItem * item = items().at(k);
+        IModel * md = qgraphicsitem_cast<IModel *>(item);
+        if (md)
+            list.append(md);
+    }
+    return list;
+}
 
 IModel * KModelScene::createModel(IModelFactory * factory, const KModelInfo& info)
 {
@@ -224,7 +251,11 @@ IModel * KModelScene::createModel(IModelFactory * factory, const KModelInfo& inf
 }
 void KModelScene::clearModels()
 {
-    data->clearModels();
+    ModelList modelList = models();
+    for(int k = 0; k < modelList.size(); k++)
+        removeModel(modelList.at(k), false);
+
+    data->clearModelData();
     this->clear();
 }
 void KModelScene::refresh()
@@ -260,6 +291,7 @@ void KModelScene::generateReport()
     //call generate report
     foreach(IModel * model, *vNodes) {
         model->generateReport();
+        xTrace() << *model << " : Report generated";
     }
 
     //output reports
@@ -341,7 +373,7 @@ void KModelScene::pause()
 
 void KModelScene::stop()
 {
-    data->stop();
+    data->stopCalculation();
 }
 
 void KModelScene::resume()
@@ -423,18 +455,19 @@ void KModelScene::setEditMode(KModelScene::EditMode mode)
         update();
     }
 }
-void KModelScene::removeModel(IModel *m)
+void KModelScene::removeModel(IModel *model, bool redraw)
 {
-    Q_ASSERT(m);
+    Q_ASSERT(model);
 
     //remove connections
-    m->removeConnections();
+    model->removeConnections();
 
     //remove model
-    data->verifiedNodes()->removeOne(m);
-    this->removeItem(m);
-    delete m;
-    this->update();
+    data->verifiedNodes()->removeOne(model);
+    this->removeItem(model);
+    delete model;
+    if (redraw)
+        this->update();
 }
 
 void KModelScene::removeConnector(KConnector *con)
@@ -513,7 +546,7 @@ void KModelScene::tryDrawConnector(const QPointF& scPos)
 void KModelScene::reannotateModels()
 {
     //clear annotation list and verified list
-    data->clearModels();
+    data->clearModelData();
 
     //reannotate all models
     QList<QGraphicsItem*> list = items();

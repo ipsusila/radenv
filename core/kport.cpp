@@ -56,10 +56,11 @@ bool KPortList::isAnyConnected() const
 }
 
 KPort::KPort(IModel * m, const Quantity * qty, KPort::DataDirection dir)
-    : QGraphicsItem(m), _model(m), _quantity(qty), _direction(dir)
+    : QGraphicsItem(m), _model(m), _quantity(qty), _direction(dir), _index(0)
 {
     //calculate position
     this->setZValue(m->zValue()+1);
+    this->setVisible(false);
 }
 KPort::~KPort()
 {
@@ -86,6 +87,15 @@ const KPortList & KPort::connectedPorts() const
 ConnectorList KPort::connectors() const
 {
     return _conList;
+}
+void KPort::setIndex(int idx)
+{
+    _index = idx;
+}
+
+int KPort::index() const
+{
+    return _index;
 }
 KLocation KPort::firstValidLocation() const
 {
@@ -246,7 +256,7 @@ bool KPort::canConnect(KPort * port) const
 }
 QRectF KPort::boundingRect () const
 {
-    return QRectF(-8, -6, 16, 12);
+    return QRectF(-5, -4, 10, 8);
 }
 void KPort::paint(QPainter * painter, const QStyleOptionGraphicsItem * option, QWidget * widget)
 {
@@ -264,6 +274,13 @@ void KPort::paint(QPainter * painter, const QStyleOptionGraphicsItem * option, Q
     QFont f = painter->font();
     f.setPointSize(10);
     painter->setFont(f);
+
+    QFontMetrics fm = painter->fontMetrics();
+    float th = fm.height();
+    float dh = th - rect.height();
+    if (dh > 0)
+        rect.adjust(0, -dh/2, 0, dh/2);
+
     if (xHas(this->direction(), KPort::Input)) {
         painter->drawText(rect.right()+2, rect.top(), w, rect.height(),
                           Qt::AlignLeft | Qt::AlignVCenter, _quantity->symbol);
@@ -277,11 +294,13 @@ void KPort::paint(QPainter * painter, const QStyleOptionGraphicsItem * option, Q
 }
 void KPort::rearrangeConnectors(const QPointF& oldPos, const QPointF& newPos)
 {
-    qDebug() << "Rearrange connector, old: " << oldPos << ",new: " << newPos;
+    foreach(KConnector * con, _conList)
+        con->movePos(this, oldPos, newPos);
 }
 
 int KPort::type() const
 {
     return Type;
 }
+
 

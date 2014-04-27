@@ -35,6 +35,10 @@ bool WidgetWaterDischarge::validate()
 {
     return true;
 }
+bool WidgetWaterDischarge::isEmpty() const
+{
+    return false;
+}
 
 void WidgetWaterDischarge::acceptValues()
 {

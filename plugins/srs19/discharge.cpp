@@ -41,11 +41,6 @@ void Discharge::refresh()
         lp->refresh();
 }
 
-bool Discharge::isSource() const
-{
-    return true;
-}
-
 const KPortList & Discharge::outputs() const
 {
     return _outPorts;

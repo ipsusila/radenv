@@ -164,7 +164,7 @@ void XModelView::removeItem(QGraphicsItem *item)
             QString(tr("Do you really want to remove model %1?")).arg(model->tagName()),
             QMessageBox::Yes, QMessageBox::No);
         if (ret == QMessageBox::Yes)
-            mc->removeModel(model);
+            mc->removeModel(model, true);
     }
 }
 

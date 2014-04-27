@@ -23,7 +23,6 @@ protected:
     KPortList        _inpPorts;
     KDataGroupArray _userInputs;
 
-    KDataGroupArray & toUserInputs(const KDataArray & da);
     virtual KData modelData(const Quantity & qty) const;
     virtual bool calculate(const KCalculationInfo& ci, const KLocation & loc, KDataArray * calResult) = 0;
 

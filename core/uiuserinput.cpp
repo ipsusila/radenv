@@ -387,6 +387,10 @@ QVariant UiUserInput::value(const Quantity * qty) const
     }
     return QVariant();
 }
+bool UiUserInput::isEmpty() const
+{
+    return controlMaps.isEmpty();
+}
 bool UiUserInput::validate()
 {
     bool result = true;

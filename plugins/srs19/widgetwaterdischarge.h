@@ -16,6 +16,7 @@ public:
     explicit WidgetWaterDischarge(KDataArray * userParam, QWidget *parent = 0);
     ~WidgetWaterDischarge();
 
+    bool isEmpty() const;
     virtual void acceptValues();
     bool validate();
     QSize sizeHint() const;

@@ -10,11 +10,6 @@ KDataGroupArray * Transport::userInputs()
 {
     return &_userInputs;
 }
-KDataGroupArray & Transport::toUserInputs(const KDataArray & da)
-{
-    _userInputs = KDataGroupArray(QObject::tr("User inputs"), da);
-    return _userInputs;
-}
 
 KData Transport::modelData(const Quantity &qty) const
 {

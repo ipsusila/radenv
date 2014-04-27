@@ -71,13 +71,13 @@ bool AtmosphericTransport::verify(int * oerr, int * owarn)
         err++;
     }
 
-    KData daPp = _userInputs.find(Srs19::FractionOfWind);
+    const KData & daPp = _userInputs.find(Srs19::FractionOfWind);
     if (!daPp.isValid() || daPp.numericValue() <= 0) {
         KOutputProxy::errorNotSpecified(this, Srs19::FractionOfWind);
         err ++;
     }
 
-    KData daUa = _userInputs.find(Srs19::GeometricMeanOfWindSpeed);
+    const KData & daUa = _userInputs.find(Srs19::GeometricMeanOfWindSpeed);
     if (!daUa.isValid() || daUa.numericValue() <= 0) {
         KOutputProxy::errorNotSpecified(this, Srs19::GeometricMeanOfWindSpeed);
         err ++;
@@ -89,7 +89,7 @@ bool AtmosphericTransport::verify(int * oerr, int * owarn)
     H = daH.numericValue();
 
     //get building height
-    KData daHB = _userInputs.find(Srs19::BuildingHeight);
+    const KData & daHB = _userInputs.find(Srs19::BuildingHeight);
     if (!daHB.isValid()) {
         KOutputProxy::errorNotSpecified(this, Srs19::BuildingHeight);
         err ++;
@@ -97,7 +97,7 @@ bool AtmosphericTransport::verify(int * oerr, int * owarn)
     else {
         HB = daHB.numericValue();
         if (H <= 2.5 * HB) {
-            KData daAB = _userInputs.find(Srs19::CrossSectionalArea);
+            const KData & daAB = _userInputs.find(Srs19::CrossSectionalArea);
             if (!daAB.isValid()) {
                 KOutputProxy::errorNotSpecified(this, Srs19::CrossSectionalArea);
                 err++;
@@ -129,13 +129,13 @@ bool AtmosphericTransport::verify(int * oerr, int * owarn)
         }
     }
 
-    KData vf = _userInputs.find(Srs19::DryDepositionCoeff);
-    if (!vf.isValid() || vf.numericValue() <= 0) {
+    const KData & vfd = _userInputs.find(Srs19::DryDepositionCoeff);
+    if (!vfd.isValid() || vfd.numericValue() <= 0) {
         KOutputProxy::warningNotProperlyDefined(this, Srs19::DryDepositionCoeff);
         warn ++;
     }
-    vf = _userInputs.find(Srs19::WetDepositionCoeff);
-    if (!vf.isValid() || vf.numericValue() <= 0) {
+    const KData & vfw = _userInputs.find(Srs19::WetDepositionCoeff);
+    if (!vfw.isValid() || vfw.numericValue() <= 0) {
         KOutputProxy::warningNotProperlyDefined(this, Srs19::WetDepositionCoeff);
         warn ++;
     }

@@ -9,15 +9,22 @@ struct KGroup
 {
     typedef T value_type;
     typedef T * pointer_type;
+    static const int DefaultId = 0;
 
-    KGroup() : name(QString()), items(QList<T>()) {}
+    KGroup() : groupId(DefaultId), name(QString()), items(QList<T>()) {}
 
-    KGroup(const QString& nm) : name(nm), items(QList<T>()) {}
+    KGroup(const QString& nm) : groupId(DefaultId), name(nm), items(QList<T>()) {}
+
+    KGroup(int id, const QString& nm) : groupId(id), name(nm), items(QList<T>()) {}
 
     KGroup(const QString& nm, const QList<T>& it)
-        : name(nm), items(it){}
+        : groupId(DefaultId), name(nm), items(it){}
+
+    KGroup(int id, const QString& nm, const QList<T>& it)
+        : groupId(id), name(nm), items(it){}
 
     KGroup &operator=(const KGroup& other) {
+        this->groupId = other.groupId;
         this->name = other.name;
         this->items = other.items;
         return *this;
@@ -28,6 +35,9 @@ struct KGroup
 
     inline void remove(const T& item)
     { items.removeOne(item); }
+
+    inline void removeAt(int idx)
+    { items.removeAt(idx); }
 
     inline void clear()
     { items.clear(); }
@@ -52,12 +62,12 @@ struct KGroup
 
     bool operator==(const KGroup<T> & o) const
     {
-        return (o.name == this->name && o.items == this->items);
+        return (o.groupId == this->groupId && o.name == this->name && o.items == this->items);
     }
 
     bool operator!=(const KGroup<T> & o) const
     {
-        return (o.name != this->name || o.items != this->items);
+        return (o.groupId != this->groupId || o.name != this->name || o.items != this->items);
     }
 
     KGroup & operator<<(const T& item)
@@ -80,6 +90,7 @@ struct KGroup
         return result;
     }
 
+    int groupId;
     QString name;
     QList<T> items;
 };

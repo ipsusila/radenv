@@ -11,7 +11,6 @@ public:
     KDataArray result() const;
     bool calculate(const KCalculationInfo& ci);
     void refresh();
-    bool isSource() const;
     KDataGroupArray * userInputs();
 
     const KPortList & outputs() const;

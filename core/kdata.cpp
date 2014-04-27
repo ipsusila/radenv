@@ -55,6 +55,19 @@ public:
             _types |= it.at(k).contentTypes();
         _types |= KData::Array;
     }
+    KDataPrivate(const Quantity *qty, const QMap<QString, qreal> & items, KData::ContentTypes t)
+        : _quantity(qty)
+    {
+        Q_ASSERT(_quantity != 0);
+        _types |= (KData::Array | t);
+
+        QMap<QString, qreal>::const_iterator it = items.constBegin();
+        QMap<QString, qreal>::const_iterator end = items.constEnd();
+        while (it != end) {
+            _items.append(KDataItem(it.key(), it.value(), t));
+            it++;
+        }
+    }
 
     inline KData::ContentType guessType(const QVariant & v) {
         KData::ContentType t;
@@ -75,6 +88,15 @@ public:
     {
         _items.append(KDataItem(nm, v, t));
         _types |= (t | KData::Array) ;
+    }
+    void remove(const QString& nm)
+    {
+        for(int k = 0; k < _items.size(); k++) {
+            if (_items.at(k).name() == nm) {
+                _items.remove(k);
+                break;
+            }
+        }
     }
 
     inline void setValue(int idx, const QVariant& v)
@@ -255,6 +277,10 @@ KData::KData(const Quantity * qty, const DataItemArray & items)
     : data(new KDataPrivate(qty, items))
 {
 }
+KData::KData(const Quantity * qty, const QMap<QString, qreal> & items, ContentTypes f)
+    : data(new KDataPrivate(qty, items, f))
+{
+}
 
 KData::KData(const KData& rhs) : data(rhs.data)
 {
@@ -315,6 +341,10 @@ bool KData::isEmpty() const
 void KData::append(const QString& nm, const QVariant& v, ContentTypes t)
 {
     data->append(nm, v, t);
+}
+void KData::remove(const QString &nm)
+{
+    data->remove(nm);
 }
 
 QVariant KData::value(int idx) const
@@ -520,24 +550,6 @@ void KDataArray::appendOrReplace(const KData &di)
     append(di);
 }
 
-const KData & KDataGroupArray::find(const Quantity& v) const
-{
-    KDataGroupArray::const_iterator it = this->begin();
-    KDataGroupArray::const_iterator end = this->end();
-    while (it != end) {
-        int nz = it->count();
-        for(int k = 0; k < nz; k++) {
-            const KData & d = it->itemAt(k);
-            if (d.quantity() == v)
-                return d;
-        }
-
-        it++;
-    }
-
-    return __nullData;
-}
-
 KDataGroupArray::KDataGroupArray() : QVector<DataGroup >()
 {
 }
@@ -552,34 +564,76 @@ KDataGroupArray::KDataGroupArray(const QString& name, const KDataArray & da)
     this->append(g);
 }
 
-qreal KDataGroupArray::numericValueOf(const Quantity& v) const
+const KData & KDataGroupArray::find(const Quantity& v, int gid) const
 {
     KDataGroupArray::const_iterator it = this->begin();
     KDataGroupArray::const_iterator end = this->end();
     while (it != end) {
-        int nz = it->count();
-        for(int k = 0; k < nz; k++) {
-            const KData & d = it->itemAt(k);
-            if (d.quantity() == v)
-                return d.numericValue();
+        if (it->groupId == gid) {
+            int nz = it->count();
+            for(int k = 0; k < nz; k++) {
+                const KData & d = it->itemAt(k);
+                if (d.quantity() == v)
+                    return d;
+            }
+        }
+        it++;
+    }
+
+    return __nullData;
+}
+
+KData * KDataGroupArray::findPtr(const Quantity& v, int gid)
+{
+    KDataGroupArray::iterator it = this->begin();
+    KDataGroupArray::iterator end = this->end();
+    while (it != end) {
+        if (it->groupId == gid) {
+            int nz = it->count();
+            for(int k = 0; k < nz; k++) {
+                KData * d = it->pointerAt(k);
+                if (d->quantity() == v)
+                    return d;
+            }
+        }
+        it++;
+    }
+
+    return 0;
+}
+
+
+qreal KDataGroupArray::numericValueOf(const Quantity& v, int gid) const
+{
+    KDataGroupArray::const_iterator it = this->begin();
+    KDataGroupArray::const_iterator end = this->end();
+    while (it != end) {
+        if (it->groupId == gid) {
+            int nz = it->count();
+            for(int k = 0; k < nz; k++) {
+                const KData & d = it->itemAt(k);
+                if (d.quantity() == v)
+                    return d.numericValue();
+            }
         }
 
         it++;
     }
     return __nullValue.toDouble();
 }
-QVariant KDataGroupArray::valueOf(const Quantity& v) const
+QVariant KDataGroupArray::valueOf(const Quantity& v, int gid) const
 {
     KDataGroupArray::const_iterator it = this->begin();
     KDataGroupArray::const_iterator end = this->end();
     while (it != end) {
-        int nz = it->count();
-        for(int k = 0; k < nz; k++) {
-            const KData & d = it->itemAt(k);
-            if (d.quantity() == v)
-                return d.value();
+        if (it->groupId == gid) {
+            int nz = it->count();
+            for(int k = 0; k < nz; k++) {
+                const KData & d = it->itemAt(k);
+                if (d.quantity() == v)
+                    return d.value();
+            }
         }
-
         it++;
     }
     return __nullValue;
@@ -601,20 +655,64 @@ ConstQuantityList KDataGroupArray::quantities() const
     }
     return list;
 }
-void KDataGroupArray::replace(const KData &di)
+
+void KDataGroupArray::removeQuantity(const Quantity &v, int gid)
 {
     KDataGroupArray::iterator it = this->begin();
     KDataGroupArray::iterator end = this->end();
     while (it != end) {
-        int nz = it->count();
-        for(int k = 0; k < nz; k++) {
-            const KData & d = it->itemAt(k);
-            if (d.quantity() == di.quantity()) {
-                it->replaceAt(k, di);
-                return;
+        if (it->groupId == gid) {
+            int nz = it->count();
+            for(int k = 0; k < nz; k++) {
+                const KData & d = it->itemAt(k);
+                if (d.quantity() == v) {
+                    it->removeAt(k);
+                    return;
+                }
             }
         }
+        it++;
+    }
+}
 
+void KDataGroupArray::appendOrReplace(const KData& di, int gid)
+{
+    KDataGroupArray::iterator it = this->begin();
+    KDataGroupArray::iterator end = this->end();
+    while (it != end) {
+        if (it->groupId == gid) {
+            //try replace item
+            int nz = it->count();
+            for(int k = 0; k < nz; k++) {
+                const KData & d = it->itemAt(k);
+                if (d.quantity() == di.quantity()) {
+                    it->replaceAt(k, di);
+                    return;
+                }
+            }
+
+            //add new item
+            it->add(di);
+        }
+        it++;
+    }
+}
+
+void KDataGroupArray::replace(const KData &di, int gid)
+{
+    KDataGroupArray::iterator it = this->begin();
+    KDataGroupArray::iterator end = this->end();
+    while (it != end) {
+        if (it->groupId == gid) {
+            int nz = it->count();
+            for(int k = 0; k < nz; k++) {
+                const KData & d = it->itemAt(k);
+                if (d.quantity() == di.quantity()) {
+                    it->replaceAt(k, di);
+                    return;
+                }
+            }
+        }
         it++;
     }
 }

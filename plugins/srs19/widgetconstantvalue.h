@@ -18,6 +18,7 @@ public:
 
     bool validate();
     void acceptValues();
+    bool isEmpty() const;
     
 private slots:
 

@@ -8,7 +8,7 @@ SewageDischarge::SewageDischarge(IModelFactory * fact, const KModelInfo& inf)
 }
 bool SewageDischarge::allocateIoPorts()
 {
-    _outPorts << new KPort(this, &Srs19::ConcentrationInDrySewage, KPort::Output);
+    _outPorts << new KPort(this, &Srs19::ConcentrationInWetSewage, KPort::Output);
     return true;
 }
 void SewageDischarge::defineParameters()

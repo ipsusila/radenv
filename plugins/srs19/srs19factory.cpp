@@ -24,6 +24,7 @@
 #include "grounddeposition.h"
 #include "aquaticfoodtransport.h"
 #include "defaultvalues.h"
+#include "doseestimation.h"
 
 Q_EXPORT_PLUGIN2(srs19, Srs19Factory)
 
@@ -175,8 +176,14 @@ bool Srs19Factory::initialize()
                     tr("Concentration of radionuclide in marine fish"), QIcon())
         << KModelInfo(MarineShellfishTransport::SerialId, "SF", tr("Marine shellfish"),
                     tr("Concentration of radionuclide in marine shellfish"), QIcon()) ;
-
     _groupInfos.append(KGroupInfo(tr("Foods"), mi));
+
+    mi.clear();
+    mi << KModelInfo(InfantDoseEstimation::SerialId, "IF", tr("Infant"),
+                    tr("Infant dose estimation"), QIcon(":/srs19/transport.png"))
+        << KModelInfo(AdultDoseEstimation::SerialId, "AU", tr("Adult"),
+                    tr("Adult dose estimation"), QIcon(":/srs19/transport.png"));
+    _groupInfos.append(KGroupInfo(tr("Doses"), mi));
 
     return true;
 }
@@ -236,6 +243,11 @@ IModel * Srs19Factory::createModel(const KModelInfo & info)
         return new MarineFishTransport(this, info);
     case MarineShellfishTransport::SerialId:
         return new MarineShellfishTransport(this, info);
+
+    case InfantDoseEstimation::SerialId:
+        return new InfantDoseEstimation(this, info);
+    case AdultDoseEstimation::SerialId:
+            return new AdultDoseEstimation(this, info);
 
     default:
         return 0;

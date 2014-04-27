@@ -41,7 +41,7 @@ bool GroundDeposition::calculate(const KCalculationInfo& ci, const KLocation & l
     Q_UNUSED(loc);
 
     KData di = _inpPorts.data(Srs19::DailyDepositionRate);
-    if (di.isValid()) {
+    if (!di.isValid()) {
         di = _inpPorts.data(Srs19::AnnualAverageDepositionRate);
     }
 

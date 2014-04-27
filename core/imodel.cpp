@@ -4,6 +4,7 @@
 #include <QDialog>
 #include <QDialogButtonBox>
 #include <QLayout>
+#include <QMessageBox>
 #include "dialoguserinput.h"
 #include "kport.h"
 #include "imodel.h"
@@ -12,6 +13,7 @@
 #include "koutput.h"
 #include "uiuserinput.h"
 #include "ksettingmanager.h"
+#include "kconnector.h"
 
 /**
  * @brief Empty Ports list.
@@ -19,20 +21,99 @@
 static const KPortList EmptyPorts;
 SPadding IModel::Padding = {10, 25, 10, 26};
 
-IModel::IModel(IModelFactory * fact, const KModelInfo& inf) : _tagId(0), _locPort(0), _repPort(0),
-    _sourceDistance(0), _visitor(0), _factory(fact)
+class IModelPrivate : public QSharedData
 {
+public:
+    int _tagId;
+    KLocationPort * _locPort;
+    KReportPort * _repPort;
+    KModelInfo _info;
+    int _sourceDistance;
+    IModel * _visitor;
+    IModelFactory * _factory;
+
+    IModelPrivate(IModelFactory * fact) : _tagId(0), _locPort(0), _repPort(0),
+          _sourceDistance(0), _visitor(0), _factory(fact)
+    {
+    }
+
+    inline void setReport(KReport * rep)
+    {
+        if (_repPort != 0)
+            _repPort->setReport(rep);
+    }
+
+    inline void setLocation(const KLocation& loc)
+    {
+        if (_locPort != 0)
+            _locPort->setLocation(loc);
+    }
+    inline KLocation location() const
+    {
+        if (_locPort != 0)
+            return _locPort->location();
+        return KLocation();
+    }
+
+    inline KReport * report() const
+    {
+        if (_repPort == 0)
+            return 0;
+
+        return _repPort->report();
+    }
+
+    void visit(IModel * self, IModel * visitor)
+    {
+        if (visitor == 0) {
+            //this node must be source
+            if (!self->isSource()) {
+                xWarning() << *self << QObject::tr(" is not source but visited by NULL node. Set distance to 0.");
+            }
+            _sourceDistance = 0;
+        }
+        else if (visitor == _visitor) {
+            //check for loop
+            if (_sourceDistance < visitor->sourceDistance()) {
+                xWarning() << *self << QObject::tr(" and ") << visitor->tagName()
+                           << QObject::tr(" are connected as loop. Could not be evaluated properly.");
+            }
+        }
+        else {
+            //update distance if equal or greater than the latest distance
+            if (_sourceDistance <= visitor->sourceDistance()) {
+                _sourceDistance = visitor->sourceDistance() + 1;
+                _visitor = visitor;
+            }
+        }
+
+        //display in output window
+        xInfo() << QObject::tr("Visiting ") << *self << QObject::tr(" by ")
+                << (visitor == 0 ? "NULL" : visitor->tagName())
+                << QObject::tr(", source distance is ") << _sourceDistance;
+
+        //visit all nodes that is connected to this model
+        const KPortList& outs = self->outputs();
+        foreach(KPort * p, outs) {
+            const KPortList& conPorts = p->connectedPorts();
+            foreach(KPort * cp, conPorts) {
+                IModel * md = cp->model();
+                md->visit(self);
+            }
+        }
+    }
+};
+
+IModel::IModel(IModelFactory * fact, const KModelInfo& inf) : dptr(new IModelPrivate(fact))
+{
+    this->setZValue(1);
     this->setInfo(inf);
+    this->setAcceptHoverEvents(true);
     //set flags
     this->setFlags(QGraphicsItem::ItemIsMovable | QGraphicsItem::ItemIsSelectable |
                    QGraphicsItem::ItemIsFocusable | QGraphicsItem::ItemSendsGeometryChanges);
 }
-IModel::IModel(const IModel &model)
-    : QGraphicsItem(model.parentItem()), _tagId(0), _locPort(0), _repPort(0), _sourceDistance(0), _visitor(0)
-{
-    this->setInfo(model._info);
-    this->setFlags(model.flags());
-}
+
 IModel::~IModel()
 {
     qDebug() << "Model destroyed";
@@ -51,72 +132,30 @@ void IModel::removeConnections()
 
 int IModel::sourceDistance() const
 {
-    return _sourceDistance;
+    return dptr->_sourceDistance;
 }
 void IModel::visit(IModel * visitor)
 {
-    if (visitor == 0) {
-        //this node must be source
-        if (!isSource()) {
-            xWarning() << *this << QObject::tr(" is not source but visited by NULL node. Set distance to 0.");
-        }
-        _sourceDistance = 0;
-    }
-    else if (visitor == _visitor) {
-        //check for loop
-        if (_sourceDistance < visitor->sourceDistance()) {
-            xWarning() << *this << QObject::tr(" and ") << visitor->tagName()
-                       << QObject::tr(" are connected as loop. Could not be evaluated properly.");
-        }
-    }
-    else {
-        //update distance if equal or greater than the latest distance
-        if (_sourceDistance <= visitor->sourceDistance()) {
-            _sourceDistance = visitor->sourceDistance() + 1;
-            _visitor = visitor;
-        }
-    }
+    dptr->visit(this, visitor);
+}
 
-    //display in output window
-    xInfo() << QObject::tr("Visiting ") << *this << QObject::tr(" by ")
-            << (visitor == 0 ? "NULL" : visitor->tagName())
-            << QObject::tr(", source distance is ") << sourceDistance();
-
-    //visit all nodes that is connected to this model
-    const KPortList& outs = this->outputs();
-    foreach(KPort * p, outs) {
-        const KPortList& conPorts = p->connectedPorts();
-        foreach(KPort * cp, conPorts) {
-            IModel * md = cp->model();
-            md->visit(this);
-        }
-    }
+void IModel::copyDataTo(IModel * model) const
+{
+    Q_ASSERT(model->info().serialId() == this->info().serialId());
+    Q_UNUSED(model);
 }
 
 IModel * IModel::copyTo(KModelScene * mscene) const
 {
-    /*
-    int _tagId;
-    KLocationPort * _locPort;
-    KReportPort * _repPort;
-    KModelInfo _info;
-    int _sourceDistance;
-    IModel * _visitor;
-    IModelFactory * _factory;
-    */
-
     // for visitors (will bi assigned by scene)
-    IModel * model = mscene->createModel(_factory, _info);
+    IModel * model = mscene->createModel(factory(), info());
     if (model) {
         //assign position
         model->setPos(this->pos());
         model->setZValue(this->zValue());
-
-        //assign report and location
-        if (model->_locPort && this->_locPort)
-            model->_locPort->setLocation(this->_locPort->location());
-        if (model->_repPort && this->_repPort)
-            model->_repPort->setReport(this->_repPort->report());
+        model->setLocation(location());
+        model->setReport(report());
+        copyDataTo(model);
     }
 
     return model;
@@ -124,7 +163,7 @@ IModel * IModel::copyTo(KModelScene * mscene) const
 
 const IModel * IModel::latestVisitor() const
 {
-    return _visitor;
+    return dptr->_visitor;
 }
 
 void IModel::defineParameters()
@@ -139,8 +178,8 @@ bool IModel::allocateIoPorts()
 bool IModel::allocateReportPorts()
 {
     if (needReport()) {
-        _repPort = new KReportPort(this);
-        _repPort->setZValue(zValue()+3);
+        dptr->_repPort = new KReportPort(this);
+        dptr->_repPort->setZValue(zValue()+3);
     }
     return true;
 }
@@ -149,8 +188,8 @@ bool IModel::allocateLocationPorts()
 {
     //check wether this model need location
     if (needLocation()) {
-        _locPort = new KLocationPort(this);
-        _locPort->setZValue(zValue()+2);
+        dptr->_locPort = new KLocationPort(this);
+        dptr->_locPort->setZValue(zValue()+2);
     }
     return true;
 }
@@ -159,26 +198,30 @@ void IModel::arrangePorts()
 {
     //lokasi
     QRectF rect = modelRect();
-    if (_locPort) {
-        _locPort->setPos(rect.x() + KLocationPort::Margin.left, rect.y());
+    if (dptr->_locPort) {
+        dptr->_locPort->setPos(rect.x() + KLocationPort::Margin.left, rect.y());
     }
 
     //report position
-    if (_repPort) {
-        _repPort->setPos(rect.right()-KReportPort::Margin.right, rect.bottom());
+    if (dptr->_repPort) {
+        dptr->_repPort->setPos(rect.right()-KReportPort::Margin.right, rect.bottom());
     }
 
     //input port position
+    int index;
     float dh, ph, base;
     const KPortList inp = inputs();
     int np = inp.size();
     if (np > 0) {
-        ph = inp.first()->boundingRect().height();
-        base = rect.y() - ph/2;
-        dh = ph + (rect.height() - np*ph) / (np+1);
+        ph = inp.first()->boundingRect().height();  //port height
+        base = rect.y() - ph/2;                     //base position
+        dh = ph + (rect.height() - np*ph) / (np+1); //distance between port
+
+        index = 0;
         foreach(KPort * p, inp) {
             base += dh;
             p->setPos(rect.x(), base);
+            p->setIndex(index++);
         }
     }
 
@@ -189,9 +232,12 @@ void IModel::arrangePorts()
         ph = out.first()->boundingRect().height();
         base = rect.y() - ph/2;
         dh = ph + (rect.height() - np*ph) / (np+1);
+
+        index = 0;
         foreach(KPort * p, out) {
             base += dh;
             p->setPos(rect.right(), base);
+            p->setIndex(index++);
         }
     }
 }
@@ -228,13 +274,22 @@ bool IModel::promptUserInputs()
     //create default user input dialogs
     IUserInput * wUserInp = createUserInputWidget();
     if (wUserInp != 0) {
-        QDialog * dlg = new DialogUserInput(this, wUserInp);
-        if (dlg->exec() == QDialog::Accepted) {
-            wUserInp->acceptValues();
-            accepted = true;
+        if (wUserInp->isEmpty()) {
+            //QMessageBox::information (
+            //  QWidget * parent,
+            //  const QString & title,
+            //  const QString & text, StandardButtons buttons = Ok, StandardButton defaultButton = NoButton )
+            QMessageBox::information(0, QObject::tr("User parameters"),
+                                     QObject::tr("User input parameters not defined!"));
         }
-
-        delete dlg;
+        else {
+            QDialog * dlg = new DialogUserInput(this, wUserInp);
+            if (dlg->exec() == QDialog::Accepted) {
+                wUserInp->acceptValues();
+                accepted = true;
+            }
+            delete dlg;
+        }
     }
 
     return accepted;
@@ -262,6 +317,13 @@ KData IModel::data(const Quantity & qty) const
     //ask from connected model
     return inputs().data(qty);
 }
+void IModel::connectionModified(KPort * port, KConnector * con, bool connected)
+{
+    Q_UNUSED(port);
+    Q_UNUSED(con);
+    Q_UNUSED(connected);
+}
+
 void IModel::generateReport()
 {
     KReport * rep = report();
@@ -295,33 +357,76 @@ QString IModel::displayText() const
 
 IModelFactory * IModel::factory() const
 {
-    return this->_factory;
+    return dptr->_factory;
 }
 
 bool IModel::isSource() const
 {
-    return false;
+    return inputs().isEmpty();
+}
+bool IModel::isSink() const
+{
+    return outputs().isEmpty();
 }
 
 int IModel::tagId() const
 {
-    return _tagId;
+    return dptr->_tagId;
 }
 void IModel::setTagId(int id)
 {
-    _tagId = id;
+    int oldId = dptr->_tagId;
+    if (oldId != id)
+        tagIdChange(oldId, id);
+    dptr->_tagId = id;
+    if (oldId != id)
+        tagIdChanged(oldId, id);
 }
+void IModel::tagIdChange(int oldId, int newId)
+{
+    Q_UNUSED(oldId);
+    Q_UNUSED(newId);
+
+    //disconnect
+    notifyConnectionsChanged(false);
+}
+
+void IModel::tagIdChanged(int oldId, int newId)
+{
+    Q_UNUSED(oldId);
+    Q_UNUSED(newId);
+
+    //reconnect
+    notifyConnectionsChanged(true);
+}
+
+void IModel::notifyConnectionsChanged(bool connected)
+{
+    //notify connected models
+    //remove connection or reconnect with this model
+    const KPortList & outs = outputs();
+    foreach(KPort * p, outs) {
+        ConnectorList connectors = p->connectors();
+        foreach(KConnector * con, connectors) {
+            KPort * inp = con->inputPort();
+            IModel * model = inp->model();
+            if (model != 0)
+                model->connectionModified(inp, con, connected);
+        }
+    }
+}
+
 QString IModel::tagName(const QString & post) const
 {
     return info().name() + QString::number(tagId()) + post;
 }
 KModelInfo IModel::info() const
 {
-    return _info;
+    return dptr->_info;
 }
 void IModel::setInfo(const KModelInfo& i)
 {
-    _info = i;
+    dptr->_info = i;
     this->setToolTip(i.text()+"\n"+i.description());
 }
 DataArrayList IModel::inputResults() const
@@ -331,6 +436,30 @@ DataArrayList IModel::inputResults() const
     foreach(KPort * p, inpList)
         resultList << p->data();
     return resultList;
+}
+ModelList IModel::connectedOutputModels() const
+{
+    ModelList list;
+    const KPortList & outs = outputs();
+    foreach(KPort * p, outs) {
+        ConnectorList connectors = p->connectors();
+        foreach(KConnector * con, connectors) {
+            KPort * inp = con->inputPort();
+            if (inp->model() != 0)
+                list.append(inp->model());
+        }
+    }
+
+    return list;
+}
+ConnectorList IModel::outputConnectors() const
+{
+    ConnectorList connectors;
+    const KPortList & outs = outputs();
+    foreach(KPort * p, outs) {
+        connectors.append(p->connectors());
+    }
+    return connectors;
 }
 
 bool IModel::needLocation() const
@@ -344,7 +473,7 @@ bool IModel::needReport() const
 
 KReportPort * IModel::reportPort() const
 {
-    return _repPort;
+    return dptr->_repPort;
 }
 
 KReport * IModel::report() const
@@ -355,20 +484,26 @@ KReport * IModel::report() const
 
     return repPort->report();
 }
+void IModel::setReport(KReport * rep)
+{
+    dptr->setReport(rep);
+}
 
 KLocationPort * IModel::locationPort() const
 {
-    return _locPort;
+    return dptr->_locPort;
 }
 void IModel::setLocationPort(KLocationPort *port)
 {
-    _locPort = port;
+    dptr->_locPort = port;
+}
+void IModel::setLocation(const KLocation & loc)
+{
+    dptr->setLocation(loc);
 }
 KLocation IModel::location() const
 {
-    if (_locPort)
-        return _locPort->location();
-    return KLocation();
+    return dptr->location();
 }
 KDataGroupArray * IModel::userInputs()
 {
@@ -386,12 +521,17 @@ IUserInput * IModel::createUserInputWidget(QWidget * parent)
 
 QRectF IModel::modelRect() const
 {
-    return QRectF(-50, -30, 100, 60);
+    return QRectF(-37.5f, -25, 75, 50);
 }
 
 int IModel::type() const
 {
     return Type;
+}
+
+QImage * IModel::image() const
+{
+    return 0;
 }
 
 QRectF IModel::boundingRect () const
@@ -410,8 +550,15 @@ void IModel::paint(QPainter * painter, const QStyleOptionGraphicsItem * option, 
 
     int penWidth = painter->pen().width();
     QRectF rect = modelRect();
-    painter->drawRect(rect);
 
+    //draw model
+    QImage * img = image();
+    if (img == 0 || img->isNull())
+        painter->drawRect(rect);
+    else
+        painter->drawImage(rect, *img);
+
+    //draw tag name
     QFont f = painter->font();
     f.setPointSize(9.5f);
     painter->setFont(f);
@@ -442,6 +589,38 @@ void IModel::mouseDoubleClickEvent (QGraphicsSceneMouseEvent * event)
     askUserParameters();
     event->accept();
 }
+void IModel::hoverEnterEvent(QGraphicsSceneHoverEvent *event)
+{
+    qDebug() << "+Enter hover event : " << this->tagName();
+    Q_UNUSED(event);
+    setPortsVisible(true);
+}
+
+void IModel::hoverLeaveEvent(QGraphicsSceneHoverEvent *event)
+{
+    qDebug() << "-Leave hover event : " << this->tagName();
+    Q_UNUSED(event);
+    setPortsVisible(false);
+}
+
+void IModel::setPortsVisible(bool v)
+{
+    const KPortList & inp = inputs();
+    for(int k = 0; k < inp.count(); k++)
+        inp.at(k)->setVisible(v);
+
+    const KPortList & out = outputs();
+    for(int k = 0; k < out.count(); k++)
+        out.at(k)->setVisible(v);
+
+    //report port
+    KReportPort * repPort = reportPort();
+    if (repPort != 0)
+        repPort->setVisible(v);
+
+    this->update();
+}
+
 QVariant IModel::itemChange(GraphicsItemChange change, const QVariant &value)
 {
     if (change == ItemPositionChange && scene()) {
@@ -460,19 +639,31 @@ QVariant IModel::itemChange(GraphicsItemChange change, const QVariant &value)
             newPos = QPointF(oldPos.x() + nx*grid, oldPos.y() + ny*grid);
 
             //rearrange ports
-            foreach(KPort * p, inputs())
-                p->rearrangeConnectors(oldPos, newPos);
-            foreach(KPort * p, outputs())
-                p->rearrangeConnectors(oldPos, newPos);
+            if (oldPos != newPos) {
+                foreach(KPort * p, inputs())
+                    p->rearrangeConnectors(oldPos, newPos);
+                foreach(KPort * p, outputs())
+                    p->rearrangeConnectors(oldPos, newPos);
+
+                //some times, the portion of text is erased after moving item
+                //schedule redraw.
+                mc->update();
+            }
 
             return newPos;
         }
         else {
             //rearrange ports
-            foreach(KPort * p, inputs())
-                p->rearrangeConnectors(oldPos, newPos);
-            foreach(KPort * p, outputs())
-                p->rearrangeConnectors(oldPos, newPos);
+            if (oldPos != newPos) {
+                foreach(KPort * p, inputs())
+                    p->rearrangeConnectors(oldPos, newPos);
+                foreach(KPort * p, outputs())
+                    p->rearrangeConnectors(oldPos, newPos);
+
+                //some times, the portion of text is erased after moving item
+                //schedule redraw.
+                mc->update();
+            }
         }
     }
 

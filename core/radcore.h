@@ -10,6 +10,7 @@
 #include "kradionuclide.h"
 #include "kmath.h"
 #include "kreport.h"
+#include "kconnector.h"
 
 
 #endif // RADCORE_H

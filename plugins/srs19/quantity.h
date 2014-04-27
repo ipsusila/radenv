@@ -169,6 +169,9 @@ namespace Srs19 {
     extern Quantity SewageSludgeDensity;
     extern Quantity SludgeContainerDepth;
     extern Quantity ConcentrationInWetSewage;
+    extern Quantity Concentration;
+
+    extern Quantity TotalDose;
 }
 
 #endif // QUANTITY_H

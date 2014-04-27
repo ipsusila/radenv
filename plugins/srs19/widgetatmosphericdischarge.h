@@ -18,6 +18,7 @@ public:
 
     virtual void acceptValues();
     bool validate();
+    bool isEmpty() const;
     QSize sizeHint() const;
     
 private:
