@@ -106,5 +106,19 @@ KGroup<T> xMakeGroup(const QString &name, const QVector<T> &items)
     return KGroup<T>(name, QList<T>::fromVector(items));
 }
 
+template<class T>
+inline QDataStream &operator<<(QDataStream & s, const KGroup<T> & g)
+{
+    s << g.groupId << g.name << g.items;
+    return s;
+}
+
+template<class T>
+inline QDataStream &operator>>(QDataStream &s, KGroup<T> &g)
+{
+    s >> g.groupId >> g.name >> g.items;
+    return s;
+}
+
 
 #endif // KGROUP_H

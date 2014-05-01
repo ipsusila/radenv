@@ -64,6 +64,7 @@ QString KReport::toPlainText()
     return QString::fromUtf8(_buffer.constData());
 }
 
+/*
 void KReport::printData(const KData& d)
 {
     Q_ASSERT(_stream);
@@ -72,6 +73,7 @@ void KReport::printData(const KData& d)
     else if (d.isValid())
         (*_stream) << d.displayText() << Rad::LatinEndLine;
 }
+*/
 
 void KReport::addCase(const KCase& caseObj)
 {
@@ -114,18 +116,29 @@ void KReport::addUserInputs(const KDataGroupArray & dga)
     (*_stream) << Rad::LatinEndLine << "---------------------------------------------------------------------------------" << Rad::LatinEndLine;
     for(int k = 0; k < dga.size(); k++) {
         const DataGroup & group = dga.at(k);
+        if (group.isEmpty())
+            continue;
+
         (*_stream) << QObject::tr("@Group : ") << group.name << Rad::LatinEndLine;
         for(int n = 0; n < group.count(); n++)
-            printData(group.itemAt(n));
+            (*_stream) << group.itemAt(n);
     }
 }
 void KReport::addResult(const KDataArray & da)
 {
     Q_ASSERT(_stream);
+    (*_stream) << da;
+    /*
     if (da.isEmpty())
         return;
 
     (*_stream) << Rad::LatinEndLine << "---------------------------------------------------------------------------------" << Rad::LatinEndLine;
     for(int k = 0; k < da.size(); k++)
         printData(da.at(k));
+    */
+}
+void KReport::addResult(const KDataTable & table)
+{
+    Q_ASSERT(_stream);
+    (*_stream) << table;
 }

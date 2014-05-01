@@ -172,6 +172,17 @@ namespace Srs19 {
     extern Quantity Concentration;
 
     extern Quantity TotalDose;
+
+    extern Quantity AbsoluteAirHumidity;
+    extern Quantity AtmosphericTritiumConcentration;
+    extern Quantity WaterTritiumConcentration;
+    extern Quantity AtmosphericWaterIntakeFraction;
+    extern Quantity WaterIntakeFraction;
+    extern Quantity TritiumDoseFactor;
+    extern Quantity SpecificCarbonActivity;
+    extern Quantity DietaryCarbonFraction;
+    extern Quantity CarbonDoseFactor;
+    extern Quantity AirborneCarbonConcentration;
 }
 
 #endif // QUANTITY_H

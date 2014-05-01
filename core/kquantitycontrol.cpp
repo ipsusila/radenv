@@ -33,6 +33,17 @@ public:
     }
 };
 
+//helper function
+QDataStream & operator<<(QDataStream &s, const KQuantityControl &qc)
+{
+    return s;
+}
+
+QDataStream & operator>>(QDataStream &s, KQuantityControl &qc)
+{
+    return s;
+}
+
 KQuantityControl::KQuantityControl(const Quantity * ctrl, bool enableOnSet)
     : data(new KQuantityControlPrivate(ctrl, enableOnSet))
 {

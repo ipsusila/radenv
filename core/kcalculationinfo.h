@@ -1,7 +1,6 @@
 #ifndef KCALCULATIONINFO_H
 #define KCALCULATIONINFO_H
 
-#include <QSharedDataPointer>
 #include "radglobal.h"
 
 class KCalculationInfoPrivate;

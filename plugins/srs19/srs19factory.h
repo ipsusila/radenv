@@ -17,6 +17,7 @@ public:
     IModel * createModel(const KModelInfo & info);
     const GroupInfoList & groups() const;
     ConstQuantityList availableQuantities() const;
+    QuantityList editableQuantities() const;
     QString name() const;
     QString author() const;
     QString version() const;

@@ -20,6 +20,7 @@ public:
     virtual void addLocation(const KLocation& loc);
     virtual void addUserInputs(const KDataGroupArray & dga);
     virtual void addResult(const KDataArray & da);
+    virtual void addResult(const KDataTable & table);
     virtual QString toPlainText();
     virtual void beginReport();
     virtual void endReport();
@@ -28,8 +29,6 @@ private:
     QString _name;
     QTextStream * _stream;
     QByteArray _buffer;
-
-    void printData(const KData& d);
 };
 
 #endif // KREPORT_H

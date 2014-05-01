@@ -1,7 +1,6 @@
 #ifndef KSTORAGECONTENT_H
 #define KSTORAGECONTENT_H
 
-#include <QSharedDataPointer>
 #include <QDataStream>
 #include "radglobal.h"
 

@@ -15,6 +15,7 @@ public:
     bool isAnyConnected() const;
 };
 
+class KPortPrivate;
 class K_CORE_EXPORT KPort : public QGraphicsItem
 {
 public:
@@ -42,6 +43,8 @@ public:
     KLocation firstValidLocation() const;
     void setIndex(int idx);
     int index() const;
+    bool isAutoHide() const;
+    void setAutoHide(bool ah);
 
     void removeConnections();
     void connectTo(KPort * dest, KConnector * con);
@@ -55,14 +58,9 @@ public:
     void rearrangeConnectors(const QPointF& oldPos, const QPointF& newPos);
 
 private:
-    IModel *                _model;
-    const Quantity *        _quantity;
-    KPort::DataDirection    _direction;
-    int                     _index;
-    KPortList               _conPorts;
-    ConnectorList           _conList;
+    Q_DISABLE_COPY(KPort)
+    QSharedDataPointer<KPortPrivate> dptr;
 };
-
 
 Q_DECLARE_OPERATORS_FOR_FLAGS(KPort::DataDirection)
 

@@ -336,10 +336,20 @@ void IModel::generateReport()
         rep->addLocation(lp->location());
     }
 
+    KDataTable table;
     KDataGroupArray * userInp = this->userInputs();
-    if (userInp != 0)
-        rep->addUserInputs(*userInp);
-    rep->addResult(this->result());
+    if (userInp != 0) {
+        KDataGroupArray dga;
+        userInp->separateTo(&dga, &table);
+        rep->addUserInputs(dga);
+    }
+
+    KDataArray da;
+    result().separateTo(&da, &table);
+    rep->addResult(da);
+
+    table.transpose();
+    rep->addResult(table);
 }
 
 const KPortList & IModel::inputs() const
@@ -606,12 +616,18 @@ void IModel::hoverLeaveEvent(QGraphicsSceneHoverEvent *event)
 void IModel::setPortsVisible(bool v)
 {
     const KPortList & inp = inputs();
-    for(int k = 0; k < inp.count(); k++)
-        inp.at(k)->setVisible(v);
+    for(int k = 0; k < inp.count(); k++) {
+        KPort * p = inp.at(k);
+        bool ah = p->isAutoHide();
+        p->setVisible((ah && v) || !ah);
+    }
 
     const KPortList & out = outputs();
-    for(int k = 0; k < out.count(); k++)
-        out.at(k)->setVisible(v);
+    for(int k = 0; k < out.count(); k++) {
+        KPort * p = out.at(k);
+        bool ah = p->isAutoHide();
+        p->setVisible((ah && v) || !ah);
+    }
 
     //report port
     KReportPort * repPort = reportPort();

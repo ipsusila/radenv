@@ -1,7 +1,6 @@
 #ifndef KSETTINGMANAGER_H
 #define KSETTINGMANAGER_H
 
-#include <QSharedDataPointer>
 #include <QRect>
 #include "imodelfactory.h"
 

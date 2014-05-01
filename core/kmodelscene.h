@@ -2,7 +2,6 @@
 #define KMODELSCENE_H
 
 #include <QGraphicsScene>
-#include <QExplicitlySharedDataPointer>
 #include "imodelfactory.h"
 #include "kcalculationinfo.h"
 
@@ -19,11 +18,6 @@ public:
 
     KModelScene(int x, int y, int w, int h);
     virtual ~KModelScene();
-
-    void addFactory(IModelFactory * factory);
-    int factoryCount() const;
-    IModelFactory * factory(int idx) const;
-    FactoryList factories() const;
     IModel * createModel(IModelFactory * factory, const KModelInfo& info);
     int copyTo(KModelScene * mscene, bool all) const;
     void clearModels();

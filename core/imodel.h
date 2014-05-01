@@ -5,7 +5,6 @@
 #include <QIODevice>
 #include <QIcon>
 #include <QGraphicsItem>
-#include <QSharedDataPointer>
 #include "kport.h"
 #include "kmodelinfo.h"
 #include "klocationport.h"

@@ -177,7 +177,17 @@ namespace Srs19 {
             << &SludgeContainerDepth
             << &ConcentrationInWetSewage
             << &Concentration
-            << &TotalDose;
+            << &TotalDose
+            << &AbsoluteAirHumidity
+            << &AtmosphericTritiumConcentration
+            << &WaterTritiumConcentration
+            << &AtmosphericWaterIntakeFraction
+            << &WaterIntakeFraction
+            << &TritiumDoseFactor
+            << &SpecificCarbonActivity
+            << &DietaryCarbonFraction
+            << &CarbonDoseFactor
+            << &AirborneCarbonConcentration;
 
         //assign to const
         for (int k = 0; k < __qtyList.size(); k++)
@@ -562,6 +572,26 @@ Quantity Concentration =
 Quantity TotalDose =
     {150, Rad::Real, DIGIT_DEF, 0, MAX_REAL, 0, "E", "E", QObject::tr("Total dose"), "Sv/a", "Sv/a", QObject::tr("Total dose rate")};
 
+Quantity AbsoluteAirHumidity =
+    {151, Rad::NumText, DIGIT_DEF, 0, MAX_REAL, 6e-3, "Hx", "H_x", QObject::tr("Absolute air humidity"), "L/m3", "L/m3", QObject::tr("Absolute humidity of the atmosphere")};
+Quantity AtmosphericTritiumConcentration =
+    {152, Rad::Real, DIGIT_DEF, 0, MAX_REAL, 0, "Cax", "C_{ax}", QObject::tr("Concentration of H-3 in atmosphere"), "Bq/L", "Bq/L", QObject::tr("Steady state concentration of H-3 in atmospheric wator vapour")};
+Quantity WaterTritiumConcentration =
+    {153, Rad::Real, DIGIT_DEF, 0, MAX_REAL, 0, "Cwx", "C_{wx}", QObject::tr("Concentration of H-3 in water"), "Bq/L", "Bq/L", QObject::tr("Steady state concentration of H-3 in water")};
+Quantity AtmosphericWaterIntakeFraction =
+    {154, Rad::Real, DIGIT_DEF, 0, 1, 1, "fA", "f_A", QObject::tr("Fraction of total water intake from atmosphere"), "", "", QObject::tr("Fraction of the total water intake that is derived from atmospheric water vapour")};
+Quantity WaterIntakeFraction =
+    {155, Rad::Real, DIGIT_DEF, 0, 1, 1, "fW", "f_W", QObject::tr("Fraction of total water intake from water"), "", "", QObject::tr("Fraction of the total water intake from aquatic discharges")};
+Quantity TritiumDoseFactor =
+    {156, Rad::NumText, DIGIT_DEF, 0, MAX_REAL, 2.6e-8, "g", "g", QObject::tr("Dose factor of H-3"), "Sv/a per Bq/L", "Sv/a per Bq/L", QObject::tr("Dose rate conversion factor for H-3")};
+Quantity SpecificCarbonActivity =
+    {157, Rad::Real, DIGIT_DEF, 0, MAX_REAL, 0, "Ax", "A_x", QObject::tr("Activity of C-14 per gram of C"), "Bq/g", "Bq/g", QObject::tr("Specific activity of C-14 per gram of Carbon")};
+Quantity DietaryCarbonFraction =
+    {158, Rad::Real, DIGIT_DEF, 0, MAX_REAL, 1, "fca", "f_{ca}", QObject::tr("Fraction of total dietary carbon"), "", "", QObject::tr("Fraction of total dietary carbon")};
+Quantity CarbonDoseFactor =
+    {159, Rad::NumText, DIGIT_DEF, 0, MAX_REAL, 5.6e-5, "g", "g", QObject::tr("Dose factor of C-14"), "Sv/a per Bq/g", "Sv/a per Bq/g", QObject::tr("Effective dose rate factor that relates to annual dose rate to the concentration of C-14 per gram of carbon in people")};
+Quantity AirborneCarbonConcentration =
+    {160, Rad::NumText, DIGIT_DEF, 0, MAX_REAL, 0.18, "Cx", "C_x", QObject::tr("Concentration of airborne carbon"), "g/m3", "g/m3", QObject::tr("Concentration of airborne carbon (default value assumed to be 0.18, corresponding to an average CO2 concentration of 330 ppm")};
 //end of symbol namespace
 }
 

@@ -2,6 +2,7 @@
 #define RADQUANTITY_H
 
 #include <QDataStream>
+#include <QVariant>
 
 /**
  * Default namespace
@@ -80,6 +81,29 @@ typedef struct _tagQuantity
         return QString("%1 (%2)").arg(text).arg(unit);
     }
 } Quantity;
+
+/**
+ * Quantity and Value pair
+ */
+typedef struct _tagQuantityValue
+{
+    const Quantity * quantity;
+    QVariant value;
+
+    _tagQuantityValue() : quantity(0)
+    {
+    }
+
+    _tagQuantityValue(const Quantity * qty, const QVariant & val)
+        : quantity(qty), value(val)
+    {
+    }
+
+    inline bool isValid() const
+    {
+        return quantity != 0 && value.isValid();
+    }
+} QuantityValue;
 
 inline QDataStream & operator<<(QDataStream &s, const Quantity & item)
 {

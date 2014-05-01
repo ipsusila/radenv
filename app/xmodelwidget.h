@@ -4,8 +4,6 @@
 #include <QWidget>
 #include <QGridLayout>
 
-class IModelFactory;
-
 class XModelGroup : public QWidget
 {
     Q_OBJECT

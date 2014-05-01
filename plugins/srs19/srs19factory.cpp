@@ -65,6 +65,10 @@ ConstQuantityList Srs19Factory::availableQuantities() const
 {
     return Srs19::availableQuantities();
 }
+QuantityList Srs19Factory::editableQuantities() const
+{
+    return Srs19::editableQuantities();
+}
 
 IParamsEditor * Srs19Factory::paramsEditor()
 {

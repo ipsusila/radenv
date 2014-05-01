@@ -1,7 +1,6 @@
 #ifndef KCASE_H
 #define KCASE_H
 
-#include <QSharedDataPointer>
 #include "radglobal.h"
 
 class KCasePrivate;

@@ -3,6 +3,8 @@
 
 #include <QList>
 #include <QSharedPointer>
+#include <QSharedDataPointer>
+#include <QExplicitlySharedDataPointer>
 #include <QtCore/qglobal.h>
 #include <QPair>
 #include <QDateTime>
@@ -20,6 +22,7 @@ class KPort;
 class KData;
 class KDataItem;
 class KDataArray;
+class KDataTable;
 class IModel;
 class KOutput;
 class KReport;
@@ -36,6 +39,7 @@ class KCalculationInfo;
 class KModelScene;
 class KSettingManager;
 class KQuantityControl;
+class KPluginManager;
 
 struct _tagPM {
     int left;
@@ -102,31 +106,31 @@ typedef struct _tagPM                   SPadding;
 
 
 namespace Rad {
-    K_CORE_EXPORT extern const char LatinEndLine;
-    K_CORE_EXPORT extern const Quantity EmptyQuantity;
-    K_CORE_EXPORT extern const Quantity ScalarInput;
-    K_CORE_EXPORT extern const Quantity ScalarInput1;
-    K_CORE_EXPORT extern const Quantity ScalarInput2;
-    K_CORE_EXPORT extern const Quantity ScalarInput3;
-    K_CORE_EXPORT extern const Quantity ScalarInput4;
-    K_CORE_EXPORT extern const Quantity ScalarInput5;
-    K_CORE_EXPORT extern const Quantity ScalarInput6;
-    K_CORE_EXPORT extern const Quantity ScalarInput7;
-    K_CORE_EXPORT extern const Quantity ScalarInput8;
-    K_CORE_EXPORT extern const Quantity ScalarInput9;
+    extern K_CORE_EXPORT const char LatinEndLine;
+    extern K_CORE_EXPORT const Quantity EmptyQuantity;
+    extern K_CORE_EXPORT const Quantity ScalarInput;
+    extern K_CORE_EXPORT const Quantity ScalarInput1;
+    extern K_CORE_EXPORT const Quantity ScalarInput2;
+    extern K_CORE_EXPORT const Quantity ScalarInput3;
+    extern K_CORE_EXPORT const Quantity ScalarInput4;
+    extern K_CORE_EXPORT const Quantity ScalarInput5;
+    extern K_CORE_EXPORT const Quantity ScalarInput6;
+    extern K_CORE_EXPORT const Quantity ScalarInput7;
+    extern K_CORE_EXPORT const Quantity ScalarInput8;
+    extern K_CORE_EXPORT const Quantity ScalarInput9;
 
-    K_CORE_EXPORT extern const Quantity ScalarOutput;
-    K_CORE_EXPORT extern const Quantity ScalarOutput1;
-    K_CORE_EXPORT extern const Quantity ScalarOutput2;
-    K_CORE_EXPORT extern const Quantity ScalarOutput3;
-    K_CORE_EXPORT extern const Quantity ScalarOutput4;
-    K_CORE_EXPORT extern const Quantity ScalarOutput5;
+    extern K_CORE_EXPORT const Quantity ScalarOutput;
+    extern K_CORE_EXPORT const Quantity ScalarOutput1;
+    extern K_CORE_EXPORT const Quantity ScalarOutput2;
+    extern K_CORE_EXPORT const Quantity ScalarOutput3;
+    extern K_CORE_EXPORT const Quantity ScalarOutput4;
+    extern K_CORE_EXPORT const Quantity ScalarOutput5;
 
-    K_CORE_EXPORT extern const Quantity CommentQuantity;
-    K_CORE_EXPORT extern const Quantity NameQuantity;
-    K_CORE_EXPORT extern const Quantity UseDefaultValue;
-    K_CORE_EXPORT extern const Quantity LongCommentQuantity;
-    K_CORE_EXPORT extern const Quantity UseDefaultValue2;
+    extern K_CORE_EXPORT const Quantity CommentQuantity;
+    extern K_CORE_EXPORT const Quantity NameQuantity;
+    extern K_CORE_EXPORT const Quantity UseDefaultValue;
+    extern K_CORE_EXPORT const Quantity LongCommentQuantity;
+    extern K_CORE_EXPORT const Quantity UseDefaultValue2;
 }
 
 #endif // RADGLOBAL_H

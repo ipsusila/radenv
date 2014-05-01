@@ -1,7 +1,6 @@
 #ifndef KQUANTITYCONTROL_H
 #define KQUANTITYCONTROL_H
 
-#include <QSharedDataPointer>
 #include "radglobal.h"
 
 class KQuantityControlPrivate;
@@ -26,5 +25,8 @@ public:
 private:
     QSharedDataPointer<KQuantityControlPrivate> data;
 };
+
+extern K_CORE_EXPORT QDataStream & operator<<(QDataStream &s, const KQuantityControl &qc);
+extern K_CORE_EXPORT QDataStream & operator>>(QDataStream &s, KQuantityControl &qc);
 
 #endif // KQUANTITYCONTROL_H

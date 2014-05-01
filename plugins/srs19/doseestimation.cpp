@@ -29,22 +29,6 @@ bool DoseEstimation::allocateIoPorts()
 
 void DoseEstimation::defineParameters()
 {
-    /*
-    DataGroup dg1(Inhalation, QObject::tr("Inhalation"));
-    dg1 << KData(&Srs19::InhalationRate, inhalationRate());
-    _userInputs << dg1;
-
-    DataGroup dg2(InhalationSludge, QObject::tr("Sewage Sludge"));
-    dg2 << KData(&Srs19::ExposedFractionTime, 0.228)
-        << KData(&Srs19::DustLoadingFactor, 1e-7);
-    _userInputs << dg2;
-
-    _userInputs << DataGroup(Ingestion, QObject::tr("Ingestion"))
-                << DataGroup(Immersion, QObject::tr("Immersion"))
-                << DataGroup(ExternalGround, QObject::tr("Ground Deposition"))
-                << DataGroup(ExternalSediment, QObject::tr("Sediment Exposure"));
-    */
-
     DataGroup dg1(Inhalation, QObject::tr("Inhalation"));
     dg1 << KData(&Srs19::InhalationRate, inhalationRate());
 

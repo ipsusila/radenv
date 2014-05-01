@@ -1,8 +1,7 @@
 #ifndef KDATA_H
 #define KDATA_H
 
-#include <QVariant>
-#include <QSharedDataPointer>
+#include <QTextStream>
 #include "klocation.h"
 #include "kquantitycontrol.h"
 
@@ -121,6 +120,8 @@ public:
     const KData & find(const Quantity& v) const;
     QString displayText() const;
 
+    void separateTo(KDataArray * dArray, KDataTable * dTable) const;
+
     void appendOrMerge(const Quantity * qty, const QString& nm,
                        const QVariant& v, KData::ContentTypes t);
     void appendOrReplace(const KData& di);
@@ -145,6 +146,8 @@ public:
     ConstQuantityList quantities() const;
     KDataArray toDataArray() const;
 
+    void separateTo(KDataGroupArray * dArray, KDataTable * dTable) const;
+
     void removeQuantity(const Quantity & v, int gid);
     void appendOrReplace(const KData& di, int gid);
     void replace(const KData& di, int gid = DataGroup::DefaultId);
@@ -154,5 +157,49 @@ public:
 private:
     QuantityControlList _controlList;
 };
+
+class KDataTablePrivate;
+class K_CORE_EXPORT KDataTable
+{
+public:
+    KDataTable();
+    KDataTable(const KDataTable&);
+    KDataTable &operator=(const KDataTable&);
+    virtual ~KDataTable();
+
+    void clear();
+    void append(const KData& d);
+    void transpose();
+    bool isTransposed() const;
+    bool isEmpty() const;
+    int rowCount() const;
+    int columnCount() const;
+    int maxRowHeaderLength() const;
+    int maxColumnLength(int col) const;
+
+    const Quantity * quantity(int idx) const;
+    QString name(int idx) const;
+
+    QString columnHeader(int col) const;
+    QString rowHeader(int row) const;
+    QVariant value(int row, int col) const;
+    void replace(int row, int col, const QVariant& v);
+
+private:
+    QSharedDataPointer<KDataTablePrivate> data;
+};
+
+extern K_CORE_EXPORT QDataStream & operator<<(QDataStream & s, const KDataItem & di);
+extern K_CORE_EXPORT QDataStream & operator>>(QDataStream & s, KDataItem & di);
+extern K_CORE_EXPORT QDataStream & operator<<(QDataStream & s, const KData &d);
+extern K_CORE_EXPORT QDataStream & operator>>(QDataStream & s, KData &d);
+extern K_CORE_EXPORT QDataStream & operator<<(QDataStream & s, const KDataArray & da);
+extern K_CORE_EXPORT QDataStream & operator>>(QDataStream & s, KDataArray & da);
+extern K_CORE_EXPORT QDataStream & operator<<(QDataStream & s, const KDataGroupArray & dga);
+extern K_CORE_EXPORT QDataStream & operator>>(QDataStream & s, KDataGroupArray & dga);
+
+extern K_CORE_EXPORT QTextStream & operator<<(QTextStream & s, const KData & d);
+extern K_CORE_EXPORT QTextStream & operator<<(QTextStream & s, const KDataArray & da);
+extern K_CORE_EXPORT QTextStream & operator<<(QTextStream & s, const KDataTable & table);
 
 #endif // KDATA_H

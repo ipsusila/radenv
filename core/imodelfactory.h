@@ -38,6 +38,8 @@ public:
      */
     virtual ConstQuantityList availableQuantities() const = 0;
 
+    virtual QuantityList editableQuantities() const = 0;
+
     /**
      * @brief Get setting manager for the plugins.
      * @return

@@ -58,11 +58,8 @@ private:
     void populatePluginMenus(XModelWidget * mw, QMenu * groupMenu,
         IModelFactory * factory, GroupInfoList groupList);
     void populatePluginMenus(QMenu * groupMenu, IModelFactory * factory, GroupInfoList groupList);
-    void loadAllPlugins();
-    bool loadPlugin(KModelScene * scene, const QString& path=QString());
 
-    FactoryList factories;
-
+    KPluginManager * pluginManager;
     XOutputView * outView;
     KModelScene * scene;
     XModelView * view;

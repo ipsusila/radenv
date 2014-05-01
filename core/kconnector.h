@@ -2,7 +2,6 @@
 #define KCONNECTOR_H
 
 #include <QGraphicsItem>
-#include <QSharedDataPointer>
 #include "radglobal.h"
 
 class KConnectorPrivate;

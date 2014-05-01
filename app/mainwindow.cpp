@@ -18,17 +18,25 @@
 #include "dialoglocation.h"
 #include "dialogradionuclide.h"
 #include "kmath.h"
+#include "kpluginmanager.h"
+
+//test
+#include "testclass.h"
 
 MainWindow::MainWindow(XOutputView * vw, QWidget *parent) :
     QMainWindow(parent), outView(vw)
 {
+    pluginManager = new KPluginManager();
+
     //create scene
     scene = new KModelScene(-800, -400, 1600, 800);
 
+    //todo (load from database)
     KStorage::addStorage("/home/ips/workspace/smea.db");
 
     //load all plugins
-    loadAllPlugins();
+    //loadAllPlugins();
+    pluginManager->loadPlugins();
 
     createView();
     createActions();
@@ -40,6 +48,8 @@ MainWindow::MainWindow(XOutputView * vw, QWidget *parent) :
     setUnifiedTitleAndToolBarOnMac(true);
 
     qDebug() << "Number: " << QString::number(1.0, 'f', 0) << ";" << QString::number(1.2, 'f', 2);
+    KPluginManager pm1;
+    qDebug() << "Factory count: " << pm1.factoryCount();
 
 }
 
@@ -49,13 +59,14 @@ MainWindow::~MainWindow()
 
     //delete storage;
     KStorage::removeStorages();
+
+    //remove plugins
+    delete pluginManager;
 }
 
 void MainWindow::closeEvent(QCloseEvent *event)
 {
-    for (int k = 0; k < factories.size(); k++) {
-        factories[k]->onFinalized();
-    }
+    pluginManager->unloadPlugins();
     event->accept();
 }
 
@@ -423,7 +434,7 @@ void MainWindow::createPluginMenus()
 {
     //add top menus
     bool hasSeparator = false;    
-    FactoryList factories = scene->factories();
+    FactoryList factories = pluginManager->factories();
     foreach(IModelFactory * factory, factories) {
         //if is top level factory, add as new menu item (placed after model)
         if (factory->isTopLevel()) {
@@ -514,72 +525,6 @@ void MainWindow::createStatusBar()
     statusBar()->showMessage(tr("Ready"));
 }
 
-/**
- * @brief MainWindow::loadAllPlugins
- */
-void MainWindow::loadAllPlugins()
-{
-    //load plugin from default
-    if (!loadPlugin(scene))
-        qWarning() << "Can not load any plugins from [Default] location";
-
-    //load plugins at user directory
-    //TODO
-}
-
-/**
- * @brief MainWindow::loadPlugin
- * @param scene
- * @param path
- * @return
- */
-bool MainWindow::loadPlugin(KModelScene * scene, const QString& path)
-{
-    QDir pluginsDir;
-    if (path.isEmpty()) {
-        //default plugin dirs
-        pluginsDir = QDir(qApp->applicationDirPath());
-    #if defined(Q_OS_WIN)
-        if (pluginsDir.dirName().toLower() == "debug" || pluginsDir.dirName().toLower() == "release")
-            pluginsDir.cdUp();
-    #elif defined(Q_OS_MAC)
-        if (pluginsDir.dirName() == "MacOS") {
-            pluginsDir.cdUp();
-            pluginsDir.cdUp();
-            pluginsDir.cdUp();
-        }
-    #endif
-        pluginsDir.cd("plugins");
-    }
-    else {
-        pluginsDir = QDir(path);
-    }
-
-    //load available plugins
-    foreach (QString fileName, pluginsDir.entryList(QDir::Files)) {
-        QPluginLoader pluginLoader(pluginsDir.absoluteFilePath(fileName));
-        QObject *plugin = pluginLoader.instance();
-        if (plugin) {
-            IModelFactory * factory = qobject_cast<IModelFactory *>(plugin);
-            if (factory) {
-                factory->initialize();
-                scene->addFactory(factory);
-
-                xTrace() << "Plugin directory: " << pluginsDir.absoluteFilePath(fileName);
-                xInfo() << "Name:" << factory->name() << ",Author:" << factory->author()
-                         << "Version: " << factory->version();
-                factories.append(factory);
-            }
-        }
-        else {
-            qWarning() << "Error: " << pluginLoader.errorString();
-            pluginLoader.unload();
-        }
-    }
-
-    return (scene->factoryCount() > 0);
-}
-
 void MainWindow::modelTriggeredAction(IModelFactory* f, const KModelInfo & info)
 {
     Q_ASSERT(f != 0);
@@ -591,7 +536,12 @@ void MainWindow::modelTriggeredAction(IModelFactory* f, const KModelInfo & info)
 
 void MainWindow::newAssessment()
 {
-
+    quintptr addr = (quintptr)TestClass::instance();
+    QString sAddr = QString::number(addr, 16);
+    xTrace() << "@Address : " << sAddr;
+    xTrace() << "@@Current value: " << TestClass::instance()->currentValue();
+    TestClass::instance()->increment(20);
+    xTrace() << "#@Next value: " << TestClass::instance()->currentValue();
 }
 
 void MainWindow::openAssessment()

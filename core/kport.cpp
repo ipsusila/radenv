@@ -55,12 +55,152 @@ bool KPortList::isAnyConnected() const
     return false;
 }
 
+class KPortPrivate : public QSharedData
+{
+public:
+    IModel *                _model;
+    const Quantity *        _quantity;
+    KPort::DataDirection    _direction;
+    int                     _index;
+    bool                    _autoHide;
+    KPortList               _conPorts;
+    ConnectorList           _conList;
+
+    KPortPrivate(IModel * m, const Quantity * qty, KPort::DataDirection dir)
+        : _model(m), _quantity(qty), _direction(dir), _index(0), _autoHide(false)
+    {
+    }
+
+    KLocation firstValidLocation() const
+    {
+        KLocation loc;
+        if ((_direction & KPort::Output) == KPort::Output)
+        {
+            if (_model != 0)
+                loc = _model->result().location();
+        }
+        else {
+            foreach(KPort * p, _conPorts) {
+                IModel * model = p->model();
+                if (model) {
+                    loc = model->result().location();
+                    if (loc.isValid())
+                        break;
+                }
+            }
+        }
+        return loc;
+    }
+
+    KDataArray data() const
+    {
+        KDataArray da;
+        if ((_direction & KPort::Output) == KPort::Output)
+        {
+            if (_model != 0)
+                da = _model->result();
+        }
+        else {
+            foreach(KPort * p, _conPorts) {
+                IModel * model = p->model();
+                if (model)
+                    da << model->result();
+            }
+        }
+        return da;
+    }
+
+    KData data(const Quantity &qty) const
+    {
+        //for output port
+        //request data from the model
+        if ((_direction & KPort::Output) == KPort::Output)
+        {
+            if (_model)
+                return _model->data(qty);
+        }
+
+        if ((_direction & KPort::Input) == KPort::Input) {
+            //for input port
+            //request data from connected model
+            //return when valid data found
+            foreach(KPort * p, _conPorts) {
+                IModel * model = p->model();
+                if (model) {
+                    KData d = model->data(qty);
+                    if (d.isValid())
+                        return d;
+                }
+            }
+        }
+
+        //if not any valid data found
+        //return invalid data
+        return KData();
+    }
+
+    KData data(int idx) const
+    {
+        if (xHas(_direction, KPort::Output))
+        {
+            if (_model != 0)
+                return _model->data(*_quantity);
+        }
+        else if (xHas(_direction, KPort::Input)) {
+            if (idx >= 0 && idx < _conPorts.size()) {
+                KPort * p = _conPorts.at(idx);
+                IModel * m = p->model();
+                if (m != 0)
+                    return m->data(*(p->quantity()));
+            }
+        }
+
+        //if not any valid data found
+        //return invalid data
+        return KData();
+    }
+
+    inline void append(KPort * p, KConnector * c)
+    {
+        _conPorts.append(p);
+        _conList.append(c);
+    }
+
+    inline void remove(KPort * p, KConnector * c)
+    {
+        _conPorts.removeOne(p);
+        _conList.removeOne(c);
+    }
+
+    void removeConnections(KPort * port)
+    {
+        QGraphicsScene * sc = port->scene();
+        while (!_conList.isEmpty()) {
+            //call disconnect will also remove connector
+            KConnector * con = _conList.first();
+            con->disconnect();
+
+            if (sc != 0)
+                sc->removeItem(con);
+            delete con;
+        }
+    }
+
+    inline void rearrangeConnectors(KPort * port, const QPointF& oldPos, const QPointF& newPos)
+    {
+        foreach(KConnector * con, _conList)
+            con->movePos(port, oldPos, newPos);
+    }
+
+};
+
+
 KPort::KPort(IModel * m, const Quantity * qty, KPort::DataDirection dir)
-    : QGraphicsItem(m), _model(m), _quantity(qty), _direction(dir), _index(0)
+    : QGraphicsItem(m), dptr(new KPortPrivate(m, qty, dir))
 {
     //calculate position
     this->setZValue(m->zValue()+1);
-    this->setVisible(false);
+    this->setVisible(!isAutoHide());
 }
 KPort::~KPort()
 {
@@ -69,130 +209,66 @@ KPort::~KPort()
 
 IModel * KPort::model() const
 {
-    return _model;
+    return dptr->_model;
 }
 
 const Quantity * KPort::quantity() const
 {
-    return _quantity;
+    return dptr->_quantity;
 }
 KPort::DataDirection KPort::direction() const
 {
-    return _direction;
+    return dptr->_direction;
 }
 const KPortList & KPort::connectedPorts() const
 {
-    return _conPorts;
+    return dptr->_conPorts;
 }
 ConnectorList KPort::connectors() const
 {
-    return _conList;
+    return dptr->_conList;
 }
 void KPort::setIndex(int idx)
 {
-    _index = idx;
+    dptr->_index = idx;
 }
 
 int KPort::index() const
 {
-    return _index;
+    return dptr->_index;
 }
+bool KPort::isAutoHide() const
+{
+    return dptr->_autoHide;
+}
+void KPort::setAutoHide(bool ah)
+{
+    dptr->_autoHide = ah;
+}
+
 KLocation KPort::firstValidLocation() const
 {
-    KLocation loc;
-    if ((direction() & KPort::Output) == KPort::Output)
-    {
-        IModel * model = this->model();
-        if (model)
-            loc = model->result().location();
-    }
-    else {
-        foreach(KPort * p, _conPorts) {
-            IModel * model = p->model();
-            if (model) {
-                loc = model->result().location();
-                if (loc.isValid())
-                    break;
-            }
-        }
-    }
-    return loc;
+    return dptr->firstValidLocation();
 }
 
 KDataArray KPort::data() const
 {
-    KDataArray da;
-    if ((direction() & KPort::Output) == KPort::Output)
-    {
-        IModel * model = this->model();
-        if (model)
-            da = model->result();
-    }
-    else {
-        foreach(KPort * p, _conPorts) {
-            IModel * model = p->model();
-            if (model)
-                da << model->result();
-        }
-    }
-    return da;
+    return dptr->data();
 }
 
 KData KPort::data(const Quantity &qty) const
 {
-    //for output port
-    //request data from the model
-    if ((direction() & KPort::Output) == KPort::Output)
-    {
-        IModel * model = this->model();
-        if (model)
-            return model->data(qty);
-    }
-
-    if ((direction() & KPort::Input) == KPort::Input) {
-        //for input port
-        //request data from connected model
-        //return when valid data found
-        foreach(KPort * p, _conPorts) {
-            IModel * model = p->model();
-            if (model) {
-                KData d = model->data(qty);
-                if (d.isValid())
-                    return d;
-            }
-        }
-    }
-
-    //if not any valid data found
-    //return invalid data
-    return KData();
+    return dptr->data(qty);
 }
 KData KPort::data(int idx) const
 {
-    if (xHas(direction(), KPort::Output))
-    {
-        IModel * m = model();
-        if (m != 0)
-            return m->data(*quantity());
-    }
-    else if (xHas(direction(), KPort::Input)) {
-        if (idx >= 0 && idx < _conPorts.size()) {
-            KPort * p = _conPorts.at(idx);
-            IModel * m = p->model();
-            if (m != 0)
-                return m->data(*(p->quantity()));
-        }
-    }
-
-    //if not any valid data found
-    //return invalid data
-    return KData();
+    return dptr->data(idx);
 }
 
 
 bool KPort::isConnected() const
 {
-    return !_conPorts.isEmpty();
+    return !dptr->_conPorts.isEmpty();
 }
 
 void KPort::connectTo(KPort *dest, KConnector *con)
@@ -202,10 +278,8 @@ void KPort::connectTo(KPort *dest, KConnector *con)
     Q_ASSERT(con->isConnected());
 
     if (con->oppositePort(this) == dest) {
-        _conPorts.append(dest);
-        dest->_conPorts.append(this);
-        _conList.append(con);
-        dest->_conList.append(con);
+        dptr->append(dest, con);
+        dest->dptr->append(this, con);
     }
 }
 void KPort::disconnectFrom(KPort * dest, KConnector * con)
@@ -214,29 +288,19 @@ void KPort::disconnectFrom(KPort * dest, KConnector * con)
     Q_ASSERT(con);
     Q_ASSERT(con->isConnected());
     if (con->oppositePort(this) == dest) {
-        _conPorts.removeOne(dest);
-        dest->_conPorts.removeOne(this);
-        _conList.removeOne(con);
-        dest->_conList.removeOne(con);
+        dptr->remove(dest, con);
+        dest->dptr->remove(this, con);
     }
 }
 
 void KPort::removeConnections()
 {
-    QGraphicsScene * sc = this->scene();
-    while (!_conList.isEmpty()) {
-        //call disconnect will also remove connector
-        KConnector * con = _conList.first();
-        con->disconnect();
-
-        if (sc != 0)
-            sc->removeItem(con);
-        delete con;
-    }
+    dptr->removeConnections(this);
 }
 
 bool KPort::canConnect(KPort * port) const
 {
+    //TODO
     bool tInp = (this->direction() & KPort::Input) == KPort::Input;
     bool tOut = (this->direction() & KPort::Output) == KPort::Output;
     bool oInp = (port->direction() & KPort::Input) == KPort::Input;
@@ -283,19 +347,18 @@ void KPort::paint(QPainter * painter, const QStyleOptionGraphicsItem * option, Q
 
     if (xHas(this->direction(), KPort::Input)) {
         painter->drawText(rect.right()+2, rect.top(), w, rect.height(),
-                          Qt::AlignLeft | Qt::AlignVCenter, _quantity->symbol);
+                          Qt::AlignLeft | Qt::AlignVCenter, quantity()->symbol);
     }
     else {
         painter->drawText(rect.x() - w, rect.top(), w-2, rect.height(),
-                          Qt::AlignRight | Qt::AlignVCenter, _quantity->symbol);
+                          Qt::AlignRight | Qt::AlignVCenter, quantity()->symbol);
     }
 
     painter->restore();
 }
 void KPort::rearrangeConnectors(const QPointF& oldPos, const QPointF& newPos)
 {
-    foreach(KConnector * con, _conList)
-        con->movePos(this, oldPos, newPos);
+    dptr->rearrangeConnectors(this, oldPos, newPos);
 }
 
 int KPort::type() const

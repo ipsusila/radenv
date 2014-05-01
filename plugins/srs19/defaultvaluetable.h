@@ -2,8 +2,6 @@
 #define DEFAULTVALUETABLE_H
 
 #include <QMap>
-#include <QDebug>
-#include <QSharedDataPointer>
 #include "kstorage.h"
 #include "kstoragecontent.h"
 #include "kradionuclide.h"

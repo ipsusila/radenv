@@ -2,7 +2,6 @@
 #define KLOCATION_H
 
 #include <QImage>
-#include <QExplicitlySharedDataPointer>
 #include "radglobal.h"
 
 class KLocationPrivate;

@@ -43,6 +43,12 @@ void AtmosphericTransport::defineParameters()
         << KData(&Srs19::OnSameBuilding, false);
     _userInputs << dg4;
 
+    //carbon and tritium
+    DataGroup dg5(QObject::tr("Atmosphere characteristics"));
+    dg5 << KData(&Srs19::AbsoluteAirHumidity)
+        << KData(&Srs19::AirborneCarbonConcentration);
+    _userInputs << dg5;
+
     //parameter control
     KQuantityControl qc(&Srs19::OnSameBuilding, false);
     qc.append(&Srs19::BuildingWidth);

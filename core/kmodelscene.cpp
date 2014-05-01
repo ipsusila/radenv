@@ -22,7 +22,7 @@ class KModelScenePrivate
     KConnector * _tempConnector;
     DialogCalculation  * _calcDialog;
     KModelRunner * _modelRunner;
-    FactoryList _factoryList;
+
     QStringList _modelNames;
     ModelList _verifiedNodes;     ///< List of verified nodes
     CalculationList _calcInfos;
@@ -59,20 +59,6 @@ public:
         _tempConnector = 0;
     }
 
-    inline void addFactory(IModelFactory * factory) {
-        _factoryList.append(factory);
-    }
-    inline int factoryCount() const {
-        return _factoryList.size();
-    }
-    inline IModelFactory * factory(int idx) const
-    {
-        return _factoryList.at(idx);
-    }
-    inline const FactoryList & factories() const
-    {
-        return _factoryList;
-    }
     inline void addCalculationInfo(const KCalculationInfo& info)
     {
         this->_calcInfos.append(info);
@@ -157,7 +143,7 @@ public:
 };
 
 KModelScene::KModelScene(int x, int y, int w, int h)
-    : QGraphicsScene(x, y, w, h), data(new KModelScenePrivate)
+    : QGraphicsScene(x, y, w, h), data(new KModelScenePrivate())
 {
     this->setFont(QFont("monospace", 10));
 }
@@ -214,22 +200,6 @@ int KModelScene::copyTo(KModelScene * mscene, bool all) const
     return copiedModels.size();
 }
 
-void KModelScene::addFactory(IModelFactory *factory)
-{
-    data->addFactory(factory);
-}
-int KModelScene::factoryCount() const
-{
-    return data->factoryCount();
-}
-IModelFactory * KModelScene::factory(int idx) const
-{
-    return data->factory(idx);
-}
-FactoryList KModelScene::factories() const
-{
-    return data->factories();
-}
 ModelList KModelScene::models() const
 {
     ModelList list;

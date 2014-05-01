@@ -49,7 +49,9 @@ SOURCES += \
     kquantitycontrol.cpp \
     dialoguserinput.cpp \
     uiarrayitemtable.cpp \
-    uiarrayitemdelegate.cpp
+    uiarrayitemdelegate.cpp \
+    kpluginmanager.cpp \
+    testclass.cpp
 
 HEADERS +=\
     kradionuclide.hxx \
@@ -94,7 +96,9 @@ HEADERS +=\
     kquantitycontrol.h \
     dialoguserinput.h \
     uiarrayitemtable.h \
-    uiarrayitemdelegate.h
+    uiarrayitemdelegate.h \
+    kpluginmanager.h \
+    testclass.h
 
 symbian {
     MMP_RULES += EXPORTUNFROZEN

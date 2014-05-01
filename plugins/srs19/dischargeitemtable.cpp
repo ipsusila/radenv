@@ -1,3 +1,4 @@
+#include <QHeaderView>
 #include "dischargeitemtable.h"
 #include "dischargeitemdelegate.h"
 #include "quantity.h"
@@ -106,5 +107,12 @@ void DischargeItemTable::setVariable(const Quantity * s)
         QStringList headers;
         headers << tr("Radionuclides") << s->displayTextWithUnit();
         setHorizontalHeaderLabels(headers);
+
+        //modify resize mode
+        QHeaderView * header = this->horizontalHeader();
+        if (header != 0) {
+            header->setResizeMode(0, QHeaderView::Interactive);
+            header->setResizeMode(1, QHeaderView::ResizeToContents);
+        }
     }
 }
