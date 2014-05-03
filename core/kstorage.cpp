@@ -420,6 +420,9 @@ bool KStorage::save(const KCase &a)
     QString sql = QString("INSERT OR REPLACE INTO %1 (name, created, author,"
                           "description, remark, docname, docsz, document, datasz, data) "
                           "VALUES(?,?,?,?,?,?,?,?,?,?)").arg(RAD_ASSESSMENT);
+    QByteArray ba;
+    a.serialize(ba);
+
     query.prepare(sql);
     query.bindValue(0, a.name());
     query.bindValue(1, a.created());
@@ -429,8 +432,8 @@ bool KStorage::save(const KCase &a)
     query.bindValue(5, a.docname());
     query.bindValue(6, a.document().size());
     query.bindValue(7, a.document());
-    query.bindValue(8, a.size());
-    query.bindValue(9, a.content());
+    query.bindValue(8, ba.size());
+    query.bindValue(9, ba);
 
     if (!query.exec()) {
         qDebug() << (QObject::tr("[Storage]: Failed to execute query -> ") + sql);
@@ -568,6 +571,18 @@ const KRadionuclide &  KStorage::radionuclide(const QString& nm) const
     return __nullNuclide;
 }
 
+KLocation KStorage::location(const QString& code) const
+{
+    LocationList::const_iterator loc = _locations.constBegin();
+    LocationList::const_iterator end = _locations.constEnd();
+    while(loc != end) {
+        if (loc->code() == code)
+            return *loc;
+        loc++;
+    }
+    return KLocation();
+}
+
 const LocationList * KStorage::locations() const
 {
     return &_locations;
@@ -665,7 +680,7 @@ AssessmentList KStorage::loadAssessments()
         a.setRemark(query.value(4).toString());
         a.setDocname(query.value(5).toString());
         a.setDocument(query.value(7).toByteArray());
-        a.append(query.value(9).toByteArray());
+        a.deserialize(query.value(9).toByteArray());
 
         list.append(a);
     }

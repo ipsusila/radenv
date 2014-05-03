@@ -29,7 +29,7 @@ void Irrigation::defineParameters()
     dg1 << KData(&Srs19::WaterDailyIrrigation)
         << KData(&Srs19::IrrigationDays)
         << KData(&Srs19::AnnualIrrigationPeriod);
-    _userInputs << dg1;
+    userInputs()->append(dg1);
 }
 
 bool Irrigation::calculate(const KCalculationInfo& ci, const KLocation & loc, KDataArray * calcResult)
@@ -37,10 +37,11 @@ bool Irrigation::calculate(const KCalculationInfo& ci, const KLocation & loc, KD
     Q_UNUSED(loc);
     Q_UNUSED(ci);
 
+    KDataGroupArray * ui = userInputs();
     KData inpCw = _inpPorts.data(Srs19::TotalConcentrationInWater);
-    qreal wd = _userInputs.numericValueOf(Srs19::WaterDailyIrrigation);
-    int Nd = _userInputs.valueOf(Srs19::IrrigationDays).toInt();
-    int Td = _userInputs.valueOf(Srs19::AnnualIrrigationPeriod).toInt();
+    qreal wd = ui->numericValueOf(Srs19::WaterDailyIrrigation);
+    int Nd = ui->valueOf(Srs19::IrrigationDays).toInt();
+    int Td = ui->valueOf(Srs19::AnnualIrrigationPeriod).toInt();
     qreal Iw = wd * Nd / (Td * 1000);   //1000 is conversion from Litre to m^3
     qreal Iwa = Iw * Td / 365;
 
@@ -69,13 +70,14 @@ bool Irrigation::verify(int * oerr, int * owarn)
         err ++;
     }
 
-    qreal wd = _userInputs.numericValueOf(Srs19::WaterDailyIrrigation);
+    KDataGroupArray * ui = userInputs();
+    qreal wd = ui->numericValueOf(Srs19::WaterDailyIrrigation);
     if (wd <= 0) {
         KOutputProxy::errorNotSpecified(this, Srs19::WaterDailyIrrigation);
         err ++;
     }
 
-    int nd = _userInputs.valueOf(Srs19::AnnualIrrigationPeriod).toInt();
+    int nd = ui->valueOf(Srs19::AnnualIrrigationPeriod).toInt();
     if (nd <= 0) {
         KOutputProxy::errorNotSpecified(this, Srs19::AnnualIrrigationPeriod);
         err ++;
@@ -90,14 +92,4 @@ bool Irrigation::verify(int * oerr, int * owarn)
     return err == 0;
 }
 
-bool Irrigation::load(QIODevice * io)
-{
-    Q_UNUSED(io);
-    return true;
-}
-bool Irrigation::save(QIODevice * io)
-{
-    Q_UNUSED(io);
-    return true;
-}
 

@@ -15,7 +15,7 @@ public:
     QString name() const;
     void setName(const QString& n);
 
-    virtual void addCase(const KCase& caseObj);
+    virtual void addAssessment(const KCase& caseObj);
     virtual void addModel(IModel * model);
     virtual void addLocation(const KLocation& loc);
     virtual void addUserInputs(const KDataGroupArray & dga);

@@ -23,13 +23,14 @@ bool AnimalFeed::allocateIoPorts()
 void AnimalFeed::defineParameters()
 {
     //define user inputs
+    KDataGroupArray * dga = userInputs();
     DataGroup dg1(QObject::tr("Vegetation"));
-    dg1 << KData(&Rad::NameQuantity, "Animal feed");
-    _userInputs << dg1;
+    dg1 << KData(&Srs19::NameQuantity, "Animal feed");
+    dga->append(dg1);
 
     DataGroup dg2(QObject::tr("Feeding parameters"));
     dg2 << KData(&Srs19::AnnualPastureFraction, 0.7);
-    _userInputs << dg2;
+    dga->append(dg2);
 }
 
 bool AnimalFeed::calculate(const KCalculationInfo& ci, const KLocation & loc, KDataArray * calcResult)
@@ -37,7 +38,7 @@ bool AnimalFeed::calculate(const KCalculationInfo& ci, const KLocation & loc, KD
     Q_UNUSED(loc);
     Q_UNUSED(ci);
 
-    qreal fp = _userInputs.numericValueOf(Srs19::AnnualPastureFraction);
+    qreal fp = userInputs()->numericValueOf(Srs19::AnnualPastureFraction);
     KData Cvi = _inpPorts.at(0)->data(Srs19::ConcentrationInVegetation);
     KData Cpi = _inpPorts.at(1)->data(Srs19::ConcentrationInStoredAnimalFeed);
 
@@ -77,7 +78,7 @@ bool AnimalFeed::verify(int * oerr, int * owarn)
         err ++;
     }
 
-    qreal fp = _userInputs.numericValueOf(Srs19::AnnualPastureFraction);
+    qreal fp = userInputs()->numericValueOf(Srs19::AnnualPastureFraction);
     if (fp < 0 || fp > 1) {
         KOutputProxy::errorNotSpecified(this, Srs19::AnnualPastureFraction);
         err++;
@@ -92,14 +93,4 @@ bool AnimalFeed::verify(int * oerr, int * owarn)
     return err == 0;
 }
 
-bool AnimalFeed::load(QIODevice * io)
-{
-    Q_UNUSED(io);
-    return true;
-}
-bool AnimalFeed::save(QIODevice * io)
-{
-    Q_UNUSED(io);
-    return true;
-}
 

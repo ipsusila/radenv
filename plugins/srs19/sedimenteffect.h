@@ -9,8 +9,6 @@ class SedimentEffect : public Transport
 public:
     QString displayText() const;
     bool verify(int * err = 0, int * warn = 0);
-    bool load(QIODevice * io);
-    bool save(QIODevice * io);
     QRectF modelRect() const;
 
 protected:

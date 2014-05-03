@@ -3,6 +3,7 @@
 #include <QStringList>
 #include "klocation.h"
 #include "kcalculationinfo.h"
+#include "kstorage.h"
 
 class KLocationPrivate : public QSharedData
 {
@@ -275,4 +276,18 @@ QString KLocation::detailDisplayText() const
         txt += "\n" + desc;
 
     return txt;
+}
+
+QDataStream & KLocation::serialize(QDataStream & stream) const
+{
+    stream << this->code();
+    return stream;
+}
+QDataStream & KLocation::deserialize(QDataStream & stream)
+{
+    QString c;
+    stream >> c;
+    *this = KStorage::storage()->location(c);
+
+    return stream;
 }

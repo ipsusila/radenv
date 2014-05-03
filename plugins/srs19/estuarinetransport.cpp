@@ -10,29 +10,30 @@ EstuarineTransport::EstuarineTransport(IModelFactory * fact, const KModelInfo& i
 void EstuarineTransport::defineParameters()
 {
     //allocate parameters for user inputs
+    KDataGroupArray * ui = userInputs();
     DataGroup dg1(QObject::tr("River conditions (site specific)"));
     dg1 << KData(&Srs19::RiverEstuaryWidth, 0)
         << KData(&Srs19::FlowDepth, 0)
         << KData(&Srs19::LowRiverFlowRate, 0)
         << KData(&Srs19::NetFreshwaterVelocity, 0)
-        << KData(&Rad::CommentQuantity, QObject::tr("If U not known, value will be calculated with U=qr/BD."));
-    _userInputs << dg1;
+        << KData(&Srs19::CommentQuantity, QObject::tr("If U not known, value will be calculated with U=qr/BD."));
+    ui->append(dg1);
 
     DataGroup dg2(QObject::tr("Parameter estimation"));
     dg2 << KData(&Srs19::EstimateParameters, false)
         << KData(&Srs19::EstimatedRiverWidth, 0);
-    _userInputs << dg2;
+    ui->append(dg2);
 
     DataGroup dg3(QObject::tr("Estuary conditions"));
     dg3 << KData(&Srs19::TidalPeriod, 45000)
         << KData(&Srs19::MaximumEbbVelocity, 0.5)
         << KData(&Srs19::MaximumFloodVelocity, 0.5);
-    _userInputs << dg3;
+    ui->append(dg3);
 
     DataGroup dg4(QObject::tr("Receptor position"));
     dg4 << KData(&Srs19::ReceptorOnOpposite, false)
         << KData(&Srs19::ReceptorAtUpstream, false);
-    _userInputs << dg4;
+    ui->append(dg4);
 }
 
 bool EstuarineTransport::calculate(const KCalculationInfo& ci, const KLocation& loc, KDataArray * calcResult)
@@ -42,12 +43,13 @@ bool EstuarineTransport::calculate(const KCalculationInfo& ci, const KLocation& 
 
    //user input parameters
     qreal x = loc.distance(ci);
-    qreal B = _userInputs.numericValueOf(Srs19::RiverEstuaryWidth);
-    qreal U = _userInputs.numericValueOf(Srs19::NetFreshwaterVelocity);
-    qreal Ue = _userInputs.numericValueOf(Srs19::MaximumEbbVelocity);
-    qreal Uf = _userInputs.numericValueOf(Srs19::MaximumFloodVelocity);
-    qreal D = _userInputs.numericValueOf(Srs19::FlowDepth);
-    qreal Tp = _userInputs.numericValueOf(Srs19::TidalPeriod);
+    KDataGroupArray * ui = userInputs();
+    qreal B = ui->numericValueOf(Srs19::RiverEstuaryWidth);
+    qreal U = ui->numericValueOf(Srs19::NetFreshwaterVelocity);
+    qreal Ue = ui->numericValueOf(Srs19::MaximumEbbVelocity);
+    qreal Uf = ui->numericValueOf(Srs19::MaximumFloodVelocity);
+    qreal D = ui->numericValueOf(Srs19::FlowDepth);
+    qreal Tp = ui->numericValueOf(Srs19::TidalPeriod);
     qreal Lz = 7 * D;
     qreal Lu = 0.32 * qAbs(Uf) * Tp;
     qreal Ut = 0.32 * (qAbs(Ue) + qAbs(Uf));
@@ -55,9 +57,9 @@ bool EstuarineTransport::calculate(const KCalculationInfo& ci, const KLocation& 
 
     //check the value of net freshwater velocity
     if (U <= 0.0) {
-        qreal qr = _userInputs.numericValueOf(Srs19::LowRiverFlowRate);
+        qreal qr = ui->numericValueOf(Srs19::LowRiverFlowRate);
         U = qr / (B * D);
-        _userInputs.replace(KData(&Srs19::NetFreshwaterVelocity, U));
+        ui->replace(KData(&Srs19::NetFreshwaterVelocity, U));
         xTrace() << *this << "Estimating net freshwater velocity: " << U;
     }
 
@@ -68,8 +70,8 @@ bool EstuarineTransport::calculate(const KCalculationInfo& ci, const KLocation& 
     (*calcResult) << KData(&Srs19::MeanTidalFlowSpeed, Ut);
     (*calcResult) << KData(&Srs19::TidalFlowRate, qw);
 
-    bool isOpposite = _userInputs.valueOf(Srs19::ReceptorOnOpposite).toBool();
-    bool isUpstream = _userInputs.valueOf(Srs19::ReceptorAtUpstream).toBool();
+    bool isOpposite = ui->valueOf(Srs19::ReceptorOnOpposite).toBool();
+    bool isUpstream = ui->valueOf(Srs19::ReceptorAtUpstream).toBool();
 
     if (isOpposite) {
         calcualteConcentration(x, qw, U, calcResult);
@@ -116,9 +118,10 @@ bool EstuarineTransport::verify(int * oerr, int * owarn)
     doVerification(&err, &warn);
 
     //set the parameters
-    qreal Tp = _userInputs.numericValueOf(Srs19::TidalPeriod);
-    qreal Ue = _userInputs.numericValueOf(Srs19::MaximumEbbVelocity);
-    qreal Uf = _userInputs.numericValueOf(Srs19::MaximumFloodVelocity);
+    KDataGroupArray * ui = userInputs();
+    qreal Tp = ui->numericValueOf(Srs19::TidalPeriod);
+    qreal Ue = ui->numericValueOf(Srs19::MaximumEbbVelocity);
+    qreal Uf = ui->numericValueOf(Srs19::MaximumFloodVelocity);
 
     if (Tp <= 0) {
         KOutputProxy::errorNotSpecified(this, Srs19::TidalPeriod);
@@ -144,14 +147,4 @@ bool EstuarineTransport::verify(int * oerr, int * owarn)
     return err == 0;
 }
 
-bool EstuarineTransport::load(QIODevice * io)
-{
-    Q_UNUSED(io);
-    return true;
-}
-bool EstuarineTransport::save(QIODevice * io)
-{
-    Q_UNUSED(io);
-    return true;
-}
 

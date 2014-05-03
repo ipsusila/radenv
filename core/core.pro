@@ -98,7 +98,8 @@ HEADERS +=\
     uiarrayitemtable.h \
     uiarrayitemdelegate.h \
     kpluginmanager.h \
-    testclass.h
+    testclass.h \
+    iserializable.h
 
 symbian {
     MMP_RULES += EXPORTUNFROZEN

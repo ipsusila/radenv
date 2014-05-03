@@ -24,15 +24,16 @@ bool GroundDeposition::allocateIoPorts()
 }
 void GroundDeposition::defineParameters()
 {
+    KDataGroupArray * ui = userInputs();
     DataGroup dg(QObject::tr("Soil reduction"));
-    dg << KData(&Rad::UseDefaultValue, true)
+    dg << KData(&Srs19::UseDefaultValue, true)
        << KData(&Srs19::ReductionOnSoil, KData::RadionuclideArray, QVariant());
-    _userInputs << dg;
+    ui->append(dg);
 
     //parameter control
-    KQuantityControl qc(&Rad::UseDefaultValue, false);
+    KQuantityControl qc(&Srs19::UseDefaultValue, false);
     qc.append(&Srs19::ReductionOnSoil);
-    _userInputs.addQuantityControl(qc);
+    ui->addQuantityControl(qc);
 }
 
 bool GroundDeposition::calculate(const KCalculationInfo& ci, const KLocation & loc, KDataArray * calcResult)
@@ -45,12 +46,13 @@ bool GroundDeposition::calculate(const KCalculationInfo& ci, const KLocation & l
         di = _inpPorts.data(Srs19::AnnualAverageDepositionRate);
     }
 
+    KDataGroupArray * ui = userInputs();
     qreal tb = _inpPorts.data(Srs19::DischargePeriod).numericValue() * 365;
-    bool useDefaultLs = _userInputs.valueOf(Rad::UseDefaultValue).toBool();
+    bool useDefaultLs = ui->valueOf(Srs19::UseDefaultValue).toBool();
 
     if (tb <= 0) {
         tb = Srs19::DischargePeriod.defaultValue * 365;  //30 years
-        _userInputs.replace(KData(&Srs19::DischargePeriod, Srs19::DischargePeriod.defaultValue));
+        ui->replace(KData(&Srs19::DischargePeriod, Srs19::DischargePeriod.defaultValue));
     }
 
     qreal ls;
@@ -83,14 +85,14 @@ bool GroundDeposition::calculate(const KCalculationInfo& ci, const KLocation & l
         }
 
         //replace values
-        _userInputs.replace(KData(&Srs19::ReductionOnSoil, lsItems));
+        ui->replace(KData(&Srs19::ReductionOnSoil, lsItems));
     }
     else {
         for(int k = 0; k < di.count(); k++) {
             const KDataItem & d = di.at(k);
             const KRadionuclide & rn = KStorage::storage()->radionuclide(d.name());
             qreal l = rn.halfLife().decayConstant(KHalfLife::Day);
-            qreal ls = _userInputs.find(Srs19::ReductionOnSoil).numericValue(d.name());
+            qreal ls = ui->find(Srs19::ReductionOnSoil).numericValue(d.name());
 
             //calculate concentration
             qreal lEs = l + ls;
@@ -117,7 +119,7 @@ bool GroundDeposition::verify(int * oerr, int * owarn)
         err ++;
     }
 
-    qreal ls = _userInputs.numericValueOf(Srs19::ReductionOnSoil);
+    qreal ls = userInputs()->numericValueOf(Srs19::ReductionOnSoil);
     if (ls < 0) {
         KOutputProxy::errorNotSpecified(this, Srs19::ReductionOnSoil);
         err++;
@@ -132,15 +134,6 @@ bool GroundDeposition::verify(int * oerr, int * owarn)
     return err == 0;
 }
 
-bool GroundDeposition::load(QIODevice * io)
-{
-    Q_UNUSED(io);
-    return true;
-}
-bool GroundDeposition::save(QIODevice * io)
-{
-    Q_UNUSED(io);
-    return true;
-}
+
 
 

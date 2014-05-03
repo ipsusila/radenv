@@ -90,3 +90,8 @@ void KReportPort::promptReport()
     //TODO
     setReport(&__defaultReport);
 }
+
+void KReportPort::refresh()
+{
+    //TODO
+}

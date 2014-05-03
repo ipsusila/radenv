@@ -17,7 +17,7 @@ class IModelPrivate;
 /**
  * @brief Base class for generic models
  */
-class K_CORE_EXPORT IModel : public QGraphicsItem
+class K_CORE_EXPORT IModel : public QGraphicsItem, public ISerializable
 {
     friend class IModelPrivate;
 public:
@@ -27,11 +27,10 @@ public:
     virtual ~IModel();
 
     virtual bool verify(int * err = 0, int * warn = 0) = 0;
-    virtual bool load(QIODevice * io) = 0;
-    virtual bool save(QIODevice * io) = 0;
     virtual KDataArray result() const = 0;
     virtual KData modelData(const Quantity & qty) const = 0;
     virtual bool calculate(const KCalculationInfo& ci) = 0;
+
     //virtual QuantityList outputQuantities() = 0;
 
     virtual void connectionModified(KPort * port, KConnector * con, bool connected);
@@ -68,10 +67,12 @@ public:
     void visit(IModel * visitor);
     const IModel * latestVisitor() const;
 
-    virtual KDataGroupArray * userInputs();
     virtual QRectF modelRect() const;
     virtual QRectF boundingRect () const;
     virtual void paint(QPainter * painter, const QStyleOptionGraphicsItem * option, QWidget * widget = 0);
+
+    virtual QDataStream & serialize(QDataStream &stream) const;
+    virtual QDataStream & deserialize(QDataStream &stream);
 
 protected:
     virtual void mouseDoubleClickEvent (QGraphicsSceneMouseEvent * event);
@@ -92,12 +93,15 @@ protected:
     virtual void arrangePorts();
     virtual bool promptUserInputs();
     virtual void userInputsFinished(bool accepted);
+
     void setInfo(const KModelInfo& i);
     void setLocationPort(KLocationPort * port);
     void setLocation(const KLocation & loc);
     void setReport(KReport * rep);
     void notifyConnectionsChanged(bool connected);
     void setPortsVisible(bool v);
+    KDataGroupArray * userInputs();
+    const KDataGroupArray & constUserInputs() const;
 
     explicit IModel(IModelFactory * fact, const KModelInfo& inf);
 
@@ -105,6 +109,8 @@ private:
     Q_DISABLE_COPY(IModel)
     QSharedDataPointer<IModelPrivate> dptr;
 };
+
+K_DECLARE_SERIALIZABLE(IModel)
 
 
 #endif // IMODEL_H

@@ -15,16 +15,17 @@ void SewageDischarge::defineParameters()
 {
     //discharge period
     //define user inputs
+    KDataGroupArray * ui = userInputs();
     DataGroup dg1(QObject::tr("Sewage parameters"));
     dg1 << KData(&Srs19::DischargePeriod, 30)
         << KData(&Srs19::PersonSludgeProduction, 20)
         << KData(&Srs19::NumOfServedPerson, 100)
         << KData(&Srs19::SolidMaterialConcentration, 5);
-    _userInputs << dg1;
+    ui->append(dg1);
 
     DataGroup dg2(QObject::tr("Sewage parameters"));
     dg2 << KData(&Srs19::SewageDischargeRate, KData::RadionuclideArray, QVariant());
-    _userInputs << dg2;
+    ui->append(dg2);
 }
 
 /*
@@ -40,31 +41,32 @@ bool SewageDischarge::verify(int * oerr, int * owarn)
     int err = 0, warn = 0;
 
     //discharge period
-    KData xd = _userInputs.find(Srs19::DischargePeriod);
+    KDataGroupArray * ui = userInputs();
+    KData xd = ui->find(Srs19::DischargePeriod);
     if (!xd.isValid() || xd.numericValue() <= 0.0) {
         KOutputProxy::errorNotSpecified(this, Srs19::DischargePeriod);
         err ++;
     }
 
-    xd = _userInputs.find(Srs19::SewageDischargeRate);
+    xd = ui->find(Srs19::SewageDischargeRate);
     if (!xd.isValid() || xd.count() == 0) {
         KOutputProxy::errorNotSpecified(this, Srs19::SewageDischargeRate);
         err ++;
     }
 
-    xd = _userInputs.find(Srs19::PersonSludgeProduction);
+    xd = ui->find(Srs19::PersonSludgeProduction);
     if (!xd.isValid() || xd.numericValue() <= 0.0) {
         KOutputProxy::errorNotSpecified(this, Srs19::PersonSludgeProduction);
         err ++;
     }
 
-    xd = _userInputs.find(Srs19::NumOfServedPerson);
+    xd = ui->find(Srs19::NumOfServedPerson);
     if (!xd.isValid() || xd.numericValue() <= 0.0) {
         KOutputProxy::errorNotSpecified(this, Srs19::NumOfServedPerson);
         err ++;
     }
 
-    xd = _userInputs.find(Srs19::SolidMaterialConcentration);
+    xd = ui->find(Srs19::SolidMaterialConcentration);
     if (xd.numericValue() <= 0.0) {
         KOutputProxy::errorNotSpecified(this, Srs19::SolidMaterialConcentration);
         err++;
@@ -77,7 +79,7 @@ bool SewageDischarge::verify(int * oerr, int * owarn)
     }
     else {
         //assign location
-        _dataList.setLocation(lp->location());
+        _dataList.setLocation(this->location());
     }
 
     KOutputProxy::infoVerificationResult(this, err, warn);
@@ -93,12 +95,13 @@ bool SewageDischarge::calculate(const KCalculationInfo& ci)
 {
     Q_UNUSED(ci);
 
-    qreal Sp = _userInputs.find(Srs19::PersonSludgeProduction).numericValue();
-    qint32 Np = _userInputs.find(Srs19::NumOfServedPerson).value().toInt();
-    qreal ps = _userInputs.numericValueOf(Srs19::SolidMaterialConcentration) / 100.0;
+    KDataGroupArray * ui = userInputs();
+    qreal Sp = ui->find(Srs19::PersonSludgeProduction).numericValue();
+    qint32 Np = ui->find(Srs19::NumOfServedPerson).value().toInt();
+    qreal ps = ui->numericValueOf(Srs19::SolidMaterialConcentration) / 100.0;
 
     //concentration
-    const KData & daQi = _userInputs.find(Srs19::SewageDischargeRate);
+    const KData & daQi = ui->find(Srs19::SewageDischargeRate);
     if (!daQi.isValid()) {
         KOutputProxy::errorNotSpecified(this, Srs19::SewageDischargeRate);
         return false;
@@ -124,16 +127,3 @@ bool SewageDischarge::calculate(const KCalculationInfo& ci)
 
     return true;
 }
-
-
-bool SewageDischarge::load(QIODevice * io)
-{
-    Q_UNUSED(io);
-    return true;
-}
-bool SewageDischarge::save(QIODevice * io)
-{
-    Q_UNUSED(io);
-    return true;
-}
-

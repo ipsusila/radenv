@@ -187,7 +187,13 @@ namespace Srs19 {
             << &SpecificCarbonActivity
             << &DietaryCarbonFraction
             << &CarbonDoseFactor
-            << &AirborneCarbonConcentration;
+            << &AirborneCarbonConcentration
+            << &ScalarOutput
+            << &CommentQuantity
+            << &LongCommentQuantity
+            << &NameQuantity
+            << &UseDefaultValue
+            << &UseDefaultValue2;
 
         //assign to const
         for (int k = 0; k < __qtyList.size(); k++)
@@ -592,6 +598,20 @@ Quantity CarbonDoseFactor =
     {159, Rad::NumText, DIGIT_DEF, 0, MAX_REAL, 5.6e-5, "g", "g", QObject::tr("Dose factor of C-14"), "Sv/a per Bq/g", "Sv/a per Bq/g", QObject::tr("Effective dose rate factor that relates to annual dose rate to the concentration of C-14 per gram of carbon in people")};
 Quantity AirborneCarbonConcentration =
     {160, Rad::NumText, DIGIT_DEF, 0, MAX_REAL, 0.18, "Cx", "C_x", QObject::tr("Concentration of airborne carbon"), "g/m3", "g/m3", QObject::tr("Concentration of airborne carbon (default value assumed to be 0.18, corresponding to an average CO2 concentration of 330 ppm")};
+
+Quantity ScalarOutput =
+    {161, Rad::Real, DIGIT_DEF, MIN_REAL, MAX_REAL, 0, "Y","Y",QObject::tr("Output"),"","","Arbitrary numeric value"};
+Quantity CommentQuantity =
+    {162, Rad::Comment, DIGIT_DEF, MIN_REAL, MAX_REAL, 0, "C","C",QObject::tr("Comment"),"","","Arbitrary comment"};
+Quantity NameQuantity =
+    {163, Rad::Text, DIGIT_DEF, MIN_REAL, MAX_REAL, 0, "","",QObject::tr("Name"),"","","Arbritrary name"};
+Quantity UseDefaultValue =
+    {164, Rad::Boolean, DIGIT_DEF, MIN_REAL, MAX_REAL, 0, "ud","ud",QObject::tr("Use predefined default value(s)"),"","","Use default value defined in software."};
+Quantity LongCommentQuantity =
+    {165, Rad::LongComment, DIGIT_DEF, MIN_REAL, MAX_REAL, 0, "C","C",QObject::tr("Comment"),"","","Full row arbitrary comment"};
+Quantity UseDefaultValue2 =
+    {166, Rad::Boolean, DIGIT_DEF, MIN_REAL, MAX_REAL, 0, "ud","ud",QObject::tr("Use predefined default value(s)"),"","","Use default value defined in software."};
+
 //end of symbol namespace
 }
 

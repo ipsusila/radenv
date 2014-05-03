@@ -4,7 +4,7 @@
 #include <QGraphicsItem>
 #include "kdata.h"
 
-class KPortList : public QList<KPort *>
+class K_CORE_EXPORT KPortList : public QList<KPort *>
 {
 public:
     KData data(const Quantity& qty) const;

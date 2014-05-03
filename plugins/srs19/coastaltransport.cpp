@@ -26,16 +26,17 @@ void CoastalTransport::defineParameters()
     dg1 << KData(&Srs19::ReleaseToBeachDistance, 0)
         << KData(&Srs19::WaterDepth, 0)
         << KData(&Srs19::CoastalCurrent, 0.1);
-    _userInputs << dg1;
+    userInputs()->append(dg1);
 }
 
 bool CoastalTransport::calculate(const KCalculationInfo& ci, const KLocation& loc, KDataArray * calcResult)
 {
     //user input parameters
     qreal x = loc.distance(ci);
-    qreal y0 = _userInputs.numericValueOf(Srs19::ReleaseToBeachDistance);
-    qreal D = _userInputs.numericValueOf(Srs19::WaterDepth);
-    qreal U = _userInputs.numericValueOf(Srs19::CoastalCurrent);
+    KDataGroupArray * ui = userInputs();
+    qreal y0 = ui->numericValueOf(Srs19::ReleaseToBeachDistance);
+    qreal D = ui->numericValueOf(Srs19::WaterDepth);
+    qreal U = ui->numericValueOf(Srs19::CoastalCurrent);
 
     //const KData & qiW = inpQi.find(Srs19::WaterDischargeRate);
     KData qiW = _inpPorts.data(Srs19::WaterDischargeRate);
@@ -72,7 +73,8 @@ bool CoastalTransport::verify(int * oerr, int * owarn)
     int result = doVerification(&err, &warn);
 
     //check counditions
-    qreal D = _userInputs.numericValueOf(Srs19::WaterDepth);
+    KDataGroupArray * ui = userInputs();
+    qreal D = ui->numericValueOf(Srs19::WaterDepth);
     qreal x = this->location().distance();
     if ((7*D) >= x) {
         KOutputProxy::warningMessage(this, QObject::tr("Model condition is not satisfied (condition: 7D < x)"));
@@ -104,19 +106,20 @@ bool CoastalTransport::doVerification(int *oerr, int *owarn)
         err ++;
     }
 
-    qreal y0 = _userInputs.numericValueOf(Srs19::ReleaseToBeachDistance);
+    KDataGroupArray * ui = userInputs();
+    qreal y0 = ui->numericValueOf(Srs19::ReleaseToBeachDistance);
     if (y0 <= 0) {
         KOutputProxy::errorNotSpecified(this, Srs19::ReleaseToBeachDistance);
         err ++;
     }
 
-    qreal D = _userInputs.numericValueOf(Srs19::WaterDepth);
+    qreal D = ui->numericValueOf(Srs19::WaterDepth);
     if (D <= 0) {
         KOutputProxy::errorNotSpecified(this, Srs19::WaterDepth);
         err ++;
     }
 
-    qreal U = _userInputs.numericValueOf(Srs19::CoastalCurrent);
+    qreal U = ui->numericValueOf(Srs19::CoastalCurrent);
     if (U <= 0) {
         KOutputProxy::errorNotSpecified(this, Srs19::CoastalCurrent);
         err++;
@@ -128,17 +131,6 @@ bool CoastalTransport::doVerification(int *oerr, int *owarn)
         *owarn = warn;
 
     return err == 0;
-}
-
-bool CoastalTransport::load(QIODevice * io)
-{
-    Q_UNUSED(io);
-    return true;
-}
-bool CoastalTransport::save(QIODevice * io)
-{
-    Q_UNUSED(io);
-    return true;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -164,23 +156,24 @@ void GenericCoastalTransport::defineParameters()
         << KData(&Srs19::CoastalCurrent, 0.1)
         << KData(&Srs19::LateralDispersionCoeff, 0)
         << KData(&Srs19::UseOkuboDispersionExp, true);
-    _userInputs << dg1;
+    userInputs()->append(dg1);
 }
 
 bool GenericCoastalTransport::calculate(const KCalculationInfo& ci, const KLocation& loc, KDataArray * calcResult)
 {
     //user input parameters
     qreal x = loc.distance(ci);
-    qreal y0 = _userInputs.numericValueOf(Srs19::ReleaseToBeachDistance);
-    qreal y = _userInputs.numericValueOf(Srs19::DistanceFromShoreline);
-    qreal D = _userInputs.numericValueOf(Srs19::WaterDepth);
-    qreal U = _userInputs.numericValueOf(Srs19::CoastalCurrent);
-    qreal Ey = _userInputs.numericValueOf(Srs19::LateralDispersionCoeff);
-    bool okuboEq = _userInputs.valueOf(Srs19::UseOkuboDispersionExp).toBool();
+    KDataGroupArray * ui = userInputs();
+    qreal y0 = ui->numericValueOf(Srs19::ReleaseToBeachDistance);
+    qreal y = ui->numericValueOf(Srs19::DistanceFromShoreline);
+    qreal D = ui->numericValueOf(Srs19::WaterDepth);
+    qreal U = ui->numericValueOf(Srs19::CoastalCurrent);
+    qreal Ey = ui->numericValueOf(Srs19::LateralDispersionCoeff);
+    bool okuboEq = ui->valueOf(Srs19::UseOkuboDispersionExp).toBool();
 
     if (okuboEq) {
         Ey = 3.44e-7 * qPow(x/U, 1.34);
-        _userInputs.replace(KData(&Srs19::LateralDispersionCoeff, Ey));
+        ui->replace(KData(&Srs19::LateralDispersionCoeff, Ey));
         xTrace() << *this << "Estimating Ey: " << Ey;
     }
 
@@ -192,7 +185,7 @@ bool GenericCoastalTransport::calculate(const KCalculationInfo& ci, const KLocat
     KData qiW = _inpPorts.data(Srs19::WaterDischargeRate);
     DataItemArray cwList;
     if (Ey > 0.0) {
-        (*calcResult) << KData(&Rad::CommentQuantity, QObject::tr("Using eq. VI-46, page 183."));
+        (*calcResult) << KData(&Srs19::CommentQuantity, QObject::tr("Using eq. VI-46, page 183."));
         for(int k = 0; k < qiW.count(); k++) {
             const KDataItem & qi = qiW.at(k);
             const KRadionuclide & rn = KStorage::storage()->radionuclide(qi.name());
@@ -207,7 +200,7 @@ bool GenericCoastalTransport::calculate(const KCalculationInfo& ci, const KLocat
         }
     }
     else {
-        (*calcResult) << KData(&Rad::CommentQuantity, QObject::tr("Ey not available, using eq. VI-52, page 184."));
+        (*calcResult) << KData(&Srs19::CommentQuantity, QObject::tr("Ey not available, using eq. VI-52, page 184."));
         for(int k = 0; k < qiW.count(); k++) {
             const KDataItem & qi = qiW.at(k);
             const KRadionuclide & rn = KStorage::storage()->radionuclide(qi.name());
@@ -241,13 +234,3 @@ bool GenericCoastalTransport::verify(int * oerr, int * owarn)
     return result;
 }
 
-bool GenericCoastalTransport::load(QIODevice * io)
-{
-    Q_UNUSED(io);
-    return true;
-}
-bool GenericCoastalTransport::save(QIODevice * io)
-{
-    Q_UNUSED(io);
-    return true;
-}

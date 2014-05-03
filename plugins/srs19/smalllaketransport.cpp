@@ -27,17 +27,18 @@ bool SmallLakeTransport::allocateIoPorts()
 void SmallLakeTransport::defineParameters()
 {
     //define user inputs
+    KDataGroupArray * ui = userInputs();
     DataGroup dg1(QObject::tr("River conditions"));
     dg1 << KData(&Srs19::LowRiverFlowRate, 0)
         << KData(&Srs19::EstimateParameters, false)
         << KData(&Srs19::EstimatedRiverWidth, 0);
-    _userInputs << dg1;
+    ui->append(dg1);
 
     DataGroup dg2(QObject::tr("Lake parameters"));
     dg2 << KData(&Srs19::LakeSurfaceArea, 0)
         << KData(&Srs19::LakeVolume, 0);
 
-    _userInputs << dg2;
+    ui->append(dg2);
 }
 
 bool SmallLakeTransport::calculate(const KCalculationInfo& ci, const KLocation & loc, KDataArray * calcResult)
@@ -46,9 +47,10 @@ bool SmallLakeTransport::calculate(const KCalculationInfo& ci, const KLocation &
     Q_UNUSED(ci);
 
     //estimate qr
-    bool estimate = _userInputs.valueOf(Srs19::EstimateParameters).toBool();
+    KDataGroupArray * ui = userInputs();
+    bool estimate = ui->valueOf(Srs19::EstimateParameters).toBool();
     if (estimate) {
-        qreal Bd = _userInputs.numericValueOf(Srs19::EstimatedRiverWidth);
+        qreal Bd = ui->numericValueOf(Srs19::EstimatedRiverWidth);
         xTrace() << "Estimating parameter with Bd=" << Bd;
 
         //SRS-19 page 168
@@ -58,12 +60,12 @@ bool SmallLakeTransport::calculate(const KCalculationInfo& ci, const KLocation &
         //qr = 10 ^ (...)
         qreal qrd = qPow(10.0, (log10(Bd) - 1.0) / 0.460);
         qreal qr = qrd / 3;
-        _userInputs.replace(KData(&Srs19::LowRiverFlowRate, qr));
+        ui->replace(KData(&Srs19::LowRiverFlowRate, qr));
     }
 
-    qreal qr = _userInputs.numericValueOf(Srs19::LowRiverFlowRate);
-    qreal Al = _userInputs.numericValueOf(Srs19::LakeSurfaceArea);
-    qreal V = _userInputs.numericValueOf(Srs19::LakeVolume);
+    qreal qr = ui->numericValueOf(Srs19::LowRiverFlowRate);
+    qreal Al = ui->numericValueOf(Srs19::LakeSurfaceArea);
+    qreal V = ui->numericValueOf(Srs19::LakeVolume);
     qreal di = _inpPorts.data(1, Srs19::DailyDepositionRate).numericValue();
     qreal T = _inpPorts.data(Srs19::DischargePeriod).numericValue();
     if (T <= 0)
@@ -126,29 +128,30 @@ bool SmallLakeTransport::verify(int * oerr, int * owarn)
     }
 
     //get qr
-    bool estimate = _userInputs.valueOf(Srs19::EstimateParameters).toBool();
+    KDataGroupArray * ui = userInputs();
+    bool estimate = ui->valueOf(Srs19::EstimateParameters).toBool();
     if (estimate) {
-        qreal Bd = _userInputs.numericValueOf(Srs19::EstimatedRiverWidth);
+        qreal Bd = ui->numericValueOf(Srs19::EstimatedRiverWidth);
         if (Bd <= 0) {
             KOutputProxy::errorNotSpecified(this, Srs19::EstimatedRiverWidth);
             err ++;
         }
     }
     else {
-        qreal qr = _userInputs.numericValueOf(Srs19::LowRiverFlowRate);
+        qreal qr = ui->numericValueOf(Srs19::LowRiverFlowRate);
         if (qr <= 0) {
             KOutputProxy::errorNotSpecified(this, Srs19::LowRiverFlowRate);
             err ++;
         }
     }
 
-    qreal Al = _userInputs.numericValueOf(Srs19::LakeSurfaceArea);
+    qreal Al = ui->numericValueOf(Srs19::LakeSurfaceArea);
     if (Al <= 0) {
         KOutputProxy::errorNotSpecified(this, Srs19::LakeSurfaceArea);
         err ++;
     }
 
-    qreal V = _userInputs.numericValueOf(Srs19::LakeVolume);
+    qreal V = ui->numericValueOf(Srs19::LakeVolume);
     if (V <= 0) {
         KOutputProxy::errorNotSpecified(this, Srs19::LakeVolume);
         err++;
@@ -163,14 +166,4 @@ bool SmallLakeTransport::verify(int * oerr, int * owarn)
     return err == 0;
 }
 
-bool SmallLakeTransport::load(QIODevice * io)
-{
-    Q_UNUSED(io);
-    return true;
-}
-bool SmallLakeTransport::save(QIODevice * io)
-{
-    Q_UNUSED(io);
-    return true;
-}
 

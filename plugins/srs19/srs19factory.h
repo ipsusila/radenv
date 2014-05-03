@@ -3,6 +3,7 @@
 
 #include "srs19.h"
 #include "imodelfactory.h"
+#include "kgroupinfo.h"
 
 class SRS19_SHARED_EXPORT Srs19Factory : public QObject, public IModelFactory
 {
@@ -16,6 +17,7 @@ public:
     void onFinalized();
     IModel * createModel(const KModelInfo & info);
     const GroupInfoList & groups() const;
+    KModelInfo modelInfo(int serId) const;
     ConstQuantityList availableQuantities() const;
     QuantityList editableQuantities() const;
     QString name() const;

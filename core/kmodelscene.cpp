@@ -12,6 +12,10 @@
 #include "kconnector.h"
 #include "dialogcalculation.h"
 #include "kmodelrunner.h"
+#include "kpluginmanager.h"
+
+//Stream token
+static const QString __sceneToken = "@Scene-v.1.0";
 
 class KModelScenePrivate
 {
@@ -59,6 +63,23 @@ public:
         _tempConnector = 0;
     }
 
+    inline void serialize(QDataStream & s) const
+    {
+        s << __sceneToken << _snapToGrid << _gridPixel
+          << _displayGrid << (qint32)_editMode << _modelNames;
+    }
+    inline void deserialize(QDataStream & s)
+    {
+        QString token;
+        s >> token;
+        Q_ASSERT(token == __sceneToken);
+
+        qint32 mode;
+        s >> _snapToGrid >> _gridPixel
+          >> _displayGrid >> mode >> _modelNames;
+        _editMode = (KModelScene::EditMode)mode;
+    }
+
     inline void addCalculationInfo(const KCalculationInfo& info)
     {
         this->_calcInfos.append(info);
@@ -78,21 +99,6 @@ public:
         return _calcDialog;
     }
 
-    inline IModel * createModel(IModelFactory * factory, const KModelInfo& info)
-    {
-        IModel * model = factory->createModel(info);
-        if (model) {
-            if (!model->initialize()) {
-                delete model;
-                return 0;
-            }
-
-            //add annotation
-            annotateModel(model);
-            return model;
-        }
-        return 0;
-    }
     inline void annotateModel(IModel * model) {
         QString name = model->info().name();
         _modelNames.append(name);
@@ -211,12 +217,35 @@ ModelList KModelScene::models() const
     }
     return list;
 }
+ConnectorList KModelScene::connectors() const
+{
+    ConnectorList list;
+    for(int k = 0; k < items().size(); k++) {
+        QGraphicsItem * item = items().at(k);
+        KConnector * con = qgraphicsitem_cast<KConnector *>(item);
+        if (con)
+            list.append(con);
+    }
+    return list;
+}
+IModel * KModelScene::findModel(const QString& tagName) const
+{
+    for(int k = 0; k < items().size(); k++) {
+        QGraphicsItem * item = items().at(k);
+        IModel * md = qgraphicsitem_cast<IModel *>(item);
+        if (md != 0 && md->tagName() == tagName)
+            return md;
+    }
+    return 0;
+}
 
 IModel * KModelScene::createModel(IModelFactory * factory, const KModelInfo& info)
 {
-    IModel * model = data->createModel(factory, info);
-    if (model)
-        this->addItem(model);
+    IModel * model = KPluginManager::instance()->createModel(factory, info);
+    if (model != 0) {
+        data->annotateModel(model);
+        addItem(model);
+    }
     return model;
 }
 void KModelScene::clearModels()
@@ -237,6 +266,8 @@ void KModelScene::refresh()
         if (md)
             md->refresh();
     }
+    //fresh update
+    this->update();
 }
 void KModelScene::generateReport()
 {
@@ -526,5 +557,58 @@ void KModelScene::reannotateModels()
             data->annotateModel(md);
     }
     this->update();
+}
+
+QDataStream & KModelScene::serialize(QDataStream & stream) const
+{
+    ModelList lModels = models();
+    ConnectorList lCons = connectors();
+
+    //serialize internal data
+    data->serialize(stream);
+    //save scene rectangle
+    stream << sceneRect();
+
+    int nz = lModels.size();
+    stream << nz;
+    for (int k = 0; k < nz; k++)
+        lModels.at(k)->serialize(stream);
+
+    nz = lCons.size();
+    stream << nz;
+    for(int k = 0; k < nz; k++)
+        lCons.at(k)->serialize(stream);
+
+    return stream;
+}
+QDataStream & KModelScene::deserialize(QDataStream & stream)
+{
+    QRectF rect;
+    data->deserialize(stream);
+    stream >> rect;
+    this->setSceneRect(rect);
+
+    int nz;
+    stream >> nz;
+    for (int k = 0; k < nz; k++) {
+        IModel * md = KPluginManager::instance()->createModel(stream);
+        if (md != 0) {
+            addItem(md);
+            md->deserialize(stream);
+        }
+    }
+
+    stream >> nz;
+    for (int k = 0; k < nz; k++) {
+        KConnector * con = new KConnector();
+        addItem(con);
+        con->deserialize(stream);
+        if (!con->isConnected()) {
+            removeItem(con);
+            delete con;
+        }
+    }
+
+    return stream;
 }
 

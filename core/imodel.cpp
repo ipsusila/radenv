@@ -14,6 +14,7 @@
 #include "uiuserinput.h"
 #include "ksettingmanager.h"
 #include "kconnector.h"
+#include "kpluginmanager.h"
 
 /**
  * @brief Empty Ports list.
@@ -31,10 +32,21 @@ public:
     int _sourceDistance;
     IModel * _visitor;
     IModelFactory * _factory;
+    KDataGroupArray _userInputs;
 
     IModelPrivate(IModelFactory * fact) : _tagId(0), _locPort(0), _repPort(0),
           _sourceDistance(0), _visitor(0), _factory(fact)
     {
+    }
+
+    inline const KDataGroupArray & constUserInputs() const
+    {
+        return _userInputs;
+    }
+
+    inline KDataGroupArray * userInputsPtr()
+    {
+        return &_userInputs;
     }
 
     inline void setReport(KReport * rep)
@@ -305,6 +317,9 @@ void IModel::refresh()
     KLocationPort * lp = locationPort();
     if (lp)
         lp->refresh();
+    KReportPort * rp = reportPort();
+    if (rp)
+        rp->refresh();
 }
 KData IModel::data(const Quantity & qty) const
 {
@@ -317,6 +332,33 @@ KData IModel::data(const Quantity & qty) const
     //ask from connected model
     return inputs().data(qty);
 }
+QDataStream & IModel::serialize(QDataStream &stream) const
+{
+    //This serialization order is related to KPluginManager::createMode(QDataStream &)
+    const KDataGroupArray & dga = dptr->constUserInputs();
+    stream << factory()->name() << info().serialId()
+           << dptr->_tagId << this->pos() << !dga.isEmpty();
+    if (!dga.isEmpty())
+        return dga.serialize(stream);
+    return stream;
+}
+QDataStream & IModel::deserialize(QDataStream &stream)
+{
+    //This function must be called after KPluginManager::createMode(QDataStream &)
+    int tid = 0;
+    bool hasUserInput = false;
+    QPointF mpos = this->pos();
+    stream >> tid >> mpos >> hasUserInput;
+    this->setTagId(tid);
+    if (hasUserInput) {
+        KDataGroupArray * dga = dptr->userInputsPtr();
+        dga->deserialize(stream);
+    }
+    setPos(mpos);
+
+    return stream;
+}
+
 void IModel::connectionModified(KPort * port, KConnector * con, bool connected)
 {
     Q_UNUSED(port);
@@ -515,9 +557,14 @@ KLocation IModel::location() const
 {
     return dptr->location();
 }
-KDataGroupArray * IModel::userInputs()
+
+KDataGroupArray *IModel::userInputs()
 {
-    return 0;
+    return dptr->userInputsPtr();
+}
+const KDataGroupArray & IModel::constUserInputs() const
+{
+    return dptr->constUserInputs();
 }
 
 IUserInput * IModel::createUserInputWidget(QWidget * parent)

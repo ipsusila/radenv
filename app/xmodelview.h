@@ -11,6 +11,13 @@ public:
     explicit XModelView(QGraphicsScene * scene, QWidget * parent = 0);
     void setEditMode(KModelScene::EditMode mode);
 
+    bool isDisplayGrid() const;
+    bool isSnapToGrid() const;
+    void createModel(IModelFactory * factory, const KModelInfo & info);
+    void refreshModels();
+    void verifyModels();
+    void calculate();
+
 protected:
     virtual void resizeEvent(QResizeEvent *event);
     virtual void drawBackground(QPainter * painter, const QRectF & rect);

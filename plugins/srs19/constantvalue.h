@@ -11,7 +11,6 @@ public:
     ConstantValue(IModelFactory * fact, const KModelInfo& inf);
     KDataArray result() const;
     bool calculate(const KCalculationInfo& ci);
-    void refresh();
     bool needLocation() const;
     QRectF modelRect() const;
 
@@ -19,8 +18,8 @@ public:
     QString displayText() const;
 
     bool verify(int * err = 0, int * warn = 0);
-    bool load(QIODevice * io);
-    bool save(QIODevice * io);
+    virtual QDataStream & serialize(QDataStream &stream) const;
+    virtual QDataStream & deserialize(QDataStream &stream);
 
 protected:
     bool allocateIoPorts();

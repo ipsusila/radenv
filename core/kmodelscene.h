@@ -4,9 +4,10 @@
 #include <QGraphicsScene>
 #include "imodelfactory.h"
 #include "kcalculationinfo.h"
+#include "iserializable.h"
 
 class KModelScenePrivate;
-class K_CORE_EXPORT KModelScene : public QGraphicsScene
+class K_CORE_EXPORT KModelScene : public QGraphicsScene, public ISerializable
 {
 public:
     enum EditMode {
@@ -44,10 +45,15 @@ public:
     void removeConnector(KConnector * con);
     void reannotateModels();
     ModelList models() const;
+    IModel * findModel(const QString& tagName) const;
+    ConnectorList connectors() const;
 
     void connectItem(QGraphicsItem * selItem, const QPointF& scPos);
     void cancelConnection();
     void tryDrawConnector(const QPointF& scPos);
+
+    virtual QDataStream & serialize(QDataStream & stream) const;
+    virtual QDataStream & deserialize(QDataStream & stream);
 private:
     KModelScenePrivate * data;
 };

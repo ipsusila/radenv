@@ -19,7 +19,7 @@ KData DoseEstimation::modelData(const Quantity &qty) const
     KData d = _dataList.find(qty);
     if (d.isValid())
         return d;
-    return _userInputs.find(qty);
+    return constUserInputs().find(qty);
 }
 bool DoseEstimation::allocateIoPorts()
 {
@@ -36,18 +36,14 @@ void DoseEstimation::defineParameters()
     dg2 << KData(&Srs19::ExposedFractionTime, 0.228)
         << KData(&Srs19::DustLoadingFactor, 1e-7);
 
-    _userInputs << dg1
-                << DataGroup(Ingestion, QObject::tr("Ingestion"))
-                << DataGroup(Immersion, QObject::tr("Immersion"))
-                << DataGroup(ExternalGround, QObject::tr("Ground Deposition"))
-                << DataGroup(ExternalSediment, QObject::tr("Sediment Exposure"))
-                << dg2;
+    KDataGroupArray * ui = userInputs();
+    (*ui) << dg1
+        << DataGroup(Ingestion, QObject::tr("Ingestion"))
+        << DataGroup(Immersion, QObject::tr("Immersion"))
+        << DataGroup(ExternalGround, QObject::tr("Ground Deposition"))
+        << DataGroup(ExternalSediment, QObject::tr("Sediment Exposure"))
+        << dg2;
 
-}
-
-KDataGroupArray * DoseEstimation::userInputs()
-{
-    return &_userInputs;
 }
 
 KDataArray DoseEstimation::result() const
@@ -57,11 +53,12 @@ KDataArray DoseEstimation::result() const
 void DoseEstimation::addExposedFraction(const IModel * model, int type)
 {
     //Immersion/SkinImmersion/
-    KData * da = _userInputs.findPtr(Srs19::ExposedFractionTime, type);
+    KDataGroupArray * ui = userInputs();
+    KData * da = ui->findPtr(Srs19::ExposedFractionTime, type);
     if (da == 0) {
         //new data
         KData di(&Srs19::ExposedFractionTime, model->tagName(), exposedFraction(type), KData::NumericArray);
-        _userInputs.appendOrReplace(di, type);
+        ui->appendOrReplace(di, type);
     }
     else {
         da->append(model->tagName(), exposedFraction(type), KData::Numeric);
@@ -84,12 +81,13 @@ void DoseEstimation::addConsumptionRate(const IModel * model, const Quantity & q
         }
     }
 
+    KDataGroupArray * ui = userInputs();
     qreal Hp = consumptionRate(qty, type);
-    KData * da = _userInputs.findPtr(Srs19::ConsumptionRate, Ingestion);
+    KData * da = ui->findPtr(Srs19::ConsumptionRate, Ingestion);
     if (da == 0) {
         //new data
         KData di(&Srs19::ConsumptionRate, model->tagName(), Hp, KData::NumericArray);
-        _userInputs.appendOrReplace(di, Ingestion);
+        ui->appendOrReplace(di, Ingestion);
     }
     else {
         da->append(model->tagName(), Hp, KData::Numeric);
@@ -130,29 +128,30 @@ void DoseEstimation::removeQuantity(KPort * port, KConnector * con)
     IModel * model = other->model();
     const Quantity * qty = other->quantity();
 
+    KDataGroupArray * ui = userInputs();
     if (qty == &Srs19::ConcentrationInAir) {
         //Immersion
-        KData * da = _userInputs.findPtr(Srs19::ExposedFractionTime, Immersion);
+        KData * da = ui->findPtr(Srs19::ExposedFractionTime, Immersion);
         if (da) {
             da->remove(model->tagName());
             if (da->isEmpty())
-                _userInputs.removeQuantity(Srs19::ExposedFractionTime, Immersion);
+                ui->removeQuantity(Srs19::ExposedFractionTime, Immersion);
         }
     }
     else if (qty == &Srs19::ConcentrationInSurfaceSoil) {
-        KData * da = _userInputs.findPtr(Srs19::ExposedFractionTime, ExternalGround);
+        KData * da = ui->findPtr(Srs19::ExposedFractionTime, ExternalGround);
         if (da) {
             da->remove(model->tagName());
             if (da->isEmpty())
-                _userInputs.removeQuantity(Srs19::ExposedFractionTime, ExternalGround);
+                ui->removeQuantity(Srs19::ExposedFractionTime, ExternalGround);
         }
     }
     else if (qty == &Srs19::ConcentrationInShoreSediment) {
-        KData * da = _userInputs.findPtr(Srs19::ExposedFractionTime, ExternalSediment);
+        KData * da = ui->findPtr(Srs19::ExposedFractionTime, ExternalSediment);
         if (da) {
             da->remove(model->tagName());
             if (da->isEmpty())
-                _userInputs.removeQuantity(Srs19::ExposedFractionTime, ExternalSediment);
+                ui->removeQuantity(Srs19::ExposedFractionTime, ExternalSediment);
         }
 
     }
@@ -163,11 +162,11 @@ void DoseEstimation::removeQuantity(KPort * port, KConnector * con)
              qty == &Srs19::ConcentrationInShoreline ||
              qty == &Srs19::ConcentrationInAquaticFood)
     {
-        KData * da = _userInputs.findPtr(Srs19::ConsumptionRate, Ingestion);
+        KData * da = ui->findPtr(Srs19::ConsumptionRate, Ingestion);
         if (da) {
             da->remove(model->tagName());
             if (da->isEmpty())
-                _userInputs.removeQuantity(Srs19::ConsumptionRate, Ingestion);
+                ui->removeQuantity(Srs19::ConsumptionRate, Ingestion);
         }
     }
 }
@@ -209,21 +208,10 @@ bool DoseEstimation::verify(int * oerr, int * owarn)
     return err == 0;
 }
 
-bool DoseEstimation::load(QIODevice * io)
-{
-    Q_UNUSED(io);
-    return true;
-}
-
-bool DoseEstimation::save(QIODevice * io)
-{
-    Q_UNUSED(io);
-    return true;
-}
-
 void DoseEstimation::calcImmersionDose(QMap<QString, qreal> * totalDoses)
 {
     QMap<QString, qreal> doses, daDf;
+    KDataGroupArray * ui = userInputs();
     const KPortList & inpPorts = inputs().first()->connectedPorts();
     foreach(KPort * p, inpPorts) {
         const Quantity * qty = p->quantity();
@@ -233,7 +221,7 @@ void DoseEstimation::calcImmersionDose(QMap<QString, qreal> * totalDoses)
             for (int k = 0; k < daCa.count(); k++) {
                 const KDataItem & ca = daCa.at(k);
                 QString nuc = ca.name();
-                KData *daOf = _userInputs.findPtr(Srs19::ExposedFractionTime, Immersion);
+                KData *daOf = ui->findPtr(Srs19::ExposedFractionTime, Immersion);
                 if (daOf == 0)
                     continue;
                 qreal Of = daOf->numericValue(model->tagName());
@@ -276,6 +264,7 @@ void DoseEstimation::calcImmersionDose(QMap<QString, qreal> * totalDoses)
 void DoseEstimation::calcIngestionDose(QMap<QString, qreal> * totalDoses)
 {
     QMap<QString, qreal> doses, daDf;
+    KDataGroupArray * ui = userInputs();
     const KPortList & inpPorts = inputs().first()->connectedPorts();
     foreach(KPort * p, inpPorts) {
         const Quantity * qty = p->quantity();
@@ -291,7 +280,7 @@ void DoseEstimation::calcIngestionDose(QMap<QString, qreal> * totalDoses)
             for (int k = 0; k < daCp.count(); k++) {
                 const KDataItem & cp = daCp.at(k);
                 QString nuc = cp.name();
-                KData *daHp = _userInputs.findPtr(Srs19::ConsumptionRate, Ingestion);
+                KData *daHp = ui->findPtr(Srs19::ConsumptionRate, Ingestion);
                 if (daHp == 0)
                     continue;
                 qreal Hp = daHp->numericValue(model->tagName());
@@ -332,7 +321,8 @@ void DoseEstimation::calcIngestionDose(QMap<QString, qreal> * totalDoses)
 
 void DoseEstimation::calcInhalationDose(QMap<QString, qreal> * totalDoses)
 {
-    qreal Rinh = _userInputs.numericValueOf(Srs19::InhalationRate, Inhalation);
+    KDataGroupArray * ui = userInputs();
+    qreal Rinh = ui->numericValueOf(Srs19::InhalationRate, Inhalation);
     QMap<QString, qreal> doses, daDf;
     const KPortList & inpPorts = inputs().first()->connectedPorts();
     foreach(KPort * p, inpPorts) {
@@ -380,6 +370,7 @@ void DoseEstimation::calcInhalationDose(QMap<QString, qreal> * totalDoses)
 void DoseEstimation::calcGroundDose(QMap<QString, qreal> * totalDoses)
 {
     QMap<QString, qreal> doses, daDf;
+    KDataGroupArray * ui = userInputs();
     const KPortList & inpPorts = inputs().first()->connectedPorts();
     foreach(KPort * p, inpPorts) {
         const Quantity * qty = p->quantity();
@@ -389,7 +380,7 @@ void DoseEstimation::calcGroundDose(QMap<QString, qreal> * totalDoses)
             for (int k = 0; k < daCa.count(); k++) {
                 const KDataItem & ca = daCa.at(k);
                 QString nuc = ca.name();
-                KData *daOf = _userInputs.findPtr(Srs19::ExposedFractionTime, ExternalGround);
+                KData *daOf = ui->findPtr(Srs19::ExposedFractionTime, ExternalGround);
                 if (daOf == 0)
                     continue;
                 qreal Of = daOf->numericValue(model->tagName());
@@ -431,6 +422,7 @@ void DoseEstimation::calcGroundDose(QMap<QString, qreal> * totalDoses)
 void DoseEstimation::calcSedimentDose(QMap<QString, qreal> * totalDoses)
 {
     QMap<QString, qreal> doses;
+    KDataGroupArray * ui = userInputs();
     const KPortList & inpPorts = inputs().first()->connectedPorts();
     foreach(KPort * p, inpPorts) {
         const Quantity * qty = p->quantity();
@@ -440,7 +432,7 @@ void DoseEstimation::calcSedimentDose(QMap<QString, qreal> * totalDoses)
             for (int k = 0; k < daCa.count(); k++) {
                 const KDataItem & ca = daCa.at(k);
                 QString nuc = ca.name();
-                KData *daOf = _userInputs.findPtr(Srs19::ExposedFractionTime, ExternalSediment);
+                KData *daOf = ui->findPtr(Srs19::ExposedFractionTime, ExternalSediment);
                 if (daOf == 0)
                     continue;
                 qreal Of = daOf->numericValue(model->tagName());
@@ -477,6 +469,7 @@ void DoseEstimation::calcSedimentDose(QMap<QString, qreal> * totalDoses)
 void DoseEstimation::calcExtSludgeDose(QMap<QString, qreal> * totalDoses)
 {
     QMap<QString, qreal> doses;
+    KDataGroupArray * ui = userInputs();
     const KPortList & inpPorts = inputs().first()->connectedPorts();
     foreach(KPort * p, inpPorts) {
         const Quantity * qty = p->quantity();
@@ -486,7 +479,7 @@ void DoseEstimation::calcExtSludgeDose(QMap<QString, qreal> * totalDoses)
             for (int k = 0; k < daCsl.count(); k++) {
                 const KDataItem & csl = daCsl.at(k);
                 QString nuc = csl.name();
-                KData *daOf = _userInputs.findPtr(Srs19::ExposedFractionTime, InhalationSludge);
+                KData *daOf = ui->findPtr(Srs19::ExposedFractionTime, InhalationSludge);
                 if (daOf == 0)
                     continue;
                 qreal Of = daOf->numericValue(model->tagName());
@@ -523,7 +516,8 @@ void DoseEstimation::calcExtSludgeDose(QMap<QString, qreal> * totalDoses)
 void DoseEstimation::calcInhSludgeDose(QMap<QString, qreal> * totalDoses)
 {
     QMap<QString, qreal> doses;
-    qreal Rinh = _userInputs.numericValueOf(Srs19::InhalationRate, Inhalation);
+    KDataGroupArray * ui = userInputs();
+    qreal Rinh = ui->numericValueOf(Srs19::InhalationRate, Inhalation);
     const KPortList & inpPorts = inputs().first()->connectedPorts();
     foreach(KPort * p, inpPorts) {
         const Quantity * qty = p->quantity();
@@ -533,8 +527,8 @@ void DoseEstimation::calcInhSludgeDose(QMap<QString, qreal> * totalDoses)
             for (int k = 0; k < daCsl.count(); k++) {
                 const KDataItem & csl = daCsl.at(k);
                 QString nuc = csl.name();
-                KData *daOf = _userInputs.findPtr(Srs19::ExposedFractionTime, InhalationSludge);
-                KData * daDL = _userInputs.findPtr(Srs19::DustLoadingFactor, InhalationSludge);
+                KData *daOf = ui->findPtr(Srs19::ExposedFractionTime, InhalationSludge);
+                KData * daDL = ui->findPtr(Srs19::DustLoadingFactor, InhalationSludge);
                 if (daOf == 0 || daDL == 0)
                     continue;
 
@@ -572,6 +566,7 @@ void DoseEstimation::calcInhSludgeDose(QMap<QString, qreal> * totalDoses)
 void DoseEstimation::calcSkinDose(QMap<QString, qreal> * totalDoses)
 {
     QMap<QString, qreal> doses, daDf;
+    KDataGroupArray * ui = userInputs();
     const KPortList & inpPorts = inputs().first()->connectedPorts();
     foreach(KPort * p, inpPorts) {
         const Quantity * qty = p->quantity();
@@ -581,7 +576,7 @@ void DoseEstimation::calcSkinDose(QMap<QString, qreal> * totalDoses)
             for (int k = 0; k < daCa.count(); k++) {
                 const KDataItem & ca = daCa.at(k);
                 QString nuc = ca.name();
-                KData *daOf = _userInputs.findPtr(Srs19::ExposedFractionTime, Immersion);
+                KData *daOf = ui->findPtr(Srs19::ExposedFractionTime, Immersion);
                 if (daOf == 0)
                     continue;
                 qreal Of = daOf->numericValue(model->tagName());
@@ -619,7 +614,7 @@ bool DoseEstimation::calculate(const KCalculationInfo& ci)
         if (lp == 0)
             return false;
 
-        KLocation loc = lp->location();
+        KLocation loc = this->location();
         _dataList.setLocation(loc);
     }
 
@@ -643,13 +638,6 @@ bool DoseEstimation::calculate(const KCalculationInfo& ci)
 
     //return true if there are any result
     return !_dataList.isEmpty();
-}
-
-void DoseEstimation::refresh()
-{
-    KLocationPort * lp = locationPort();
-    if (lp)
-        lp->refresh();
 }
 
 const KPortList & DoseEstimation::inputs() const

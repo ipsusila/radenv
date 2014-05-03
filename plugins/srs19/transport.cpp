@@ -6,17 +6,12 @@ Transport::Transport(IModelFactory * fact, const KModelInfo& inf)
 {
 }
 
-KDataGroupArray * Transport::userInputs()
-{
-    return &_userInputs;
-}
-
 KData Transport::modelData(const Quantity &qty) const
 {
     KData d = _dataList.find(qty);
     if (d.isValid())
         return d;
-    return _userInputs.find(qty);
+    return constUserInputs().find(qty);
 }
 
 KDataArray Transport::result() const
@@ -34,7 +29,7 @@ bool Transport::calculate(const KCalculationInfo &ci)
         if (lp == 0)
             return false;
 
-        KLocation loc = lp->location();
+        KLocation loc = this->location();
         _dataList.setLocation(loc);
         return calculate(ci, loc, &_dataList);
     }
@@ -44,13 +39,6 @@ bool Transport::calculate(const KCalculationInfo &ci)
         _dataList.setLocation(loc);
         return calculate(ci, loc, &_dataList);
     }
-}
-
-void Transport::refresh()
-{
-    KLocationPort * lp = locationPort();
-    if (lp)
-        lp->refresh();
 }
 
 const KPortList & Transport::inputs() const

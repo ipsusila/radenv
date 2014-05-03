@@ -24,15 +24,16 @@ void LargeLakeTransport::defineParameters()
     dg1 << KData(&Srs19::ReleaseToBeachDistance, 0)
         << KData(&Srs19::WaterDepth, 0)
         << KData(&Srs19::LakeFlowVelocity, 0.1);
-    _userInputs << dg1;
+    userInputs()->append(dg1);
 }
 bool LargeLakeTransport::calculate(const KCalculationInfo& ci, const KLocation & loc, KDataArray * calcResult)
 {
     //user input parameters
     qreal x = loc.distance(ci);
-    qreal y0 = _userInputs.numericValueOf(Srs19::ReleaseToBeachDistance);
-    qreal D = _userInputs.numericValueOf(Srs19::WaterDepth);
-    qreal U = _userInputs.numericValueOf(Srs19::LakeFlowVelocity);
+    KDataGroupArray * ui = userInputs();
+    qreal y0 = ui->numericValueOf(Srs19::ReleaseToBeachDistance);
+    qreal D = ui->numericValueOf(Srs19::WaterDepth);
+    qreal U = ui->numericValueOf(Srs19::LakeFlowVelocity);
 
     //const KData & qiW = inpQi.find(Srs19::WaterDischargeRate);
     KData qiW = _inpPorts.data(Srs19::WaterDischargeRate);
@@ -79,19 +80,20 @@ bool LargeLakeTransport::verify(int * oerr, int * owarn)
         err ++;
     }
 
-    qreal y0 = _userInputs.numericValueOf(Srs19::ReleaseToBeachDistance);
+    KDataGroupArray * ui = userInputs();
+    qreal y0 = ui->numericValueOf(Srs19::ReleaseToBeachDistance);
     if (y0 <= 0) {
         KOutputProxy::errorNotSpecified(this, Srs19::ReleaseToBeachDistance);
         err ++;
     }
 
-    qreal D = _userInputs.numericValueOf(Srs19::WaterDepth);
+    qreal D = ui->numericValueOf(Srs19::WaterDepth);
     if (D <= 0) {
         KOutputProxy::errorNotSpecified(this, Srs19::WaterDepth);
         err ++;
     }
 
-    qreal U = _userInputs.numericValueOf(Srs19::LakeFlowVelocity);
+    qreal U = ui->numericValueOf(Srs19::LakeFlowVelocity);
     if (U <= 0) {
         KOutputProxy::errorNotSpecified(this, Srs19::LakeFlowVelocity);
         err++;
@@ -106,14 +108,4 @@ bool LargeLakeTransport::verify(int * oerr, int * owarn)
     return err == 0;
 }
 
-bool LargeLakeTransport::load(QIODevice * io)
-{
-    Q_UNUSED(io);
-    return true;
-}
-bool LargeLakeTransport::save(QIODevice * io)
-{
-    Q_UNUSED(io);
-    return true;
-}
 

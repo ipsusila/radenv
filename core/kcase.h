@@ -1,10 +1,11 @@
 #ifndef KCASE_H
 #define KCASE_H
 
-#include "radglobal.h"
+#include <QRectF>
+#include "iserializable.h"
 
 class KCasePrivate;
-class K_CORE_EXPORT KCase : public QByteArray
+class K_CORE_EXPORT KCase : public ISerializable
 {
 public:
     KCase(const QDateTime & created = QDateTime());
@@ -28,10 +29,19 @@ public:
     void setDocname(const QString& docname);
     QByteArray document() const;
     void setDocument(const QByteArray & doc);
-    const QByteArray & content() const;
-    
+
+    KModelScene * createScene(const QRectF & rect = QRectF());
+    SceneList scenes() const;
+    void clear();
+
+    void deserialize(const QByteArray & cont);
+    void serialize(QByteArray &ba) const;
+    virtual QDataStream & serialize(QDataStream & stream) const;
+    virtual QDataStream & deserialize(QDataStream & stream);
+
 private:
-    QSharedDataPointer<KCasePrivate> data;
+    QExplicitlySharedDataPointer<KCasePrivate> data;
 };
+K_DECLARE_SERIALIZABLE(KCase)
 
 #endif // KCASE_H

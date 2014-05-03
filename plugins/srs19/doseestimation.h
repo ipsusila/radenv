@@ -21,18 +21,12 @@ public:
 
     KDataArray result() const;
     bool calculate(const KCalculationInfo& ci);
-    void refresh();
-    KDataGroupArray * userInputs();
     const KPortList & inputs() const;
 
     bool verify(int * err = 0, int * warn = 0);
-    bool load(QIODevice * io);
-    bool save(QIODevice * io);
-
 protected:
     KPortList        _inpPorts;
     KDataArray       _dataList;
-    KDataGroupArray  _userInputs;
     ExternalDoseCoefficient       _extDf;
     InhalationDoseCoefficient       _inhDf;
     IngestionDoseCoefficient       _ingDf;
@@ -95,15 +89,5 @@ protected:
     int inhalationCoeffIndex() const;
     int ingestionCoeffIndex() const;
 };
-
-/*
-    bool calculate(const KCalculationInfo& ci);
-    bool verify(int * err = 0, int * warn = 0);
-    bool load(QIODevice * io);
-    bool save(QIODevice * io);
-protected:
-    bool allocateIoPorts();
-    IUserInput * createUserInputWidget(QWidget *parent);
-*/
 
 #endif // DOSEESTIMATION_H

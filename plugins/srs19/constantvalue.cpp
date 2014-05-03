@@ -2,6 +2,7 @@
 #include "kport.h"
 #include "koutput.h"
 #include "widgetconstantvalue.h"
+#include "quantity.h"
 
 ConstantValue::ConstantValue(IModelFactory * fact, const KModelInfo& inf)
     : IModel(fact, inf)
@@ -21,11 +22,6 @@ bool ConstantValue::calculate(const KCalculationInfo& ci)
 {
     Q_UNUSED(ci);
     return !_dataList.isEmpty();
-}
-
-void ConstantValue::refresh()
-{
-    //todo
 }
 
 bool ConstantValue::needLocation() const
@@ -49,7 +45,7 @@ QString ConstantValue::displayText() const
 
 bool ConstantValue::allocateIoPorts()
 {
-    _outPorts << new KPort(this, &Rad::ScalarOutput, KPort::Output);
+    _outPorts << new KPort(this, &Srs19::ScalarOutput, KPort::Output);
     return true;
 }
 IUserInput * ConstantValue::createUserInputWidget(QWidget *parent)
@@ -77,13 +73,16 @@ bool ConstantValue::verify(int * oerr, int * owarn)
     return err == 0;
 }
 
-bool ConstantValue::load(QIODevice * io)
+QDataStream & ConstantValue::serialize(QDataStream &stream) const
 {
-    Q_UNUSED(io);
-    return true;
+    IModel::serialize(stream);
+    _dataList.serialize(stream);
+    return stream;
 }
-bool ConstantValue::save(QIODevice * io)
+QDataStream & ConstantValue::deserialize(QDataStream &stream)
 {
-    Q_UNUSED(io);
-    return true;
+    IModel::deserialize(stream);
+    _dataList.deserialize(stream);
+    return stream;
 }
+

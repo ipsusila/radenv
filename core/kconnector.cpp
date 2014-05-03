@@ -5,13 +5,14 @@
 #include "kport.h"
 #include "kconnector.h"
 #include "imodel.h"
+#include "kmodelscene.h"
 
 class KConnectorPrivate : public QSharedData {
     KConnector * connector;
 public:
     KPort * firstPort;
-    KPort * input;
-    KPort * output;
+    KPort * input;              //Port which input direction
+    KPort * output;             //Port which has output direction
     QPointF tempPoint;
     QVector<QPointF> points;
     QRectF rect;
@@ -102,6 +103,53 @@ public:
         QPointF itemPt = connector->mapFromScene(pt);
         tempPoint = itemPt;
         rect = rectWith(itemPt);
+    }
+    inline QDataStream & serialize(QDataStream &s) const
+    {
+        Q_ASSERT(input != 0);
+        Q_ASSERT(output != 0);
+        Q_ASSERT(firstPort != 0);
+
+        s << input->model()->tagName() << input->index()
+          << output->model()->tagName() << output->index()
+          << (firstPort == input ? 1 : 2) << rect << points << connector->pos();
+
+        return s;
+    }
+    inline QDataStream & deserialize(QDataStream &s)
+    {
+        QPointF pos;
+        QString inpTagName, outTagName;
+        int inpIndex, outIndex, firstPortIndex;
+
+        s >> inpTagName >> inpIndex >> outTagName >> outIndex
+          >> firstPortIndex >> rect >> points >> pos;
+
+        //TODO
+        //check for boundary conditions
+        //z-value
+
+        //search port
+        KModelScene * scene = reinterpret_cast<KModelScene*>(connector->scene());
+        Q_ASSERT(scene != 0);
+        IModel * mi = scene->findModel(inpTagName);
+        IModel * mo = scene->findModel(outTagName);
+        Q_ASSERT(mi != 0);
+        Q_ASSERT(mo != 0);
+        Q_ASSERT(inpIndex >= 0 && inpIndex < mi->inputs().size());
+        Q_ASSERT(outIndex >= 0 && outIndex < mo->outputs().size());
+
+        //get port
+        input = mi->inputs().at(inpIndex);
+        output = mo->outputs().at(outIndex);
+
+        if (firstPortIndex == 1)
+            firstPort = input;
+        else
+            firstPort = output;
+        connect();
+        connector->setPos(pos);
+        return s;
     }
 
     inline bool isEmpty() const {
@@ -318,4 +366,15 @@ void KConnector::paint(QPainter * painter, const QStyleOptionGraphicsItem * opti
         */
 
     painter->restore();
+}
+
+QDataStream & KConnector::serialize(QDataStream &stream) const
+{
+    return data->serialize(stream);
+}
+
+QDataStream & KConnector::deserialize(QDataStream &stream)
+{
+    prepareGeometryChange();
+    return data->deserialize(stream);
 }

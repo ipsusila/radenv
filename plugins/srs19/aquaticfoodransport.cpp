@@ -36,20 +36,21 @@ void AquaticFoodTransport::defineParameters()
         break;
     }
 
+    KDataGroupArray * dga = userInputs();
     //define user inputs
     DataGroup dg1(QObject::tr("Fish"));
-    dg1 << KData(&Rad::NameQuantity, name);
-    _userInputs << dg1;
+    dg1 << KData(&Srs19::NameQuantity, name);
+    dga->append(dg1);
 
     DataGroup dg2(QObject::tr("Aquatic food parameters"));
-    dg2 << KData(&Rad::UseDefaultValue, true)
+    dg2 << KData(&Srs19::UseDefaultValue, true)
         << KData(&Srs19::BioaccumulationFactor, KData::RadionuclideArray, QVariant());
-    _userInputs << dg2;
+    dga->append(dg2);
 
     //parameter control
-    KQuantityControl qc(&Rad::UseDefaultValue, false);
+    KQuantityControl qc(&Srs19::UseDefaultValue, false);
     qc.append(&Srs19::BioaccumulationFactor);
-    _userInputs.addQuantityControl(qc);
+    dga->addQuantityControl(qc);
 }
 
 bool AquaticFoodTransport::calculate(const KCalculationInfo& ci, const KLocation & loc, KDataArray * calcResult)
@@ -57,7 +58,8 @@ bool AquaticFoodTransport::calculate(const KCalculationInfo& ci, const KLocation
     Q_UNUSED(loc);
     Q_UNUSED(ci);
 
-    bool useDefault = _userInputs.find(Rad::UseDefaultValue).value().toBool();
+    KDataGroupArray * ui = userInputs();
+    bool useDefault = ui->find(Srs19::UseDefaultValue).value().toBool();
     KData daCw = _inpPorts.data(Srs19::TotalConcentrationInWater);
     DataItemArray cafList;
     if (useDefault) {
@@ -70,11 +72,11 @@ bool AquaticFoodTransport::calculate(const KCalculationInfo& ci, const KLocation
             bpList << KDataItem(cw.name(), Bp, KData::Radionuclide);
         }
         if (!bpList.isEmpty()) {
-            _userInputs.replace(KData(&Srs19::BioaccumulationFactor, bpList));
+            ui->replace(KData(&Srs19::BioaccumulationFactor, bpList));
         }
     }
     else {
-        const KData& daBp = _userInputs.find(Srs19::BioaccumulationFactor);
+        const KData& daBp = ui->find(Srs19::BioaccumulationFactor);
         for(int k = 0; k < daCw.count(); k++) {
             const KDataItem & cw = daCw.at(k);
             qreal Bp = daBp.numericValue(cw.name());
@@ -100,7 +102,8 @@ bool AquaticFoodTransport::verify(int * oerr, int * owarn)
         err ++;
     }
 
-    bool useDefault = _userInputs.valueOf(Rad::UseDefaultValue).toBool();
+    KDataGroupArray * ui = userInputs();
+    bool useDefault = ui->valueOf(Srs19::UseDefaultValue).toBool();
     if (useDefault) {
         if (!bpValues.load(true)) {
             KOutputProxy::errorLoadFailed(this, Srs19::BioaccumulationFactor);
@@ -108,7 +111,7 @@ bool AquaticFoodTransport::verify(int * oerr, int * owarn)
         }
     }
     else {
-        const KData& Bp = _userInputs.find(Srs19::BioaccumulationFactor);
+        const KData& Bp = ui->find(Srs19::BioaccumulationFactor);
         if (Bp.isEmpty()) {
             KOutputProxy::errorNotSpecified(this, Srs19::BioaccumulationFactor);
             err++;
@@ -122,17 +125,6 @@ bool AquaticFoodTransport::verify(int * oerr, int * owarn)
     KOutputProxy::infoVerificationResult(this, err, warn);
 
     return err == 0;
-}
-
-bool AquaticFoodTransport::load(QIODevice * io)
-{
-    Q_UNUSED(io);
-    return true;
-}
-bool AquaticFoodTransport::save(QIODevice * io)
-{
-    Q_UNUSED(io);
-    return true;
 }
 
 FreshwaterFishTransport::FreshwaterFishTransport(IModelFactory * fact, const KModelInfo& inf)

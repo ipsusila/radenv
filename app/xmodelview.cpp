@@ -244,3 +244,45 @@ void XModelView::reannotateModel()
     Q_ASSERT(mc != 0);
     mc->reannotateModels();
 }
+
+bool XModelView::isDisplayGrid() const
+{
+    KModelScene * mc = reinterpret_cast<KModelScene *>(scene());
+    if (mc != 0)
+        return mc->displayGrid();
+    return false;
+}
+bool XModelView::isSnapToGrid() const
+{
+    KModelScene * mc = reinterpret_cast<KModelScene *>(scene());
+    if (mc != 0)
+        return mc->snapToGrid();
+    return false;
+}
+void XModelView::createModel(IModelFactory * factory, const KModelInfo & info)
+{
+    KModelScene * mc = reinterpret_cast<KModelScene *>(scene());
+    if (mc != 0)
+        mc->createModel(factory, info);
+}
+
+void XModelView::refreshModels()
+{
+    KModelScene * mc = reinterpret_cast<KModelScene *>(scene());
+    if (mc != 0)
+        mc->refresh();
+}
+
+void XModelView::verifyModels()
+{
+    KModelScene * mc = reinterpret_cast<KModelScene *>(scene());
+    if (mc != 0)
+        mc->verify();
+}
+
+void XModelView::calculate()
+{
+    KModelScene * mc = reinterpret_cast<KModelScene *>(scene());
+    if (mc != 0)
+        mc->calculate();
+}

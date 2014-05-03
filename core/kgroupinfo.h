@@ -10,6 +10,7 @@ public:
     KGroupInfo(const QString& n, const ModelInfoList &inf);
 
     ModelInfoList infos() const;
+    const KModelInfo * info(int serId) const;
     void addInfo(const KModelInfo& info);
     void addInfos(const ModelInfoList& inf);
     void clear();

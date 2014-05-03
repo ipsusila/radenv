@@ -104,6 +104,20 @@ private:
             else
                 mapKey = key;
 
+            struct _m { QString key; qreal f0; };
+            Q_ASSERT(sizeof(struct _m) <= sizeof(T));
+            if (sizeof(struct _m) > sizeof(T))
+                return 0;
+
+            T val = valTable[mapKey];
+            struct _m * vt = (struct _m *)(&val);
+            qreal * fields = &(vt->f0);
+            if (vt->key == mapKey)
+                return fields[idx];
+            else
+                return 0;
+
+            /*
             //use pointer aritmetic to calculate item field data
             T val = valTable[mapKey];
             int sz = sizeof(QString);
@@ -112,6 +126,7 @@ private:
 
             //cast to real
             return fields[idx];
+            */
         }
     };
 

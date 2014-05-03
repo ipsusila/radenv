@@ -13,6 +13,13 @@ ModelInfoList KGroupInfo::infos() const
 {
     return _infos;
 }
+const KModelInfo * KGroupInfo::info(int serId) const
+{
+    for(int k = 0; k < _infos.size(); k++)
+        if (_infos.at(k).serialId() == serId)
+            return &(_infos.at(k));
+    return 0;
+}
 void KGroupInfo::addInfo(const KModelInfo& inf)
 {
     _infos.append(inf);

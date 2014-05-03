@@ -41,6 +41,7 @@ public:
     const RadionuclideList * radionuclides() const;
     const KRadionuclide & radionuclide(const QString& nm) const;
 
+    KLocation location(const QString& code) const;
     const LocationList * locations() const;
     const AssessmentList * assessments() const;
 

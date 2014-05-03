@@ -22,6 +22,7 @@ public:
     void setReport(KReport * rep);
     bool hasReport() const;
     void promptReport();
+    void refresh();
 private:
     KReport * _report;
 };

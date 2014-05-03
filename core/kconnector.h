@@ -2,10 +2,10 @@
 #define KCONNECTOR_H
 
 #include <QGraphicsItem>
-#include "radglobal.h"
+#include "iserializable.h"
 
 class KConnectorPrivate;
-class K_CORE_EXPORT KConnector : public QGraphicsItem
+class K_CORE_EXPORT KConnector : public QGraphicsItem, public ISerializable
 {
 public:
     enum { Type = UserType + TYPE_CONNECTOR};
@@ -29,12 +29,16 @@ public:
     void disconnect();
     void copyTo(KConnector * con, KPort * out, KPort * inp) const;
 
-    int type() const;
+    virtual int type() const;
     virtual QRectF boundingRect () const;
     virtual void paint(QPainter * painter, const QStyleOptionGraphicsItem * option, QWidget * widget = 0);
+    virtual QDataStream & serialize(QDataStream &stream) const;
+    virtual QDataStream & deserialize(QDataStream &stream);
     
 private:
     QSharedDataPointer<KConnectorPrivate> data;
 };
+
+K_DECLARE_SERIALIZABLE(KConnector)
 
 #endif // KCONNECTOR_H

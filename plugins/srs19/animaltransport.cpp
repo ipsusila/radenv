@@ -27,12 +27,13 @@ bool AnimalTransport::calculate(const KCalculationInfo& ci, const KLocation & lo
     Q_UNUSED(loc);
     Q_UNUSED(ci);
 
-    bool useDefault = _userInputs.valueOf(Rad::UseDefaultValue).toBool();
+    KDataGroupArray * dga = userInputs();
+    bool useDefault = dga->valueOf(Srs19::UseDefaultValue).toBool();
     KData Cai = _inpPorts.data(0, Srs19::ConcentrationInAnimalFeed);
     KData Cwi = _inpPorts.data(1, Srs19::ConcentrationInWater);
-    qreal Qw = _userInputs.numericValueOf(Srs19::WaterConsumption);
-    qreal Qmf = _userInputs.numericValueOf(*feedingAmountQuantity());
-    qreal Tmf = _userInputs.numericValueOf(*consumptionDelayQuantity());
+    qreal Qw = dga->numericValueOf(Srs19::WaterConsumption);
+    qreal Qmf = dga->numericValueOf(*feedingAmountQuantity());
+    qreal Tmf = dga->numericValueOf(*consumptionDelayQuantity());
 
     if (useDefault) {
         DataItemArray FmItems;
@@ -50,10 +51,10 @@ bool AnimalTransport::calculate(const KCalculationInfo& ci, const KLocation & lo
             FmItems << KDataItem(CaItem.name(), fmf, KData::Radionuclide);
             calculate(CaItem, cwi, fmf, Qmf, Qw, Tmf, calcResult);
         }
-        _userInputs.replace(KData(uptakeRateQuantity(), FmItems));
+        dga->replace(KData(uptakeRateQuantity(), FmItems));
     }
     else {
-        const KData & Fm = _userInputs.find(*uptakeRateQuantity());
+        const KData & Fm = dga->find(*uptakeRateQuantity());
         for (int k = 0; k < Cai.count(); k++) {
             const KDataItem & CaItem = Cai.at(k);
             qreal cwi = Cwi.numericValue(CaItem.name());
@@ -90,26 +91,27 @@ bool AnimalTransport::verify(int * oerr, int * owarn)
         //err ++;
     }
 
-    qreal Qmf = _userInputs.numericValueOf(*feedingAmountQuantity());
+    KDataGroupArray * dga = userInputs();
+    qreal Qmf = dga->numericValueOf(*feedingAmountQuantity());
     if (Qmf <= 0) {
         KOutputProxy::errorNotSpecified(this, *feedingAmountQuantity());
         err++;
     }
 
-    qreal Tmf = _userInputs.numericValueOf(*consumptionDelayQuantity());
+    qreal Tmf = dga->numericValueOf(*consumptionDelayQuantity());
     if (Tmf < 0) {
         KOutputProxy::errorNotSpecified(this, *consumptionDelayQuantity());
         err ++;
     }
 
-    qreal qw = _userInputs.numericValueOf(Srs19::WaterConsumption);
+    qreal qw = dga->numericValueOf(Srs19::WaterConsumption);
     if (qw < 0) {
         KOutputProxy::errorNotSpecified(this, Srs19::WaterConsumption);
         err++;
     }
 
     //uptake rate
-    bool useDefault = _userInputs.valueOf(Rad::UseDefaultValue).toBool();
+    bool useDefault = dga->valueOf(Srs19::UseDefaultValue).toBool();
     if (useDefault) {
         if (!_Fmf.load(true)) {
             KOutputProxy::errorLoadFailed(this, *uptakeRateQuantity());
@@ -117,7 +119,7 @@ bool AnimalTransport::verify(int * oerr, int * owarn)
         }
     }
     else {
-        const KData & fmf = _userInputs.find(*uptakeRateQuantity());
+        const KData & fmf = dga->find(*uptakeRateQuantity());
         if (fmf.isEmpty()) {
             KOutputProxy::errorNotSpecified(this, *uptakeRateQuantity());
             err++;
@@ -135,17 +137,6 @@ bool AnimalTransport::verify(int * oerr, int * owarn)
     return err == 0;
 }
 
-bool AnimalTransport::load(QIODevice * io)
-{
-    Q_UNUSED(io);
-    return true;
-}
-bool AnimalTransport::save(QIODevice * io)
-{
-    Q_UNUSED(io);
-    return true;
-}
-
 ////Milk
 MilkTransport::MilkTransport(IModelFactory *fact, const KModelInfo &inf)
     : AnimalTransport(fact, inf)
@@ -153,31 +144,32 @@ MilkTransport::MilkTransport(IModelFactory *fact, const KModelInfo &inf)
 }
 void MilkTransport::defineParameters()
 {
+    KDataGroupArray * dga = userInputs();
     //define user inputs
     DataGroup dg1(QObject::tr("Animal"));
-    dg1 << KData(&Rad::NameQuantity, "Milk animal");
-    _userInputs << dg1;
+    dg1 << KData(&Srs19::NameQuantity, "Milk animal");
+    dga->append(dg1);
 
     DataGroup dg2(QObject::tr("Feeding parameters"));
     dg2 << KData(&Srs19::MilkAnimalFeed, 16)
         << KData(&Srs19::WaterConsumption, 0.06)
-        << KData(&Rad::LongCommentQuantity, QObject::tr("For small animal suach as sheep and goats, "
+        << KData(&Srs19::LongCommentQuantity, QObject::tr("For small animal suach as sheep and goats, "
                                             "if specific value is unknown, 0.006 should be used."));
-    _userInputs << dg2;
+    dga->append(dg2);
 
     DataGroup dg3(QObject::tr("Consumption parameter"));
     dg3 << KData(&Srs19::IntervalAfterMilking, 1);
-    _userInputs << dg3;
+    dga->append(dg3);
 
     DataGroup dg4(QObject::tr("Transfer factor"));
-    dg4 << KData(&Rad::UseDefaultValue, true)
+    dg4 << KData(&Srs19::UseDefaultValue, true)
         << KData(&Srs19::FractionIntakeAtMilking, KData::RadionuclideArray, QVariant());
-    _userInputs << dg4;
+    dga->append(dg4);
 
     //parameter control
-    KQuantityControl qc(&Rad::UseDefaultValue, false);
+    KQuantityControl qc(&Srs19::UseDefaultValue, false);
     qc.append(&Srs19::FractionIntakeAtMilking);
-    _userInputs.addQuantityControl(qc);
+    dga->addQuantityControl(qc);
 }
 
 const Quantity * MilkTransport::feedingAmountQuantity() const
@@ -207,31 +199,32 @@ MeatTransport::MeatTransport(IModelFactory *fact, const KModelInfo &inf)
 
 void MeatTransport::defineParameters()
 {
+    KDataGroupArray * dga = userInputs();
     //define user inputs
     DataGroup dg1(QObject::tr("Animal"));
-    dg1 << KData(&Rad::NameQuantity, "Meat animal");
-    _userInputs << dg1;
+    dg1 << KData(&Srs19::NameQuantity, "Meat animal");
+    dga->append(dg1);
 
     DataGroup dg2(QObject::tr("Feeding parameters"));
     dg2 << KData(&Srs19::MeatAnimalFeed, 12)
         << KData(&Srs19::WaterConsumption, 0.04)
-        << KData(&Rad::LongCommentQuantity, QObject::tr("For small animal suach as sheep and goats, "
+        << KData(&Srs19::LongCommentQuantity, QObject::tr("For small animal suach as sheep and goats, "
                                         "if specific value is unknown, 0.004 should be used."));
-    _userInputs << dg2;
+    dga->append(dg2);
 
     DataGroup dg3(QObject::tr("Consumption parameter"));
     dg3 << KData(&Srs19::IntervalAfterSlaughter, 20);
-    _userInputs << dg3;
+    dga->append(dg3);
 
     DataGroup dg4(QObject::tr("Transfer factor"));
-    dg4 << KData(&Rad::UseDefaultValue, true)
+    dg4 << KData(&Srs19::UseDefaultValue, true)
         << KData(&Srs19::FractionIntakeAtSlaughter, KData::RadionuclideArray, QVariant());
-    _userInputs << dg4;
+    dga->append(dg4);
 
     //parameter control
-    KQuantityControl qc(&Rad::UseDefaultValue, false);
+    KQuantityControl qc(&Srs19::UseDefaultValue, false);
     qc.append(&Srs19::FractionIntakeAtSlaughter);
-    _userInputs.addQuantityControl(qc);
+    dga->addQuantityControl(qc);
 
 }
 const Quantity * MeatTransport::feedingAmountQuantity() const

@@ -1,8 +1,15 @@
 #ifndef RADQUANTITY_H
 #define RADQUANTITY_H
 
+#include <QtCore/qglobal.h>
 #include <QDataStream>
 #include <QVariant>
+
+#if defined(KCORE_LIBRARY)
+#  define K_CORE_EXPORT Q_DECL_EXPORT
+#else
+#  define K_CORE_EXPORT Q_DECL_IMPORT
+#endif
 
 /**
  * Default namespace
@@ -58,6 +65,18 @@ typedef struct _tagQuantity
     {
         return type == Rad::Integer || type == Rad::Real || type == Rad::NumText;
     }
+    inline bool isComment() const
+    {
+        return type == Rad::Comment || type == Rad::LongComment;
+    }
+    inline bool isString() const
+    {
+        return type == Rad::Text;
+    }
+    inline bool isLogic() const
+    {
+        return type == Rad::Boolean;
+    }
     inline QString defaultValueString(char fmt = 'g') const
     {
         return QString::number(defaultValue, fmt, decimal);
@@ -79,8 +98,9 @@ typedef struct _tagQuantity
         if (unit.isEmpty())
             return text;
         return QString("%1 (%2)").arg(text).arg(unit);
-    }
+    } 
 } Quantity;
+
 
 /**
  * Quantity and Value pair
@@ -125,6 +145,14 @@ inline QDataStream & operator>>(QDataStream &s, Quantity & item)
           >> item.unit >> item.rtUnit >> item.description;
     }
     return s;
+}
+
+namespace Rad {
+    extern K_CORE_EXPORT const char LatinEndLine;
+    extern K_CORE_EXPORT const Quantity EmptyQuantity;
+
+    extern K_CORE_EXPORT void serialize(QDataStream & stream, const Quantity * qty);
+    extern K_CORE_EXPORT const Quantity * deserialize(QDataStream & stream);
 }
 
 #endif // RADQUANTITY_H

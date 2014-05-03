@@ -70,6 +70,25 @@ public:
         }
     }
 
+    QDataStream & serialize(QDataStream & s) const
+    {
+        s << (int)_types;
+        Rad::serialize(s, _quantity);
+        s << _items;
+
+        return s;
+    }
+    inline QDataStream & deserialize(QDataStream & s)
+    {
+        int itypes;
+        s >> itypes;
+        _types = KData::ContentTypes(itypes);
+        _quantity = Rad::deserialize(s);
+        s >> _items;
+
+        return s;
+    }
+
     inline KData::ContentType guessType(const QVariant & v) {
         KData::ContentType t;
         if (!v.isValid())
@@ -198,6 +217,11 @@ KDataItem::KDataItem(const KDataItem& other)
     : _name(other._name), _value(other._value), _types(other._types)
 {
 }
+
+KDataItem::~KDataItem()
+{
+}
+
 KDataItem &KDataItem::operator=(const KDataItem& rhs)
 {
     if (this != &rhs) {
@@ -247,6 +271,18 @@ KDataItem & KDataItem::operator/=(qreal c)
 {
     _value = _value.toDouble() / c;
     return *this;
+}
+QDataStream & KDataItem::serialize(QDataStream &stream) const
+{
+    stream << _name << (int)_types << _value;
+    return stream;
+}
+QDataStream & KDataItem::deserialize(QDataStream &stream)
+{
+    int itypes;
+    stream >> _name >> itypes >> _value;
+    _types = KData::ContentTypes(itypes);
+    return stream;
 }
 
 /***********************************************************************************/
@@ -426,6 +462,14 @@ QString KData::displayText() const
 {
     return data->displayText();
 }
+QDataStream & KData::serialize(QDataStream &stream) const
+{
+    return data->serialize(stream);
+}
+QDataStream & KData::deserialize(QDataStream &stream)
+{
+    return data->deserialize(stream);
+}
 
 /***********************************************************************************/
 KDataArray::KDataArray()
@@ -441,6 +485,9 @@ KDataArray::KDataArray(const KDataArray& o)
 }
 KDataArray::KDataArray(const DataList &o)
     : DataList(o)
+{
+}
+KDataArray::~KDataArray()
 {
 }
 
@@ -478,8 +525,8 @@ const KData & KDataArray::find(const QString& qty) const
 
 const KData & KDataArray::find(const Quantity& v) const
 {
-    DataList::const_iterator beg = this->begin();
-    DataList::const_iterator end = this->end();
+    DataList::const_iterator beg = this->constBegin();
+    DataList::const_iterator end = this->constEnd();
     while (beg != end) {
         if (beg->quantity() == v)
             return *beg;
@@ -566,7 +613,21 @@ void KDataArray::appendOrReplace(const KData &di)
     }
     append(di);
 }
+QDataStream & KDataArray::serialize(QDataStream &stream) const
+{
+    const DataList * dList = this;
+    stream << *dList << _location;
 
+    return stream;
+}
+QDataStream & KDataArray::deserialize(QDataStream &stream)
+{
+    DataList * dList = this;
+    stream >> *dList >> _location;
+    return stream;
+}
+
+///////////////////////////////////////////////////////////////////
 KDataGroupArray::KDataGroupArray() : QVector<DataGroup >()
 {
 }
@@ -579,6 +640,10 @@ KDataGroupArray::KDataGroupArray(const QString& name, const KDataArray & da)
         g.add(d);
     }
     this->append(g);
+}
+KDataGroupArray::~KDataGroupArray()
+{
+
 }
 
 const KData & KDataGroupArray::find(const Quantity& v, int gid) const
@@ -749,7 +814,7 @@ KDataArray KDataGroupArray::toDataArray() const
     return list;
 }
 
-void KDataGroupArray::separateTo(KDataGroupArray * dArray, KDataTable * dTable) const
+void KDataGroupArray::separateTo(KDataGroupArray * dArray, KDataTable * dTable, KData::ContentTypes type) const
 {
     Q_ASSERT(dArray != 0);
     Q_ASSERT(dTable != 0);
@@ -761,14 +826,18 @@ void KDataGroupArray::separateTo(KDataGroupArray * dArray, KDataTable * dTable) 
         DataGroup group = *gr;
         for(int k = 0; k < nz; k++) {
             const KData & d = gr->itemAt(k);
-            if (d.contains(KData::Radionuclide) || d.contains(KData::Array)) {
+            //TODO:
+            //select only radionuclide (or parameterized)
+            //if (d.contains(KData::Radionuclide) || d.contains(KData::Array)) {
+            if ((d.contentTypes() & type) == type) {
                 dTable->append(d);
                 group.remove(d);
             }
         }
         if (!group.isEmpty()) {
             const KData & d1 = group.itemAt(0);
-            if (!(group.count() == 1 && (d1.quantity() == Rad::UseDefaultValue || d1.quantity() == Rad::UseDefaultValue2)))
+            //if (!(group.count() == 1 && (d1.quantity() == Rad::UseDefaultValue || d1.quantity() == Rad::UseDefaultValue2)))
+            if (!(group.count() == 1 && d1.quantity().isComment()))
                 dArray->append(group);
         }
 
@@ -797,6 +866,20 @@ void KDataGroupArray::addQuantityControl(const KQuantityControl & qc)
 const QuantityControlList & KDataGroupArray::quantityControls() const
 {
     return _controlList;
+}
+
+QDataStream & KDataGroupArray::serialize(QDataStream &stream) const
+{
+    const QVector<DataGroup> * vItems = this;
+    stream << *vItems << _controlList;
+
+    return stream;
+}
+QDataStream & KDataGroupArray::deserialize(QDataStream &stream)
+{
+    QVector<DataGroup> * vItems = this;
+    stream >> *vItems >> _controlList;
+    return stream;
 }
 
 //*************************************************************************************************
@@ -1026,50 +1109,9 @@ void KDataTable::replace(int row, int col, const QVariant& v)
     data->replace(row, col, v);
 }
 
-//helper functions (stream related)
-QDataStream & operator<<(QDataStream & s, const KDataItem & di)
-{
-
-}
-
-QDataStream & operator>>(QDataStream & s, KDataItem & di)
-{
-
-}
-
-QDataStream & operator<<(QDataStream & s, const KData &d)
-{
-
-}
-
-QDataStream & operator>>(QDataStream & s, KData &d)
-{
-
-}
-
-QDataStream & operator<<(QDataStream & s, const KDataArray & da)
-{
-
-}
-
-QDataStream & operator>>(QDataStream & s, KDataArray & da)
-{
-
-}
-
-QDataStream & operator<<(QDataStream & s, const KDataGroupArray & dga)
-{
-
-}
-
-QDataStream & operator>>(QDataStream & s, KDataGroupArray & dga)
-{
-
-}
-
 QTextStream & operator<<(QTextStream & s, const KData & d)
 {
-    if (d.quantity() == Rad::CommentQuantity || d.quantity() == Rad::LongCommentQuantity)
+    if (d.quantity().isComment())
         s << "//" << d.value().toString() << Rad::LatinEndLine;
     else if (d.isValid())
         s << d.displayText() << Rad::LatinEndLine;
@@ -1079,7 +1121,9 @@ QTextStream & operator<<(QTextStream & s, const KData & d)
 QTextStream & operator<<(QTextStream & s, const KDataArray & da)
 {
     if (!da.isEmpty()) {
-        s << Rad::LatinEndLine << "---------------------------------------------------------------------------------" << Rad::LatinEndLine;
+        s << Rad::LatinEndLine
+          << "-----------------------------------------------"
+             "----------------------------------" << Rad::LatinEndLine;
         for(int k = 0; k < da.size(); k++)
             s << da.at(k);
     }

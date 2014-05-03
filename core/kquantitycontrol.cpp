@@ -1,6 +1,8 @@
 #include <QSharedData>
 #include "kquantitycontrol.h"
 #include "radcore.h"
+#include "kpluginmanager.h"
+#include "imodelfactory.h"
 
 class KQuantityControlPrivate : public QSharedData {
 public:
@@ -12,6 +14,34 @@ public:
         : _controller(ctrl), _enableOnSet(en)
     {
 
+    }
+
+    inline QDataStream & serialize(QDataStream &s) const
+    {
+        s << _enableOnSet;
+        Rad::serialize(s, _controller);
+
+        int nz = _controlledQuantities.size();
+        s << nz;
+        for(int k = 0; k < nz; k++)
+            Rad::serialize(s, _controlledQuantities.at(k));
+
+        return s;
+    }
+    inline QDataStream & deserialize(QDataStream &s)
+    {
+        s >> _enableOnSet;
+        _controller = Rad::deserialize(s);
+        int nz;
+        s >> nz;
+        _controlledQuantities.clear();
+        for(int k = 0; k < nz; k++) {
+            const Quantity * qty = Rad::deserialize(s);
+            if (qty != 0)
+                _controlledQuantities.append(qty);
+        }
+
+        return s;
     }
 
     inline void remove(const Quantity * qty)
@@ -33,15 +63,9 @@ public:
     }
 };
 
-//helper function
-QDataStream & operator<<(QDataStream &s, const KQuantityControl &qc)
+KQuantityControl::KQuantityControl()
+    : data(new KQuantityControlPrivate(&Rad::EmptyQuantity, false))
 {
-    return s;
-}
-
-QDataStream & operator>>(QDataStream &s, KQuantityControl &qc)
-{
-    return s;
 }
 
 KQuantityControl::KQuantityControl(const Quantity * ctrl, bool enableOnSet)
@@ -100,4 +124,14 @@ KQuantityControl & KQuantityControl::operator<<(const DataGroup& group)
 {
     data->append(group);
     return *this;
+}
+
+QDataStream & KQuantityControl::serialize(QDataStream &s) const
+{
+    return data->serialize(s);
+}
+
+QDataStream & KQuantityControl::deserialize(QDataStream &s)
+{
+    return data->deserialize(s);
 }

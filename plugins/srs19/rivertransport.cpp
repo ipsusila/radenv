@@ -23,31 +23,33 @@ bool RiverTransport::allocateIoPorts()
 void RiverTransport::defineParameters()
 {
     //define user inputs
+    KDataGroupArray * ui = userInputs();
     DataGroup dg1(QObject::tr("River conditions (site specific)"));
     dg1 << KData(&Srs19::RiverEstuaryWidth, 0)
         << KData(&Srs19::FlowDepth, 0)
         << KData(&Srs19::LowRiverFlowRate, 0)
         << KData(&Srs19::NetFreshwaterVelocity, 0)
-        << KData(&Rad::CommentQuantity, QObject::tr("If U not known, value will be calculated with U=qr/BD."));
-    _userInputs << dg1;
+        << KData(&Srs19::CommentQuantity, QObject::tr("If U not known, value will be calculated with U=qr/BD."));
+    ui->append(dg1);
 
     DataGroup dg2(QObject::tr("Parameter estimation"));
     dg2 << KData(&Srs19::EstimateParameters, false)
         << KData(&Srs19::EstimatedRiverWidth, 0);
-    _userInputs << dg2;
+    ui->append(dg2);
 
     DataGroup dg3(QObject::tr("Receptor position"));
     dg3 << KData(&Srs19::ReceptorOnOpposite, false);
-    _userInputs << dg3;
+    ui->append(dg3);
 }
 
 void RiverTransport::estimateParameters()
 {
-    bool estimate = _userInputs.valueOf(Srs19::EstimateParameters).toBool();
+    KDataGroupArray * ui = userInputs();
+    bool estimate = ui->valueOf(Srs19::EstimateParameters).toBool();
     if (!estimate)
         return;
 
-    qreal Bd = _userInputs.numericValueOf(Srs19::EstimatedRiverWidth);
+    qreal Bd = ui->numericValueOf(Srs19::EstimatedRiverWidth);
     xTrace() << "Estimating parameter with Bd=" << Bd;
 
     //SRS-19 page 168
@@ -62,8 +64,8 @@ void RiverTransport::estimateParameters()
     qreal U = qr / (B * D);
 
     //save parameters
-    KDataGroupArray::iterator it = _userInputs.begin();
-    KDataGroupArray::iterator end = _userInputs.end();
+    KDataGroupArray::iterator it = ui->begin();
+    KDataGroupArray::iterator end = ui->end();
     while(it != end) {
         DataList::iterator iit = it->items.begin();
         DataList::iterator iend = it->items.end();
@@ -115,13 +117,14 @@ bool RiverTransport::calculate(const KCalculationInfo& ci, const KLocation& loc,
 
     //user input parameters
     qreal x = loc.distance(ci);
-    qreal B = _userInputs.numericValueOf(Srs19::RiverEstuaryWidth);
-    qreal qr = _userInputs.numericValueOf(Srs19::LowRiverFlowRate);
-    qreal D = _userInputs.numericValueOf(Srs19::FlowDepth);
-    qreal U = _userInputs.numericValueOf(Srs19::NetFreshwaterVelocity);
+    KDataGroupArray * ui = userInputs();
+    qreal B = ui->numericValueOf(Srs19::RiverEstuaryWidth);
+    qreal qr = ui->numericValueOf(Srs19::LowRiverFlowRate);
+    qreal D = ui->numericValueOf(Srs19::FlowDepth);
+    qreal U = ui->numericValueOf(Srs19::NetFreshwaterVelocity);
     if (U <= 0.0) {
         U = qr / (B * D);
-        _userInputs.replace(KData(&Srs19::NetFreshwaterVelocity, U));
+        ui->replace(KData(&Srs19::NetFreshwaterVelocity, U));
     }
     qreal Lz = 7 * D;
 
@@ -129,7 +132,7 @@ bool RiverTransport::calculate(const KCalculationInfo& ci, const KLocation& loc,
     (*calcResult) << KData(&Srs19::LongitudinalDistance, x);
     (*calcResult) << KData(&Srs19::CompleteMixingDistance, Lz);
 
-    bool isOpposite = _userInputs.valueOf(Srs19::ReceptorOnOpposite).toBool();
+    bool isOpposite = ui->valueOf(Srs19::ReceptorOnOpposite).toBool();
     if (isOpposite) {
         calcualteConcentration(x, qr, U, calcResult);
     }
@@ -180,9 +183,10 @@ bool RiverTransport::doVerification(int * oerr, int * owarn)
         err++;
     }
 
-    bool estimate = _userInputs.valueOf(Srs19::EstimateParameters).toBool();
+    KDataGroupArray * ui = userInputs();
+    bool estimate = ui->valueOf(Srs19::EstimateParameters).toBool();
     if (estimate) {
-        qreal Bd = _userInputs.numericValueOf(Srs19::EstimatedRiverWidth);
+        qreal Bd = ui->numericValueOf(Srs19::EstimatedRiverWidth);
         if (Bd <= 0) {
             KOutputProxy::errorNotSpecified(this, Srs19::EstimatedRiverWidth);
             err++;
@@ -190,10 +194,10 @@ bool RiverTransport::doVerification(int * oerr, int * owarn)
     }
     else {
         //ceck all parameter
-        qreal B = _userInputs.numericValueOf(Srs19::RiverEstuaryWidth);
-        qreal qr = _userInputs.numericValueOf(Srs19::LowRiverFlowRate);
-        qreal U = _userInputs.numericValueOf(Srs19::NetFreshwaterVelocity);
-        qreal D = _userInputs.numericValueOf(Srs19::FlowDepth);
+        qreal B = ui->numericValueOf(Srs19::RiverEstuaryWidth);
+        qreal qr = ui->numericValueOf(Srs19::LowRiverFlowRate);
+        qreal U = ui->numericValueOf(Srs19::NetFreshwaterVelocity);
+        qreal D = ui->numericValueOf(Srs19::FlowDepth);
 
         if (B <= 0) {
             KOutputProxy::errorNotSpecified(this, Srs19::RiverEstuaryWidth);
@@ -239,14 +243,4 @@ bool RiverTransport::verify(int * oerr, int * owarn)
     return result;
 }
 
-bool RiverTransport::load(QIODevice * io)
-{
-    Q_UNUSED(io);
-    return true;
-}
-bool RiverTransport::save(QIODevice * io)
-{
-    Q_UNUSED(io);
-    return true;
-}
 

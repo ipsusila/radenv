@@ -2,10 +2,10 @@
 #define KLOCATION_H
 
 #include <QImage>
-#include "radglobal.h"
+#include "iserializable.h"
 
 class KLocationPrivate;
-class K_CORE_EXPORT KLocation
+class K_CORE_EXPORT KLocation : public ISerializable
 {
 private:
     QExplicitlySharedDataPointer<KLocationPrivate> data;
@@ -63,6 +63,10 @@ public:
 
     KLocation clone() const;
     qreal distanceBetween(const KLocation & loc) const;
+
+    virtual QDataStream & serialize(QDataStream & stream) const;
+    virtual QDataStream & deserialize(QDataStream & stream);
 };
+K_DECLARE_SERIALIZABLE(KLocation)
 
 #endif // KLOCATION_H

@@ -12,8 +12,6 @@ public:
 
     bool calculate(const KCalculationInfo& ci);
     bool verify(int * err = 0, int * warn = 0);
-    bool load(QIODevice * io);
-    bool save(QIODevice * io);
 protected:
     bool allocateIoPorts();
     //IUserInput * createUserInputWidget(QWidget *parent);

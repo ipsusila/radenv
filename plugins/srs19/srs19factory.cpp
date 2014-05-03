@@ -96,6 +96,17 @@ void Srs19Factory::onFinalized()
     delete _settingManager;
 }
 
+KModelInfo Srs19Factory::modelInfo(int serId) const
+{
+    for(int j = _groupInfos.size() - 1; j >= 0; j--) {
+        const KGroupInfo & gi = _groupInfos.at(j);
+        const KModelInfo * mi = gi.info(serId);
+        if (mi != 0)
+            return *mi;
+    }
+    return KModelInfo();
+}
+
 bool Srs19Factory::initialize()
 {
     //load or create new default kd tables if does not exist

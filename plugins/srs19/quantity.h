@@ -183,6 +183,13 @@ namespace Srs19 {
     extern Quantity DietaryCarbonFraction;
     extern Quantity CarbonDoseFactor;
     extern Quantity AirborneCarbonConcentration;
+
+    extern Quantity ScalarOutput;
+    extern Quantity CommentQuantity;
+    extern Quantity NameQuantity;
+    extern Quantity UseDefaultValue;
+    extern Quantity LongCommentQuantity;
+    extern Quantity UseDefaultValue2;
 }
 
 #endif // QUANTITY_H

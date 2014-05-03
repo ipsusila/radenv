@@ -5,18 +5,11 @@
 #include <QSharedPointer>
 #include <QSharedDataPointer>
 #include <QExplicitlySharedDataPointer>
-#include <QtCore/qglobal.h>
 #include <QPair>
 #include <QDateTime>
 #include <limits>
 #include "kgroup.h"
 #include "radquantity.h"
-
-#if defined(KCORE_LIBRARY)
-#  define K_CORE_EXPORT Q_DECL_EXPORT
-#else
-#  define K_CORE_EXPORT Q_DECL_IMPORT
-#endif
 
 class KPort;
 class KData;
@@ -63,7 +56,8 @@ typedef QList<KCalculationInfo>         CalculationList;
 typedef QList<const Quantity *>         ConstQuantityList;
 typedef QList<Quantity *>               QuantityList;
 typedef QList<KDataArray>               DataArrayList;
-typedef QList<KQuantityControl>           QuantityControlList;
+typedef QList<KQuantityControl>         QuantityControlList;
+typedef QList<KModelScene *>            SceneList;
 
 typedef struct _tagPM                   SMargin;
 typedef struct _tagPM                   SPadding;
@@ -103,34 +97,6 @@ typedef struct _tagPM                   SPadding;
 #define MIN_REAL                        std::numeric_limits<qreal>::min()
 #define MAX_INT                         (qreal)std::numeric_limits<int>::max()
 #define MIN_INT                         (qreal)std::numeric_limits<int>::min()
-
-
-namespace Rad {
-    extern K_CORE_EXPORT const char LatinEndLine;
-    extern K_CORE_EXPORT const Quantity EmptyQuantity;
-    extern K_CORE_EXPORT const Quantity ScalarInput;
-    extern K_CORE_EXPORT const Quantity ScalarInput1;
-    extern K_CORE_EXPORT const Quantity ScalarInput2;
-    extern K_CORE_EXPORT const Quantity ScalarInput3;
-    extern K_CORE_EXPORT const Quantity ScalarInput4;
-    extern K_CORE_EXPORT const Quantity ScalarInput5;
-    extern K_CORE_EXPORT const Quantity ScalarInput6;
-    extern K_CORE_EXPORT const Quantity ScalarInput7;
-    extern K_CORE_EXPORT const Quantity ScalarInput8;
-    extern K_CORE_EXPORT const Quantity ScalarInput9;
-
-    extern K_CORE_EXPORT const Quantity ScalarOutput;
-    extern K_CORE_EXPORT const Quantity ScalarOutput1;
-    extern K_CORE_EXPORT const Quantity ScalarOutput2;
-    extern K_CORE_EXPORT const Quantity ScalarOutput3;
-    extern K_CORE_EXPORT const Quantity ScalarOutput4;
-    extern K_CORE_EXPORT const Quantity ScalarOutput5;
-
-    extern K_CORE_EXPORT const Quantity CommentQuantity;
-    extern K_CORE_EXPORT const Quantity NameQuantity;
-    extern K_CORE_EXPORT const Quantity UseDefaultValue;
-    extern K_CORE_EXPORT const Quantity LongCommentQuantity;
-    extern K_CORE_EXPORT const Quantity UseDefaultValue2;
-}
+#define INV_QTY_ID                      std::numeric_limits<unsigned int>::max()
 
 #endif // RADGLOBAL_H

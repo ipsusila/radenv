@@ -8,8 +8,6 @@ class Vegetation : public FoodChain
 {
 public:
     bool verify(int * err = 0, int * warn = 0);
-    bool load(QIODevice * io);
-    bool save(QIODevice * io);
 
 protected:
     TransferFactor _fvValues;

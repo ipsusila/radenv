@@ -75,7 +75,7 @@ void KReport::printData(const KData& d)
 }
 */
 
-void KReport::addCase(const KCase& caseObj)
+void KReport::addAssessment(const KCase& caseObj)
 {
     Q_ASSERT(_stream);
     //display to info

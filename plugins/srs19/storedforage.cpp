@@ -21,13 +21,14 @@ bool StoredForage::allocateIoPorts()
 void StoredForage::defineParameters()
 {
     //define user inputs
+    KDataGroupArray * ui = userInputs();
     DataGroup dg1(QObject::tr("Vegetation"));
-    dg1 << KData(&Rad::NameQuantity, "Stored feed");
-    _userInputs << dg1;
+    dg1 << KData(&Srs19::NameQuantity, "Stored feed");
+    ui->append(dg1);
 
     DataGroup dg2(QObject::tr("Storing parameter"));
     dg2 << KData(&Srs19::IntervalAfterHarvest, 90);
-    _userInputs << dg2;
+    ui->append(dg2);
 }
 
 bool StoredForage::calculate(const KCalculationInfo& ci, const KLocation & loc, KDataArray * calcResult)
@@ -35,7 +36,8 @@ bool StoredForage::calculate(const KCalculationInfo& ci, const KLocation & loc, 
     Q_UNUSED(loc);
     Q_UNUSED(ci);
 
-    qreal th = _userInputs.numericValueOf(Srs19::IntervalAfterHarvest);
+    KDataGroupArray * ui = userInputs();
+    qreal th = ui->numericValueOf(Srs19::IntervalAfterHarvest);
     KData Cvi1 = _inpPorts.data(Srs19::ConsDueDirectContamination);
     KData Cvi2 = _inpPorts.data(Srs19::ConsDueIndirectProcess);
 
@@ -70,7 +72,7 @@ bool StoredForage::verify(int * oerr, int * owarn)
         err ++;
     }
 
-    qreal th = _userInputs.numericValueOf(Srs19::IntervalAfterHarvest);
+    qreal th = userInputs()->numericValueOf(Srs19::IntervalAfterHarvest);
     if (th <= 0) {
         KOutputProxy::errorNotSpecified(this, Srs19::IntervalAfterHarvest);
         err++;
@@ -85,13 +87,3 @@ bool StoredForage::verify(int * oerr, int * owarn)
     return err == 0;
 }
 
-bool StoredForage::load(QIODevice * io)
-{
-    Q_UNUSED(io);
-    return true;
-}
-bool StoredForage::save(QIODevice * io)
-{
-    Q_UNUSED(io);
-    return true;
-}

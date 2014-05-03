@@ -48,6 +48,7 @@ public:
 
     virtual IModel * createModel(const KModelInfo & info) = 0;
     virtual const GroupInfoList & groups() const = 0;
+    virtual KModelInfo modelInfo(int serId) const = 0;
     virtual QString name() const = 0;
     virtual QString author() const = 0;
     virtual QString version() const = 0;

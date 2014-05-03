@@ -6,7 +6,7 @@
 #include "kquantitycontrol.h"
 
 class KDataPrivate;
-class K_CORE_EXPORT KData
+class K_CORE_EXPORT KData : public ISerializable
 {
 private:
     QSharedDataPointer<KDataPrivate> data;
@@ -80,16 +80,21 @@ public:
     bool operator!=(const KData& o) const;
 
     virtual QString displayText() const;
+    virtual QDataStream & serialize(QDataStream &stream) const;
+    virtual QDataStream & deserialize(QDataStream &stream);
 };
 Q_DECLARE_OPERATORS_FOR_FLAGS(KData::ContentTypes)
+K_DECLARE_SERIALIZABLE(KData)
 
-class K_CORE_EXPORT KDataItem
+class K_CORE_EXPORT KDataItem : public ISerializable
 {
 public:
     KDataItem();
     KDataItem(const QString& nm, const QVariant& v, KData::ContentTypes types);
     KDataItem(const KDataItem& other);
     KDataItem &operator=(const KDataItem& rhs);
+    virtual ~KDataItem();
+
     QString name() const;
     QVariant value() const;
     qreal numericValue() const;
@@ -101,18 +106,23 @@ public:
     KDataItem & operator*=(qreal c);
     KDataItem & operator/=(qreal c);
 
+    virtual QDataStream & serialize(QDataStream &stream) const;
+    virtual QDataStream & deserialize(QDataStream &stream);
+
 private:
     QString _name;
     QVariant _value;
     KData::ContentTypes _types;
 };
+K_DECLARE_SERIALIZABLE(KDataItem)
 
-class K_CORE_EXPORT KDataArray : public DataList
+class K_CORE_EXPORT KDataArray : public DataList, public ISerializable
 {
 public:
     KDataArray();
     KDataArray(const KDataArray& o);
     KDataArray(const DataList& o);
+    virtual ~KDataArray();
 
     QVariant valueOf(const Quantity & v) const;
     qreal numericValueOf(const Quantity& v) const;
@@ -129,15 +139,20 @@ public:
     KLocation location() const;
     ConstQuantityList quantities() const;
 
+    virtual QDataStream & serialize(QDataStream &stream) const;
+    virtual QDataStream & deserialize(QDataStream &stream);
+
 private:
     KLocation _location;
 };
+K_DECLARE_SERIALIZABLE(KDataArray)
 
-class K_CORE_EXPORT KDataGroupArray : public QVector<DataGroup>
+class K_CORE_EXPORT KDataGroupArray : public QVector<DataGroup>, public ISerializable
 {
 public:
     KDataGroupArray();
     explicit KDataGroupArray(const QString& name, const KDataArray & da);
+    virtual ~KDataGroupArray();
 
     KData * findPtr(const Quantity& v, int gid = DataGroup::DefaultId);
     const KData & find(const Quantity& v, int gid = DataGroup::DefaultId) const;
@@ -146,7 +161,7 @@ public:
     ConstQuantityList quantities() const;
     KDataArray toDataArray() const;
 
-    void separateTo(KDataGroupArray * dArray, KDataTable * dTable) const;
+    void separateTo(KDataGroupArray * dArray, KDataTable * dTable, KData::ContentTypes type = KData::RadionuclideArray) const;
 
     void removeQuantity(const Quantity & v, int gid);
     void appendOrReplace(const KData& di, int gid);
@@ -154,9 +169,13 @@ public:
     void addQuantityControl(const KQuantityControl & qc);
     const QuantityControlList & quantityControls() const;
 
+    virtual QDataStream & serialize(QDataStream &stream) const;
+    virtual QDataStream & deserialize(QDataStream &stream);
+
 private:
     QuantityControlList _controlList;
 };
+K_DECLARE_SERIALIZABLE(KDataGroupArray)
 
 class KDataTablePrivate;
 class K_CORE_EXPORT KDataTable
@@ -188,15 +207,6 @@ public:
 private:
     QSharedDataPointer<KDataTablePrivate> data;
 };
-
-extern K_CORE_EXPORT QDataStream & operator<<(QDataStream & s, const KDataItem & di);
-extern K_CORE_EXPORT QDataStream & operator>>(QDataStream & s, KDataItem & di);
-extern K_CORE_EXPORT QDataStream & operator<<(QDataStream & s, const KData &d);
-extern K_CORE_EXPORT QDataStream & operator>>(QDataStream & s, KData &d);
-extern K_CORE_EXPORT QDataStream & operator<<(QDataStream & s, const KDataArray & da);
-extern K_CORE_EXPORT QDataStream & operator>>(QDataStream & s, KDataArray & da);
-extern K_CORE_EXPORT QDataStream & operator<<(QDataStream & s, const KDataGroupArray & dga);
-extern K_CORE_EXPORT QDataStream & operator>>(QDataStream & s, KDataGroupArray & dga);
 
 extern K_CORE_EXPORT QTextStream & operator<<(QTextStream & s, const KData & d);
 extern K_CORE_EXPORT QTextStream & operator<<(QTextStream & s, const KDataArray & da);

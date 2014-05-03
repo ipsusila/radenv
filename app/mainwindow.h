@@ -59,7 +59,6 @@ private:
         IModelFactory * factory, GroupInfoList groupList);
     void populatePluginMenus(QMenu * groupMenu, IModelFactory * factory, GroupInfoList groupList);
 
-    KPluginManager * pluginManager;
     XOutputView * outView;
     KModelScene * scene;
     XModelView * view;

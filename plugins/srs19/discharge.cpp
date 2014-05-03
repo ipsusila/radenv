@@ -16,12 +16,7 @@ KData Discharge::modelData(const Quantity &qty) const
     KData d = _dataList.find(qty);
     if (d.isValid())
         return d;
-    return _userInputs.find(qty);
-}
-
-KDataGroupArray * Discharge::userInputs()
-{
-    return &_userInputs;
+    return constUserInputs().find(qty);
 }
 
 KDataArray Discharge::result() const
@@ -32,13 +27,6 @@ bool Discharge::calculate(const KCalculationInfo& ci)
 {
     Q_UNUSED(ci);
     return !_dataList.isEmpty();
-}
-
-void Discharge::refresh()
-{
-    KLocationPort * lp = locationPort();
-    if (lp)
-        lp->refresh();
 }
 
 const KPortList & Discharge::outputs() const
@@ -114,7 +102,7 @@ bool AirDischarge::verify(int * oerr, int * owarn)
     }
     else {
         //assign location
-        _dataList.setLocation(lp->location());
+        _dataList.setLocation(this->location());
     }
 
     KOutputProxy::infoVerificationResult(this, err, warn);
@@ -130,17 +118,6 @@ bool AirDischarge::calculate(const KCalculationInfo& ci)
 {
     Q_UNUSED(ci);
     return !_dataList.isEmpty();
-}
-
-bool AirDischarge::load(QIODevice * io)
-{
-    Q_UNUSED(io);
-    return true;
-}
-bool AirDischarge::save(QIODevice * io)
-{
-    Q_UNUSED(io);
-    return true;
 }
 
 WaterDischarge::WaterDischarge(IModelFactory * fact, const KModelInfo& inf)
@@ -192,7 +169,7 @@ bool WaterDischarge::verify(int * oerr, int * owarn)
     }
     else {
         //assign location
-        _dataList.setLocation(lp->location());
+        _dataList.setLocation(this->location());
     }
 
     KOutputProxy::infoVerificationResult(this, err, warn);
@@ -231,16 +208,3 @@ bool WaterDischarge::calculate(const KCalculationInfo& ci)
 
     return true;
 }
-
-
-bool WaterDischarge::load(QIODevice * io)
-{
-    Q_UNUSED(io);
-    return true;
-}
-bool WaterDischarge::save(QIODevice * io)
-{
-    Q_UNUSED(io);
-    return true;
-}
-

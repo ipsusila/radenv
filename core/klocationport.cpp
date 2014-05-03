@@ -5,6 +5,7 @@
 #include "klocationport.h"
 #include "imodel.h"
 #include "dialoglocation.h"
+#include "kstorage.h"
 
 SMargin KLocationPort::Margin = {20, 0, 0, 0};
 
@@ -92,5 +93,6 @@ void KLocationPort::promptLocation()
 }
 void KLocationPort::refresh()
 {
-    //
+    //reassign location
+    _location = KStorage::storage()->location(_location.code());
 }

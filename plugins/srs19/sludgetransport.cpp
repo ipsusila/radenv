@@ -28,7 +28,7 @@ void SludgeTransport::defineParameters()
     DataGroup dg1(QObject::tr("Sludge parameters"));
     dg1 << KData(&Srs19::SewageSludgeDensity, 1000)
         << KData(&Srs19::SludgeContainerDepth, 1);
-    _userInputs << dg1;
+    userInputs()->append(dg1);
 }
 
 bool SludgeTransport::calculate(const KCalculationInfo& ci, const KLocation & loc, KDataArray * calcResult)
@@ -36,9 +36,10 @@ bool SludgeTransport::calculate(const KCalculationInfo& ci, const KLocation & lo
     Q_UNUSED(loc);
     Q_UNUSED(ci);
 
-    qreal p = _userInputs.numericValueOf(Srs19::SewageSludgeDensity);
-    qreal d = _userInputs.numericValueOf(Srs19::SludgeContainerDepth);
-    //qreal ps = _userInputs.numericValueOf(Srs19::SolidMaterialConcentration) / 100.0;
+    KDataGroupArray * ui = userInputs();
+    qreal p = ui->numericValueOf(Srs19::SewageSludgeDensity);
+    qreal d = ui->numericValueOf(Srs19::SludgeContainerDepth);
+    //qreal ps = ui->numericValueOf(Srs19::SolidMaterialConcentration) / 100.0;
 
     KData daCsl = _inpPorts.data(0, Srs19::ConcentrationInWetSewage);
     DataItemArray cslList;
@@ -65,13 +66,14 @@ bool SludgeTransport::verify(int * oerr, int * owarn)
         err ++;
     }
 
-    qreal p = _userInputs.numericValueOf(Srs19::SewageSludgeDensity);
+    KDataGroupArray * ui = userInputs();
+    qreal p = ui->numericValueOf(Srs19::SewageSludgeDensity);
     if (p <= 0) {
         KOutputProxy::errorNotSpecified(this, Srs19::SewageSludgeDensity);
         err ++;
     }
 
-    qreal d = _userInputs.numericValueOf(Srs19::SludgeContainerDepth);
+    qreal d = ui->numericValueOf(Srs19::SludgeContainerDepth);
     if (d <= 0) {
         KOutputProxy::errorNotSpecified(this, Srs19::SludgeContainerDepth);
         err++;
@@ -84,16 +86,5 @@ bool SludgeTransport::verify(int * oerr, int * owarn)
     KOutputProxy::infoVerificationResult(this, err, warn);
 
     return err == 0;
-}
-
-bool SludgeTransport::load(QIODevice * io)
-{
-    Q_UNUSED(io);
-    return true;
-}
-bool SludgeTransport::save(QIODevice * io)
-{
-    Q_UNUSED(io);
-    return true;
 }
 

@@ -19,6 +19,7 @@
 #include "dialogradionuclide.h"
 #include "kmath.h"
 #include "kpluginmanager.h"
+#include "kcase.h"
 
 //test
 #include "testclass.h"
@@ -26,8 +27,6 @@
 MainWindow::MainWindow(XOutputView * vw, QWidget *parent) :
     QMainWindow(parent), outView(vw)
 {
-    pluginManager = new KPluginManager();
-
     //create scene
     scene = new KModelScene(-800, -400, 1600, 800);
 
@@ -36,7 +35,7 @@ MainWindow::MainWindow(XOutputView * vw, QWidget *parent) :
 
     //load all plugins
     //loadAllPlugins();
-    pluginManager->loadPlugins();
+    KPluginManager::instance()->loadPlugins();
 
     createView();
     createActions();
@@ -59,14 +58,11 @@ MainWindow::~MainWindow()
 
     //delete storage;
     KStorage::removeStorages();
-
-    //remove plugins
-    delete pluginManager;
 }
 
 void MainWindow::closeEvent(QCloseEvent *event)
 {
-    pluginManager->unloadPlugins();
+    KPluginManager::instance()->unloadPlugins();
     event->accept();
 }
 
@@ -130,7 +126,7 @@ void MainWindow::createActions()
     fSaveAct->setIcon(QIcon(":/std/save-assessment.png"));
     connect(fSaveAct, SIGNAL(triggered()), this, SLOT(saveAssessment()));
 
-    fSaveAsAct = new QAction(tr("Save Scenario &As..."), this);
+    fSaveAsAct = new QAction(tr("Save Assessment &As..."), this);
     fSaveAsAct->setShortcut(QKeySequence::SaveAs);
     fSaveAsAct->setStatusTip(tr("Save the assessment to given name"));
     fSaveAsAct->setIcon(QIcon(":/std/save-assessment-as.png"));
@@ -280,14 +276,14 @@ void MainWindow::createActions()
     */
     vDisplayGridAct = new QAction(tr("&Display Grid"), this);
     vDisplayGridAct->setCheckable(true);
-    vDisplayGridAct->setChecked(scene->displayGrid());
+    vDisplayGridAct->setChecked(view->isDisplayGrid());
     vDisplayGridAct->setStatusTip(tr("Show/hide grid line"));
     vDisplayGridAct->setIcon(QIcon(":/std/grid-show.png"));
     connect(vDisplayGridAct, SIGNAL(triggered(bool)), view, SLOT(displayGrid(bool)));
 
     vSnapGridAct = new QAction(tr("&Snap to Grid"), this);
     vSnapGridAct->setCheckable(true);
-    vSnapGridAct->setChecked(scene->snapToGrid());
+    vSnapGridAct->setChecked(view->isSnapToGrid());
     vSnapGridAct->setStatusTip(tr("Snap object to grid"));
     vSnapGridAct->setIcon(QIcon(":/std/grid-snap.png"));
     connect(vSnapGridAct, SIGNAL(triggered(bool)), view, SLOT(snapToGrid(bool)));
@@ -434,7 +430,7 @@ void MainWindow::createPluginMenus()
 {
     //add top menus
     bool hasSeparator = false;    
-    FactoryList factories = pluginManager->factories();
+    FactoryList factories = KPluginManager::instance()->factories();
     foreach(IModelFactory * factory, factories) {
         //if is top level factory, add as new menu item (placed after model)
         if (factory->isTopLevel()) {
@@ -529,8 +525,7 @@ void MainWindow::modelTriggeredAction(IModelFactory* f, const KModelInfo & info)
 {
     Q_ASSERT(f != 0);
     //Ask scene to create model
-    if (scene)
-        scene->createModel(f, info);
+    view->createModel(f, info);
     xTrace() << "Create model: " << info.name();
 }
 
@@ -546,16 +541,42 @@ void MainWindow::newAssessment()
 
 void MainWindow::openAssessment()
 {
+    //open file
+    QString fileName = QFileDialog::getOpenFileName(this, tr("Open File"),
+                                                    "",
+                                                    tr("Data file (*.dat)"));
+    if (fileName.isEmpty())
+        return;
 
+    QFile file(fileName);
+    if (file.open(QFile::ReadOnly)) {
+        QDataStream stream(&file);
+        scene->clearModels();
+        scene->deserialize(stream);
+        file.close();
+    }
 }
 
 void MainWindow::saveAssessment()
 {
-
+    //save as current name
 }
 
 void MainWindow::saveAssessmentAs()
 {
+    //save as file
+    QString fileName = QFileDialog::getSaveFileName(this, tr("Save File"),
+                                                    "",
+                                                    tr("Data file (*.dat)"));
+    if (fileName.isEmpty())
+        return;
+
+    QFile file(fileName);
+    if (file.open(QFile::WriteOnly)) {
+        QDataStream stream(&file);
+        scene->serialize(stream);
+        file.close();
+    }
 
 }
 
@@ -599,31 +620,37 @@ void MainWindow::modelLocations()
 {
     DialogLocation dlg;
     dlg.exec();
-    scene->refresh();
+    view->refreshModels();
 
 }
 void MainWindow::modelRadionuclides()
 {
     DialogRadionuclide dlg;
     dlg.exec();
-    scene->refresh();
+    view->refreshModels();
 }
 void MainWindow::modelVerify()
 {
     outView->clearContents();
-    scene->verify();
+    view->verifyModels();
 }
 
 void MainWindow::modelCalculate()
 {
     outView->clearContents();
-    scene->calculate();
+    view->calculate();
 }
 
 
 void MainWindow::helpContent()
 {
+    //TEST
+    AssessmentList list;
+    list.append(KCase());
+    list.append(KCase());
 
+    AssessmentList list2 = list;
+    list = AssessmentList();
 }
 void MainWindow::helpAbout()
 {

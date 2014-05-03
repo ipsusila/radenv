@@ -10,8 +10,6 @@ public:
     RiverTransport(IModelFactory * fact, const KModelInfo& inf);
 
     virtual bool verify(int * err = 0, int * warn = 0);
-    virtual bool load(QIODevice * io);
-    virtual bool save(QIODevice * io);
 protected:
     bool allocateIoPorts();
     virtual void defineParameters();

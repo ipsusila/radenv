@@ -6,7 +6,13 @@
  ******************************************************************************/
 
 #include <QSharedData>
+#include <QRectF>
+#include <QDebug>
 #include "kcase.h"
+#include "kmodelscene.h"
+
+//Token identifier
+static const QString __assessmentToken = "@Assessment_v-1.0";
 
 class KCasePrivate : public QSharedData {
 public:
@@ -17,8 +23,90 @@ public:
     QString remark;
     QString docname;
     QByteArray document;
+    SceneList scenes;
 
     KCasePrivate() : created(QDateTime::currentDateTime()) {}
+    ~KCasePrivate()
+    {
+        qDebug() << "Removing case private";
+        this->clear();
+    }
+
+    inline KModelScene * createScene(const QRectF & rect = QRectF())
+    {
+        KModelScene * scene;
+        if (rect.isValid())
+            scene = new KModelScene(rect.x(), rect.y(), rect.width(), rect.height());
+        else
+            scene = new KModelScene(-800, -400, 1600, 800);
+        scenes.append(scene);
+        return scene;
+    }
+    void clear()
+    {
+        created = QDateTime::currentDateTime();
+        name.clear();
+        author.clear();
+        description.clear();
+        remark.clear();
+        docname.clear();
+        document.clear();
+
+        while (!scenes.isEmpty()) {
+            KModelScene * scene = scenes.takeFirst();
+            delete scene;
+        }
+    }
+
+    void serialize(QByteArray &ba) const
+    {
+        ba.clear();
+        quint32 sz = (quint32)scenes.size();
+        QDataStream stream(&ba, QIODevice::WriteOnly);
+        stream << sz;
+        for(quint32 k = 0; k < sz; k++)
+            scenes.at(k)->serialize(stream);
+    }
+    QDataStream & serialize(QDataStream & s) const
+    {
+        s << __assessmentToken << created << name << author
+          << description << remark << docname << document;
+
+        quint32 sz = (quint32)scenes.size();
+        s << sz;
+        for(quint32 k = 0; k < sz; k++)
+            scenes.at(k)->serialize(s);
+        return s;
+    }
+    void deserialize(const QByteArray &ba)
+    {
+        quint32 sz;
+        QDataStream stream(ba);
+        stream >> sz;
+        scenes.clear();
+        for(quint32 k = 0; k < sz; k++) {
+            KModelScene * scene = createScene();
+            scene->deserialize(stream);
+            scenes.append(scene);
+        }
+    }
+    QDataStream & deserialize(QDataStream & s)
+    {
+        QString token;
+        s >> token;
+        if (token == __assessmentToken) {
+            s >> created >> name >> author >> description
+              >> remark >> docname >> document;
+            quint32 sz;
+            s >> sz;
+            for(quint32 k = 0; k < sz; k++) {
+                KModelScene * scene = createScene();
+                scene->deserialize(s);
+                scenes.append(scene);
+            }
+        }
+        return s;
+    }
 };
 
 KCase::KCase(const QDateTime & c) : data(new KCasePrivate)
@@ -27,7 +115,7 @@ KCase::KCase(const QDateTime & c) : data(new KCasePrivate)
         data->created = c;
 }
 
-KCase::KCase(const KCase &rhs) : QByteArray(rhs), data(rhs.data)
+KCase::KCase(const KCase &rhs) : data(rhs.data)
 {
 }
 
@@ -35,7 +123,6 @@ KCase &KCase::operator=(const KCase &rhs)
 {
     if (this != &rhs) {
         data.operator=(rhs.data);
-        QByteArray::operator=(rhs);
     }
     return *this;
 }
@@ -111,7 +198,34 @@ void KCase::setDocument(const QByteArray &doc)
     data->document = doc;
 }
 
-const QByteArray& KCase::content() const
+void KCase::deserialize(const QByteArray & cont)
 {
-    return *this;
+    data->deserialize(cont);
+}
+
+KModelScene * KCase::createScene(const QRectF &rect)
+{
+    return data->createScene(rect);
+}
+SceneList KCase::scenes() const
+{
+    return data->scenes;
+}
+void KCase::clear()
+{
+    data->clear();
+}
+
+void KCase::serialize(QByteArray &ba) const
+{
+    data->serialize(ba);
+}
+
+QDataStream & KCase::serialize(QDataStream & stream) const
+{
+    return data->serialize(stream);
+}
+QDataStream & KCase::deserialize(QDataStream & stream)
+{
+    return data->deserialize(stream);
 }

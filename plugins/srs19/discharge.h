@@ -10,8 +10,6 @@ protected:
 public:
     KDataArray result() const;
     bool calculate(const KCalculationInfo& ci);
-    void refresh();
-    KDataGroupArray * userInputs();
 
     const KPortList & outputs() const;
     QString displayText() const;
@@ -19,7 +17,6 @@ public:
 protected:
     KPortList        _outPorts;
     KDataArray       _dataList;
-    KDataGroupArray _userInputs;
 
     KData modelData(const Quantity & qty) const;
 };
@@ -33,8 +30,6 @@ public:
 
     bool calculate(const KCalculationInfo& ci);
     bool verify(int * err = 0, int * warn = 0);
-    bool load(QIODevice * io);
-    bool save(QIODevice * io);
 protected:
     bool allocateIoPorts();
     IUserInput * createUserInputWidget(QWidget *parent);
@@ -49,8 +44,6 @@ public:
 
     bool calculate(const KCalculationInfo& ci);
     bool verify(int * err = 0, int * warn = 0);
-    bool load(QIODevice * io);
-    bool save(QIODevice * io);
 protected:
     bool allocateIoPorts();
     IUserInput * createUserInputWidget(QWidget *parent);

@@ -6,6 +6,7 @@
 #include "kpluginmanager.h"
 #include "imodelfactory.h"
 #include "koutput.h"
+#include "imodel.h"
 
 
 //default instance
@@ -14,37 +15,11 @@ static KPluginManager __pluginManager;
 class KPluginManagerPrivate : public QSharedData {
 private:
     QMap<QString, IModelFactory *> _factories;
-    ConstQuantityList _coreQuantities;
+    QMap<const Quantity *, IModelFactory *> _quantityFactories;
 public:
 
     KPluginManagerPrivate()
     {
-        _coreQuantities
-            << &Rad::EmptyQuantity
-            << &Rad::ScalarInput
-            << &Rad::ScalarInput1
-            << &Rad::ScalarInput2
-            << &Rad::ScalarInput3
-            << &Rad::ScalarInput4
-            << &Rad::ScalarInput5
-            << &Rad::ScalarInput6
-            << &Rad::ScalarInput7
-            << &Rad::ScalarInput8
-            << &Rad::ScalarInput9
-
-            << &Rad::ScalarOutput
-            << &Rad::ScalarOutput1
-            << &Rad::ScalarOutput2
-            << &Rad::ScalarOutput3
-            << &Rad::ScalarOutput4
-            << &Rad::ScalarOutput5
-
-            << &Rad::CommentQuantity
-            << &Rad::NameQuantity
-            << &Rad::UseDefaultValue
-            << &Rad::LongCommentQuantity
-            << &Rad::UseDefaultValue2;
-
         qDebug() << "#Allocate plugin manager instance";
     }
     ~KPluginManagerPrivate()
@@ -52,26 +27,29 @@ public:
         qDebug() << "Destroying plugin manager instance";
     }
 
-    inline FactoryList factories() const
-    {
-        return _factories.values();
-    }
     inline int factoryCount() const
     {
         return _factories.count();
     }
-    inline const ConstQuantityList & coreQuantities() const
+    inline FactoryList factories() const
     {
-        return _coreQuantities;
+        return _factories.values();
     }
+    inline IModelFactory * factory(const Quantity * qty) const
+    {
+        return _quantityFactories[qty];
+    }
+    inline IModelFactory * factory(const QString& name) const
+    {
+        return _factories[name];
+    }
+
     const Quantity * findQuantity(const QString& factoryName, unsigned int qid) const
     {
-        IModelFactory * factory;
-        if (factoryName == RAD_NULL_FACTORY)
-            return findQuantity(_coreQuantities, qid);
-        else if ((factory = _factories[factoryName]) != 0)
+        IModelFactory * factory = _factories[factoryName];
+        if (factory != 0)
             return findQuantity(factory->availableQuantities(), qid);
-        return 0;
+        return &Rad::EmptyQuantity;
     }
 
     const Quantity * findQuantity(const ConstQuantityList & qtyList, unsigned int qid) const
@@ -83,7 +61,18 @@ public:
                 return (*qty);
             qty++;
         }
-        return 0;
+        return &Rad::EmptyQuantity;
+    }
+
+    void mapQuantityFactories(IModelFactory * factory)
+    {
+        ConstQuantityList qtyList = factory->availableQuantities();
+        ConstQuantityList::const_iterator qty = qtyList.constBegin();
+        ConstQuantityList::const_iterator end = qtyList.constEnd();
+        while (qty != end) {
+            _quantityFactories[*qty] = factory;
+            qty++;
+        }
     }
 
     int loadPlugins(const QString& path)
@@ -117,6 +106,7 @@ public:
                 if (factory) {
                     factory->initialize();
                     _factories[factory->name()] = factory;
+                    mapQuantityFactories(factory);
 
                     xTrace() << "Plugin directory: " << pluginsDir.absoluteFilePath(fileName);
                     xInfo() << "Name:" << factory->name() << ",Author:" << factory->author()
@@ -171,23 +161,62 @@ KPluginManager::~KPluginManager()
 {
 }
 
-FactoryList KPluginManager::factories() const
-{
-    return data->factories();
-}
 int KPluginManager::factoryCount() const
 {
     return data->factoryCount();
 }
-
-ConstQuantityList KPluginManager::coreQuantities() const
+FactoryList KPluginManager::factories() const
 {
-    return data->coreQuantities();
+    return data->factories();
 }
-
-const Quantity * KPluginManager::findQuantity(IModelFactory * factory, unsigned int qid) const
+IModelFactory * KPluginManager::factory(const Quantity * qty) const
 {
-    return data->findQuantity(factory == 0 ? RAD_NULL_FACTORY : factory->name(), qid);
+    return data->factory(qty);
+}
+IModelFactory * KPluginManager::factory(const QString & name) const
+{
+    return data->factory(name);
+}
+IModel * KPluginManager::createModel(IModelFactory * fact, const KModelInfo & mi) const
+{
+    IModel * model = fact->createModel(mi);
+    if (model != 0) {
+        if (!model->initialize()) {
+            delete model;
+            return 0;
+        }
+    }
+    return model;
+}
+IModel * KPluginManager::createModel(const QString &factName, int infoId) const
+{
+    IModelFactory * fact = data->factory(factName);
+    if (fact == 0)
+        return 0;
+    KModelInfo mi = fact->modelInfo(infoId);
+    IModel * model = fact->createModel(mi);
+    if (model != 0) {
+        if (!model->initialize()) {
+            delete model;
+            return 0;
+        }
+    }
+    return model;
+}
+IModel * KPluginManager::createModel(QDataStream &stream) const
+{
+    int serId;
+    QString factName;
+
+    //Important
+    //This deserialization order is same as Serialization order
+    //See IModel::serialize
+    stream >> factName >> serId;
+    return createModel(factName, serId);
+}
+const Quantity * KPluginManager::findQuantity(IModelFactory * fact, unsigned int qid) const
+{
+    return data->findQuantity(fact == 0 ? RAD_NULL_FACTORY : fact->name(), qid);
 }
 const Quantity * KPluginManager::findQuantity(const QString &factoryName, unsigned int qid) const
 {

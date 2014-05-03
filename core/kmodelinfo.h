@@ -3,7 +3,7 @@
 
 #include <QIcon>
 #include <QMetaType>
-#include "radglobal.h"
+#include "iserializable.h"
 
 class KModelInfoPrivate;
 class K_CORE_EXPORT KModelInfo

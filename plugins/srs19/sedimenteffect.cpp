@@ -16,23 +16,24 @@ QString SedimentEffect::displayText() const
 void SedimentEffect::defineParameters()
 {
     //define user inputs
+    KDataGroupArray * ui = userInputs();
     DataGroup dg1(QObject::tr("Sediment parameters"));
     dg1 << KData(&Srs19::EffShoreAccumulationTime, 3.15e+7)
         << KData(&Srs19::SuspendedSedimentConcentration, defaultSuspendedSedimentConcentration())
-        << KData(&Rad::LongCommentQuantity, "If value of suspended sediment concentration not known, "
+        << KData(&Srs19::LongCommentQuantity, "If value of suspended sediment concentration not known, "
                  "left it to 0. The value of 1x10^-2 kg/m3 for coastal water, 5x10^-2 kg/m3 for others "
                  "will be used for calculation.");
-    _userInputs << dg1;
+    ui->append(dg1);
 
     DataGroup dg2(QObject::tr("Distribution coefficient"));
-    dg2 << KData(&Rad::UseDefaultValue, true)
+    dg2 << KData(&Srs19::UseDefaultValue, true)
         << KData(&Srs19::SedimentDistributionCoeff, KData::RadionuclideArray, QVariant());
-    _userInputs << dg2;
+    ui->append(dg2);
 
     //parameter control
-    KQuantityControl qc(&Rad::UseDefaultValue, false);
+    KQuantityControl qc(&Srs19::UseDefaultValue, false);
     qc.append(&Srs19::SedimentDistributionCoeff);
-    _userInputs.addQuantityControl(qc);
+    ui->addQuantityControl(qc);
 }
 
 bool SedimentEffect::allocateIoPorts()
@@ -63,18 +64,19 @@ bool SedimentEffect::calculate(const KCalculationInfo &ci, const KLocation & loc
 
     //Kd values for specific Radionuclide
     //add to input
-    qreal Ss = _userInputs.numericValueOf(Srs19::SuspendedSedimentConcentration);
-    qreal Te = _userInputs.numericValueOf(Srs19::EffShoreAccumulationTime);
-    bool useDefaultKd = _userInputs.valueOf(Rad::UseDefaultValue).toBool();
+    KDataGroupArray * ui = userInputs();
+    qreal Ss = ui->numericValueOf(Srs19::SuspendedSedimentConcentration);
+    qreal Te = ui->numericValueOf(Srs19::EffShoreAccumulationTime);
+    bool useDefaultKd = ui->valueOf(Srs19::UseDefaultValue).toBool();
 
     //check for default value
     if (Ss <= 0) {
         Ss = defaultSuspendedSedimentConcentration();
-        _userInputs.replace(KData(&Srs19::SuspendedSedimentConcentration, Ss));
+        ui->replace(KData(&Srs19::SuspendedSedimentConcentration, Ss));
     }
     if (Te <= 0) {
         Te = 3.15e+7;
-        _userInputs.replace(KData(&Srs19::EffShoreAccumulationTime, Te));
+        ui->replace(KData(&Srs19::EffShoreAccumulationTime, Te));
     }
 
     //get cwtot
@@ -92,10 +94,10 @@ bool SedimentEffect::calculate(const KCalculationInfo &ci, const KLocation & loc
             calculate(cwItem, Ss, Te, Kd, calResult);
             kdItems << KDataItem(cwItem.name(), Kd, KData::Radionuclide);
         }
-        _userInputs.replace(KData(&Srs19::SedimentDistributionCoeff, kdItems));
+        ui->replace(KData(&Srs19::SedimentDistributionCoeff, kdItems));
     }
     else {
-        const KData& KdList = _userInputs.find(Srs19::SedimentDistributionCoeff);
+        const KData& KdList = ui->find(Srs19::SedimentDistributionCoeff);
         for(int k = 0; k < Cw.count(); k++) {
             const KDataItem & cwItem = Cw.at(k);
             qreal Kd = KdList.numericValue(cwItem.name());
@@ -135,12 +137,13 @@ bool SedimentEffect::verify(int * oerr, int * owarn)
         err ++;
     }
 
-    qreal Te = _userInputs.numericValueOf(Srs19::EffShoreAccumulationTime);
+    KDataGroupArray * ui = userInputs();
+    qreal Te = ui->numericValueOf(Srs19::EffShoreAccumulationTime);
     if (Te <= 0) {
         KOutputProxy::infoUseDefaultValue(this, Srs19::EffShoreAccumulationTime);
     }
 
-    qreal Ss = _userInputs.numericValueOf(Srs19::SuspendedSedimentConcentration);
+    qreal Ss = ui->numericValueOf(Srs19::SuspendedSedimentConcentration);
     if (Ss <= 0) {
         KOutputProxy::infoUseDefaultValue(this, Srs19::SuspendedSedimentConcentration);
     }
@@ -148,7 +151,7 @@ bool SedimentEffect::verify(int * oerr, int * owarn)
     //load default kd from databases
     //TODO
     //check default flag/no
-    bool useDefaultKd = _userInputs.valueOf(Rad::UseDefaultValue).toBool();
+    bool useDefaultKd = ui->valueOf(Srs19::UseDefaultValue).toBool();
     if (useDefaultKd) {
         if (!_kdValues.load(true)) {
             KOutputProxy::errorLoadFailed(this, Srs19::SedimentDistributionCoeff);
@@ -156,7 +159,7 @@ bool SedimentEffect::verify(int * oerr, int * owarn)
         }
     }
     else {
-        const KData & Kd = _userInputs.find(Srs19::SedimentDistributionCoeff);
+        const KData & Kd = ui->find(Srs19::SedimentDistributionCoeff);
         if (Kd.isEmpty()) {
             KOutputProxy::errorNotSpecified(this, Srs19::SedimentDistributionCoeff);
             err++;
@@ -171,18 +174,6 @@ bool SedimentEffect::verify(int * oerr, int * owarn)
         *owarn = warn;
 
     return err == 0;
-}
-
-bool SedimentEffect::load(QIODevice * io)
-{
-    Q_UNUSED(io);
-    return true;
-}
-
-bool SedimentEffect::save(QIODevice * io)
-{
-    Q_UNUSED(io);
-    return true;
 }
 
 FreshwaterSediment::FreshwaterSediment(IModelFactory * fact, const KModelInfo& inf)
