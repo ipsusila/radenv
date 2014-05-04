@@ -17,7 +17,7 @@ class MainWindow : public QMainWindow
 {
     Q_OBJECT
 public:
-    explicit MainWindow(XOutputView * vw, QWidget *parent = 0);
+    explicit MainWindow(KPluginManager * pm, XOutputView * vw, QWidget *parent = 0);
     ~MainWindow();
 
 private slots:
@@ -59,6 +59,7 @@ private:
         IModelFactory * factory, GroupInfoList groupList);
     void populatePluginMenus(QMenu * groupMenu, IModelFactory * factory, GroupInfoList groupList);
 
+    KPluginManager * plugMan;
     XOutputView * outView;
     KModelScene * scene;
     XModelView * view;

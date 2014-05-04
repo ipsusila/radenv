@@ -1,7 +1,7 @@
 #include "widgetconstantvalue.h"
 #include "ui_widgetconstantvalue.h"
 
-WidgetConstantValue::WidgetConstantValue(KDataArray * up, QWidget *parent) :
+WidgetConstantValue::WidgetConstantValue(KStorage * storage, KDataArray * up, QWidget *parent) :
     IUserInput(parent),
     ui(new Ui::WidgetConstantValue),
     userParameter(up)
@@ -9,6 +9,7 @@ WidgetConstantValue::WidgetConstantValue(KDataArray * up, QWidget *parent) :
     Q_ASSERT(up);
 
     ui->setupUi(this);
+    ui->tblRnValues->setStorage(storage);
 
     //add items for combobox
     ConstQuantityList qtys = Srs19::availableQuantities();

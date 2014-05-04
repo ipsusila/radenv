@@ -13,7 +13,7 @@ class WidgetWaterDischarge : public IUserInput
     Q_OBJECT
     
 public:
-    explicit WidgetWaterDischarge(KDataArray * userParam, QWidget *parent = 0);
+    explicit WidgetWaterDischarge(KStorage * storage, KDataArray * userParam, QWidget *parent = 0);
     ~WidgetWaterDischarge();
 
     bool isEmpty() const;

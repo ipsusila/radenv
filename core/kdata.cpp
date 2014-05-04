@@ -6,6 +6,7 @@
 #include "koutput.h"
 #include "kradionuclide.h"
 #include "kstorage.h"
+#include "kpluginmanager.h"
 
 /** null parameter */
 static const KData __nullData;
@@ -178,7 +179,7 @@ public:
             QString txt = QString("%1: %2 %3").arg(_quantity->displayText())
                     .arg(toString(di)).arg(_quantity->unit);
             if (di.contentTypes().testFlag(KData::RadionuclideSource)) {
-                const KRadionuclide & nuc = KStorage::storage()->radionuclide(di.name());
+                const KRadionuclide & nuc = KPluginManager::instance()->storage()->radionuclide(di.name());
                 txt += QString(" (%1, lambda = %2 s-1)").arg(nuc.nuclide()).arg(nuc.halfLife().decayConstant());
             }
 
@@ -193,7 +194,7 @@ public:
             txt += QString("\n  %1: %2 %3").arg(beg->name())
                     .arg(toString(*beg)).arg(_quantity->unit);
             if (beg->contentTypes().testFlag(KData::RadionuclideSource)) {
-                const KRadionuclide & nuc = KStorage::storage()->radionuclide(beg->name());
+                const KRadionuclide & nuc = KPluginManager::instance()->storage()->radionuclide(beg->name());
                 txt += QString(" (lambda = %1 s-1)").arg(nuc.halfLife().decayConstant());
             }
             beg++;

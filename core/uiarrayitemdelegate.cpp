@@ -7,8 +7,9 @@
 #include "kradionuclide.h"
 #include "kelement.h"
 
-UiArrayItemDelegate::UiArrayItemDelegate(QObject *parent) :
-    QStyledItemDelegate(parent), _quantity(&Rad::EmptyQuantity), _types(KData::Undefined)
+UiArrayItemDelegate::UiArrayItemDelegate(KStorage *storage, QObject *parent) :
+    QStyledItemDelegate(parent), _storage(storage),
+    _quantity(&Rad::EmptyQuantity), _types(KData::Undefined)
 {
 }
 UiArrayItemDelegate::~UiArrayItemDelegate()
@@ -39,7 +40,8 @@ QWidget* UiArrayItemDelegate::createEditor( QWidget *parent,
             QComboBox * cb = new QComboBox(parent);
             cb->addItem("");
             //add radionuclide
-            const RadionuclideList * items = KStorage::storage()->radionuclides();
+            Q_ASSERT(_storage != 0);
+            const RadionuclideList * items = _storage->radionuclides();
             foreach(KRadionuclide nuc, *items) {
                 cb->addItem(nuc.nuclide());
             }

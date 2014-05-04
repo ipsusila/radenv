@@ -9,7 +9,7 @@
  */
 
 DischargeItemDelegate::DischargeItemDelegate(QWidget *parent) :
-    QStyledItemDelegate(parent), _decimals(4)
+    QStyledItemDelegate(parent), _storage(0), _decimals(4)
 {
 }
 DischargeItemDelegate::~DischargeItemDelegate()
@@ -24,6 +24,10 @@ int DischargeItemDelegate::decimals() const
 {
     return _decimals;
 }
+void DischargeItemDelegate::setStorage(KStorage *stg)
+{
+    _storage = stg;
+}
 
 QWidget* DischargeItemDelegate::createEditor( QWidget *parent,
                                               const QStyleOptionViewItem &option, const QModelIndex &index ) const
@@ -35,7 +39,8 @@ QWidget* DischargeItemDelegate::createEditor( QWidget *parent,
         cb->addItem("");
 
         //add radionuclide
-        const RadionuclideList * items = KStorage::storage()->radionuclides();
+        Q_ASSERT(_storage != 0);
+        const RadionuclideList * items = _storage->radionuclides();
         foreach(KRadionuclide nuc, *items) {
             cb->addItem(nuc.nuclide());
         }

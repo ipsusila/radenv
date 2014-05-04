@@ -30,7 +30,9 @@ public:
 
     void save()
     {
-        KStorage * storage = KStorage::storage();
+        Q_ASSERT(_factory != 0);
+
+        KStorage * storage = _factory->storage();
         KStorageContent content(QDateTime::currentDateTime());
         content.setFactory(_factory);
         content.setName(__sizeSectionName);
@@ -48,7 +50,9 @@ public:
     }
     void load()
     {
-        KStorage * storage = KStorage::storage();
+        Q_ASSERT(_factory != 0);
+
+        KStorage * storage = _factory->storage();
         KStorageContent  content = storage->load(__sizeSectionName, _factory);
         if (!content.isEmpty()) {
             int serId;

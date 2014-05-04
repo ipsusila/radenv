@@ -69,7 +69,7 @@ bool AnimalTransport::calculate(const KCalculationInfo& ci, const KLocation & lo
 void AnimalTransport::calculate(const KDataItem & CaItem, qreal cwi,
                                 qreal Fmf, qreal Qmf, qreal Qw, qreal Tmf, KDataArray * result)
 {
-    const KRadionuclide & rn = KStorage::storage()->radionuclide(CaItem.name());
+    const KRadionuclide & rn = factory()->storage()->radionuclide(CaItem.name());
     qreal l = rn.halfLife().decayConstant(KHalfLife::Day);
     qreal Cmf = Fmf * (CaItem.numericValue() * Qmf + cwi * Qw) * qExp(-l*Tmf);
     result->appendOrMerge(this->outQuantity(), CaItem.name(), Cmf, KData::Radionuclide);

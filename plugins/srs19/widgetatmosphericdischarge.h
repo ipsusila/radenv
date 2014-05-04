@@ -13,7 +13,7 @@ class WidgetAtmosphericDischarge : public IUserInput
     Q_OBJECT
     
 public:
-    explicit WidgetAtmosphericDischarge(KDataArray * userParam, QWidget *parent = 0);
+    explicit WidgetAtmosphericDischarge(KStorage *storage, KDataArray * userParam, QWidget *parent = 0);
     ~WidgetAtmosphericDischarge();
 
     virtual void acceptValues();

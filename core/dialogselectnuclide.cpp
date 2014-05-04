@@ -4,12 +4,12 @@
 #include "kstorage.h"
 #include "kradionuclide.h"
 
-DialogSelectNuclide::DialogSelectNuclide(const QStringList & selectedList, QWidget *parent) :
+DialogSelectNuclide::DialogSelectNuclide(KStorage *storage, const QStringList & selectedList, QWidget *parent) :
     QDialog(parent),
     ui(new Ui::DialogSelectNuclide)
 {
     ui->setupUi(this);
-    setupRadionuclides(selectedList);
+    setupRadionuclides(storage, selectedList);
 }
 
 DialogSelectNuclide::~DialogSelectNuclide()
@@ -18,9 +18,11 @@ DialogSelectNuclide::~DialogSelectNuclide()
     delete ui;
 }
 
-void DialogSelectNuclide::setupRadionuclides(const QStringList & selectedList)
+void DialogSelectNuclide::setupRadionuclides(KStorage *storage, const QStringList & selectedList)
 {
-    const RadionuclideList * sources = KStorage::storage()->radionuclides();
+    Q_ASSERT(storage != 0);
+
+    const RadionuclideList * sources = storage->radionuclides();
     QStringList items;
 
     foreach(KRadionuclide nuc, *sources) {

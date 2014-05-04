@@ -62,8 +62,8 @@ static const KdValue __defaultKd [] =
     {"Zr",1E+3,1E+6}
 };
 
-DistributionCoefficient::DistributionCoefficient(IModelFactory *factory, KStorage *storage)
-    : DefaultValueTable<KdValue>(factory, __defaultKd, SZ(__defaultKd, KdValue), __kdName, __kdDesc, true, storage)
+DistributionCoefficient::DistributionCoefficient(IModelFactory *factory)
+    : DefaultValueTable<KdValue>(factory, __defaultKd, SZ(__defaultKd, KdValue), __kdName, __kdDesc, true)
 {
 }
 
@@ -133,8 +133,8 @@ static const FvValue __defaultFv [] =
     {"Zr",0.1,0.001,6E-6,1E-5}
 };
 
-TransferFactor::TransferFactor(IModelFactory *factory, KStorage *storage)
-    : DefaultValueTable<FvValue>(factory, __defaultFv, SZ(__defaultFv, FvValue), __FvName, __FvDesc, true, storage)
+TransferFactor::TransferFactor(IModelFactory *factory)
+    : DefaultValueTable<FvValue>(factory, __defaultFv, SZ(__defaultFv, FvValue), __FvName, __FvDesc, true)
 {
 }
 
@@ -199,8 +199,8 @@ static const BpValue __defaultBp [] =
     {"Zr",300,20,5000}
 };
 
-BioAccumulationFactor::BioAccumulationFactor(IModelFactory *factory, KStorage *storage)
-    : DefaultValueTable<BpValue>(factory, __defaultBp, SZ(__defaultBp, BpValue), __BpName, __BpDesc, true, storage)
+BioAccumulationFactor::BioAccumulationFactor(IModelFactory *factory)
+    : DefaultValueTable<BpValue>(factory, __defaultBp, SZ(__defaultBp, BpValue), __BpName, __BpDesc, true)
 {
 }
 
@@ -314,9 +314,9 @@ static const ExtDfValue __extDfVal [] =
     {"Zr-95",1.10E-06,1.40E-06,4.70E-08}
 };
 
-ExternalDoseCoefficient::ExternalDoseCoefficient(IModelFactory *fact, KStorage *storage)
+ExternalDoseCoefficient::ExternalDoseCoefficient(IModelFactory *fact)
     : DefaultValueTable<ExtDfValue>(fact, __extDfVal, SZ(__extDfVal, ExtDfValue),
-                                    __extDfName, __extDfDesc, false, storage)
+                                    __extDfName, __extDfDesc, false)
 {
 }
 
@@ -429,9 +429,9 @@ static const InhDfValue __inhDfVal [] =
     {"Zr-95",1.90E-08,5.90E-09,'S'}
 };
 
-InhalationDoseCoefficient::InhalationDoseCoefficient(IModelFactory *fact, KStorage *storage)
+InhalationDoseCoefficient::InhalationDoseCoefficient(IModelFactory *fact)
     : DefaultValueTable<InhDfValue>(fact, __inhDfVal, SZ(__inhDfVal, InhDfValue),
-                                    __inhDfName, __inhDfDesc, false, storage)
+                                    __inhDfName, __inhDfDesc, false)
 {
 }
 
@@ -543,9 +543,9 @@ static const IngDfValue __ingDfVal [] =
     {"Zn-65",1.6E-08,3.9E-09,5.E-01},
     {"Zr-95",5.6E-09,9.5E-10,1.E-02}
 };
-IngestionDoseCoefficient::IngestionDoseCoefficient(IModelFactory *fact, KStorage *storage)
+IngestionDoseCoefficient::IngestionDoseCoefficient(IModelFactory *fact)
     : DefaultValueTable<IngDfValue>(fact, __ingDfVal, SZ(__ingDfVal, IngDfValue),
-                                    __ingDfName, __ingDfDesc, false, storage)
+                                    __ingDfName, __ingDfDesc, false)
 {
 }
 
@@ -663,9 +663,9 @@ static const DoseCommValue __atmDoseVal [] =
     {"Zn-65",1.00E-11},
     {"Zr-95",1.00E-12}
 };
-AtmosphereDoseCommitment::AtmosphereDoseCommitment(IModelFactory *fact, KStorage *storage)
+AtmosphereDoseCommitment::AtmosphereDoseCommitment(IModelFactory *fact)
     : DefaultValueTable<DoseCommValue>(fact, __atmDoseVal, SZ(__atmDoseVal, DoseCommValue),
-                                    __atmDoseName, __atmDoseDesc, false, storage)
+                                    __atmDoseName, __atmDoseDesc, false)
 {
 }
 
@@ -778,9 +778,9 @@ static const DoseCommValue __marineDoseVal [] =
     {"Zn-65",1.00E-12},
     {"Zr-95",1.00E-15}
 };
-MarineWaterDoseCommitment::MarineWaterDoseCommitment(IModelFactory *fact, KStorage *storage)
+MarineWaterDoseCommitment::MarineWaterDoseCommitment(IModelFactory *fact)
     : DefaultValueTable<DoseCommValue>(fact, __marineDoseVal, SZ(__marineDoseVal, DoseCommValue),
-                                    __marineDoseName, __marineDoseDesc, false, storage)
+                                    __marineDoseName, __marineDoseDesc, false)
 {
 }
 
@@ -895,9 +895,9 @@ static const DoseCommValue __fwaterDoseVal [] =
     {"Zn-65",1.00E-12},
     {"Zr-95",1.00E-14}
 };
-FreshwaterDoseCommitment::FreshwaterDoseCommitment(IModelFactory *fact, KStorage *storage)
+FreshwaterDoseCommitment::FreshwaterDoseCommitment(IModelFactory *fact)
     : DefaultValueTable<DoseCommValue>(fact, __fwaterDoseVal, SZ(__fwaterDoseVal, DoseCommValue),
-                                    __fwaterDoseName, __fwaterDoseDesc, false, storage)
+                                    __fwaterDoseName, __fwaterDoseDesc, false)
 {
 }
 

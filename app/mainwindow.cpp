@@ -24,18 +24,14 @@
 //test
 #include "testclass.h"
 
-MainWindow::MainWindow(XOutputView * vw, QWidget *parent) :
-    QMainWindow(parent), outView(vw)
+MainWindow::MainWindow(KPluginManager *pm, XOutputView * vw, QWidget *parent) :
+    QMainWindow(parent), plugMan(pm), outView(vw)
 {
     //create scene
     scene = new KModelScene(-800, -400, 1600, 800);
 
-    //todo (load from database)
-    KStorage::addStorage("/home/ips/workspace/smea.db");
-
-    //load all plugins
-    //loadAllPlugins();
-    KPluginManager::instance()->loadPlugins();
+    //setup default storage
+    //pm->setStorage("/home/ips/workspace/smea.db");
 
     createView();
     createActions();
@@ -45,24 +41,15 @@ MainWindow::MainWindow(XOutputView * vw, QWidget *parent) :
 
     setWindowTitle(tr("SMEA Dose Assessments"));
     setUnifiedTitleAndToolBarOnMac(true);
-
-    qDebug() << "Number: " << QString::number(1.0, 'f', 0) << ";" << QString::number(1.2, 'f', 2);
-    KPluginManager pm1;
-    qDebug() << "Factory count: " << pm1.factoryCount();
-
 }
 
 MainWindow::~MainWindow()
 {
     delete view;
-
-    //delete storage;
-    KStorage::removeStorages();
 }
 
 void MainWindow::closeEvent(QCloseEvent *event)
 {
-    KPluginManager::instance()->unloadPlugins();
     event->accept();
 }
 
@@ -618,14 +605,14 @@ void MainWindow::modelDatabase()
 
 void MainWindow::modelLocations()
 {
-    DialogLocation dlg;
+    DialogLocation dlg(KPluginManager::instance()->storage());
     dlg.exec();
     view->refreshModels();
 
 }
 void MainWindow::modelRadionuclides()
 {
-    DialogRadionuclide dlg;
+    DialogRadionuclide dlg(KPluginManager::instance()->storage());
     dlg.exec();
     view->refreshModels();
 }

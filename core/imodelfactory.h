@@ -13,6 +13,12 @@ class IModelFactory
 public:
     virtual ~IModelFactory() {}
 
+    virtual void setManager(KPluginManager * mngr) = 0;
+    virtual KPluginManager * manager() const = 0;
+    virtual KStorage * storage() const = 0;
+    virtual void attachStorage(KStorage * stg) = 0;
+    virtual void detachStorage() = 0;
+
     /**
      * @brief Initialize the factory. This method is called after plugin instance is created.
      * @return Return true if initialization success, otherwise false.
@@ -23,7 +29,7 @@ public:
      * @brief Do something before destroying this object
      * @return
      */
-    virtual void onFinalized() = 0;
+    virtual void finalize() = 0;
 
     /**
      * @brief Tell the factory to create new Model.

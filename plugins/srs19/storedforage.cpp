@@ -49,7 +49,7 @@ bool StoredForage::calculate(const KCalculationInfo& ci, const KLocation & loc, 
 
     for(int k = 0; k < Cvi1.count(); k++) {
         const KDataItem & Cvi1Item = Cvi1.at(k);
-        const KRadionuclide & rn = KStorage::storage()->radionuclide(Cvi1Item.name());
+        const KRadionuclide & rn = factory()->storage()->radionuclide(Cvi1Item.name());
         qreal l = rn.halfLife().decayConstant(KHalfLife::Day);
         qreal vCvi1 = Cvi1Item.numericValue();
         qreal vCvi2 = Cvi2.numericValue(rn.nuclide());

@@ -3,9 +3,10 @@
 #include "uiarrayitemtable.h"
 #include "kquantitycontrol.h"
 #include "koutput.h"
+#include "imodelfactory.h"
 
-UiUserInput::UiUserInput(KDataGroupArray * ga, QWidget *parent) :
-    IUserInput(parent), dataArray(ga)
+UiUserInput::UiUserInput(IModelFactory *fact, KDataGroupArray * ga, QWidget *parent) :
+    IUserInput(parent), factory(fact), dataArray(ga)
 {
     createControls(ga);
     associateQuantityControllers(ga);
@@ -208,7 +209,7 @@ void UiUserInput::createUnit(const KData * d, int row, int * width2,
 bool UiUserInput::createTableInput(KData *d, int row, QGridLayout *grid, QWidget *p)
 {
     if (d->contains(KData::Array)) {
-        UiArrayItemTable * table = new UiArrayItemTable(p);
+        UiArrayItemTable * table = new UiArrayItemTable(factory->storage(), p);
         table->setQuantity(d->quantityPtr(), d->contentTypes());
         table->setData(*d);
         grid->addWidget(table, row, 0, 1, 3);

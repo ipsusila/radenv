@@ -5,6 +5,7 @@
 #include "kstorage.h"
 #include "kstoragecontent.h"
 #include "kradionuclide.h"
+#include "imodelfactory.h"
 
 /**
  * Template for default value tables.
@@ -24,7 +25,6 @@ private:
     class DefaultValuePrivate : public QSharedData {
     public:
         IModelFactory * factory;
-        KStorage * storage;
         const T * defValues;
         int defValuesCnt;
         QString name;
@@ -36,15 +36,13 @@ private:
 
 
         DefaultValuePrivate(IModelFactory *f, const T * defVals, int defValsCnt,
-                            const QString &nm, const QString & desc, bool isE, KStorage *s)
-            : factory(f), storage(s), defValues(defVals),
+                            const QString &nm, const QString & desc, bool isE)
+            : factory(f), defValues(defVals),
               defValuesCnt(defValsCnt), name(nm),
               description(desc), isElement(isE)
         {
-            if (storage) {
-                loadFrom(storage);
-            }
-            else {
+
+            if (!load()) {
                 createDefault();
             }
         }
@@ -57,9 +55,10 @@ private:
             created = QDateTime::currentDateTime();
         }
 
-        bool loadFrom(KStorage * storage) {
-            //save pointer to storage
-            this->storage = storage;
+        bool load()
+        {
+            Q_ASSERT(factory != 0);
+            KStorage * storage = factory->storage();
 
             //load from storage
             valTable.clear();
@@ -74,7 +73,10 @@ private:
             }
             return !valTable.isEmpty();
         }
-        bool saveTo(KStorage * storage) {
+        bool save() {
+            Q_ASSERT(factory != 0);
+            KStorage * storage = factory->storage();
+
             KStorageContent content(created);
             content.setFactory(factory);
             content.setName(name);
@@ -132,8 +134,8 @@ private:
 
 public:
     explicit DefaultValueTable(IModelFactory * factory, const T * defValues, int defValuesCnt,
-                          const QString &name, const QString &desc, bool isElement, KStorage * storage)
-        : data(new DefaultValuePrivate(factory, defValues, defValuesCnt, name, desc, isElement, storage))
+                          const QString &name, const QString &desc, bool isElement)
+        : data(new DefaultValuePrivate(factory, defValues, defValuesCnt, name, desc, isElement))
     {
     }
 
@@ -151,19 +153,19 @@ public:
     ~DefaultValueTable() {}
 
     inline bool save() {
-        return data->saveTo(KStorage::storage());
+        return data->save();
     }
 
     inline bool saveDefault() {
         data->createDefault();
-        return data->saveTo(KStorage::storage());
+        return data->save();
     }
 
     inline bool load(bool createOnEmpty = false) {
-        bool res = data->loadFrom(KStorage::storage());
+        bool res = data->load();
         if (!res && createOnEmpty) {
             data->createDefault();
-            res = data->saveTo(KStorage::storage());
+            res = data->save();
         }
 
         return res;

@@ -10,61 +10,7 @@
 
 #include "kradionuclide.hxx"
 
-//empty storage
-static KStorage __nullStg(QString(""));
-static QMap<QString, KStorage *> __storages;
-static QString __lastStorage;
 static const KRadionuclide __nullNuclide;
-
-/*************** static methods **********************/
-KStorage * KStorage::storage(const QString& name)
-{
-    KStorage * stg = &__nullStg;
-    QString key = name.isEmpty() ? __lastStorage : name;
-    if (__storages.contains(key))
-        stg = __storages[key];
-
-    return stg;
-}
-
-KStorage * KStorage::addStorage(const QString& nm)
-{
-    if (nm.isEmpty())
-        return &__nullStg;
-
-    __lastStorage = nm;
-
-    //exists?
-    if (__storages.contains(nm))
-        return __storages[nm];
-
-    //add new
-    KStorage * stg = new KStorage(nm);
-    __storages[nm] = stg;
-
-    return stg;
-}
-
-void KStorage::removeStorage(const QString& nm)
-{
-    KStorage * stg = __storages.take(nm);
-    if (stg) {
-        if (stg->storageName() == __lastStorage)
-            __lastStorage.clear();
-
-        delete stg;
-    }
-}
-
-void KStorage::removeStorages()
-{
-    __lastStorage.clear();
-    foreach(KStorage * stg, __storages)
-        delete stg;
-    __storages.clear();
-}
-/*************** end static methods **********************/
-
 KStorage::KStorage(const QString& nm)
 {
     xTrace() << QObject::tr("Create/open storage: ") << nm;
@@ -441,15 +387,6 @@ bool KStorage::save(const KCase &a)
 
         return false;
     }
-
-    int pos = _assessments.indexOf(a);
-    if (pos < 0) {
-        _assessments.append(a);
-    }
-    else {
-        _assessments[pos] = a;
-    }
-
     return true;
 }
 
@@ -481,9 +418,6 @@ void KStorage::remove(const KCase& a)
     if (!query.exec()) {
         qDebug() << (QObject::tr("[Storage]: Failed to execute query -> ") + sql);
         qDebug() << (QObject::tr("[Storage]: ") + query.lastError().text());
-    }
-    else {
-        _assessments.removeOne(a);
     }
 }
 void KStorage::remove(const KRadionuclide &nuc)
@@ -588,11 +522,6 @@ const LocationList * KStorage::locations() const
     return &_locations;
 }
 
-const AssessmentList * KStorage::assessments() const
-{
-    return &_assessments;
-}
-
 RadionuclideList KStorage::loadNuclides()
 {
     QSqlQuery query;
@@ -656,15 +585,13 @@ LocationList KStorage::loadLocations()
     }
     return list;
 }
-
-AssessmentList KStorage::loadAssessments()
+AssessmentList KStorage::loadAssessmentPreviews(const QStringList & excludes) const
 {
     QSqlQuery query;
-    QString sql = QString("SELECT name, created, author, description, remark,"
-                          "docname, docsz, document, datasz, data FROM %1")
+    AssessmentList list;
+    QString sql = QString("SELECT name, created, author, description, remark, docname FROM %1")
             .arg(RAD_ASSESSMENT);
 
-    AssessmentList list;
     if (!query.exec(sql)) {
         qDebug() << (QObject::tr("[Storage]: Failed to execute query -> ") + sql);
         qDebug() << (QObject::tr("[Storage]: ") + query.lastError().text());
@@ -673,16 +600,63 @@ AssessmentList KStorage::loadAssessments()
     }
 
     while (query.next()) {
+        QString name = query.value(0).toString();
+        if (excludes.contains(name))
+            continue;
+
         KCase a(query.value(1).toDateTime());
         a.setName(query.value(0).toString());
         a.setAuthor(query.value(2).toString());
         a.setDescription(query.value(3).toString());
         a.setRemark(query.value(4).toString());
         a.setDocname(query.value(5).toString());
-        a.setDocument(query.value(7).toByteArray());
-        a.deserialize(query.value(9).toByteArray());
 
         list.append(a);
+    }
+
+    return list;
+}
+
+AssessmentList KStorage::loadAssessments(const QStringList & names) const
+{
+    QSqlQuery query;
+    AssessmentList list;
+
+    QString sql = QString("SELECT name, created, author, description, remark,"
+                          "docname, docsz, document, datasz, data FROM %1 WHERE name=?")
+            .arg(RAD_ASSESSMENT);
+    query.prepare(sql);
+
+    //load designated assessments
+    for(int k = 0; k < names.size(); k++) {
+        query.bindValue(0, names.at(k));
+        if (!query.exec(sql)) {
+            qDebug() << (QObject::tr("[Storage]: Failed to execute query -> ") + sql);
+            qDebug() << (QObject::tr("[Storage]: ") + query.lastError().text());
+
+            continue;
+        }
+
+        while (query.next()) {
+            KCase a(query.value(1).toDateTime());
+            a.setName(query.value(0).toString());
+            a.setAuthor(query.value(2).toString());
+            a.setDescription(query.value(3).toString());
+            a.setRemark(query.value(4).toString());
+            a.setDocname(query.value(5).toString());
+
+            int docsz = query.value(6).toInt();
+            QByteArray doc = query.value(7).toByteArray();
+            if (docsz > 0 && docsz == doc.size())
+                a.setDocument(doc);
+
+            int datasz = query.value(8).toInt();
+            QByteArray content = query.value(9).toByteArray();
+            if (datasz > 0 && content.size() == datasz)
+                a.deserialize(content);
+
+            list.append(a);
+        }
     }
 
     return list;
@@ -692,7 +666,6 @@ bool KStorage::loadAll()
 {
     _radionuclides = loadNuclides();
     _locations = loadLocations();
-    _assessments = loadAssessments();
 
     return true;
 }

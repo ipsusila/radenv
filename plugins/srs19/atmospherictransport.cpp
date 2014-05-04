@@ -164,7 +164,7 @@ qreal AtmosphericTransport::calcModifiedConcentration(
     //reduction factor for short lived radionuclide
     //eq. 9, page. 26
     qreal f = 1.0;
-    const KRadionuclide & nuclide = KStorage::storage()->radionuclide(nuc);
+    const KRadionuclide & nuclide = factory()->storage()->radionuclide(nuc);
     //if (nuclide.isVeryShortLived()) {
     bool isShortLived = _inpPorts.data(Srs19::IsShortLiveNuclide).value().toBool();
     if (isShortLived) {

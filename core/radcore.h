@@ -11,6 +11,7 @@
 #include "kmath.h"
 #include "kreport.h"
 #include "kconnector.h"
+#include "imodelfactory.h"
 
 
 #endif // RADCORE_H

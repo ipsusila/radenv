@@ -3,6 +3,7 @@
 #include "koutput.h"
 #include "widgetconstantvalue.h"
 #include "quantity.h"
+#include "imodelfactory.h"
 
 ConstantValue::ConstantValue(IModelFactory * fact, const KModelInfo& inf)
     : IModel(fact, inf)
@@ -51,7 +52,7 @@ bool ConstantValue::allocateIoPorts()
 IUserInput * ConstantValue::createUserInputWidget(QWidget *parent)
 {
      WidgetConstantValue * w =
-             new WidgetConstantValue(&_dataList, parent);
+             new WidgetConstantValue(factory()->storage(), &_dataList, parent);
     return w;
 }
 

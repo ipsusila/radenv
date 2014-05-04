@@ -8,7 +8,7 @@ class K_CORE_EXPORT UiArrayItemDelegate : public QStyledItemDelegate
 {
     Q_OBJECT
 public:
-    explicit UiArrayItemDelegate(QObject *parent = 0);
+    explicit UiArrayItemDelegate(KStorage * storage, QObject *parent = 0);
     virtual ~UiArrayItemDelegate();
     
     virtual QWidget *createEditor(QWidget *parent, const QStyleOptionViewItem &option, const QModelIndex &index) const;
@@ -21,6 +21,7 @@ public:
     static bool stringToBoolean(const Quantity * qty, const QString & txt);
 
 private:
+    KStorage * _storage;
     const Quantity * _quantity;
     KData::ContentTypes _types;
 };

@@ -206,7 +206,7 @@ namespace Srs19 {
         generateQuantityList();
 
         //load symbol from storage
-        KStorageContent  content = KStorage::storage()->load(__qtyListName, factory);
+        KStorageContent  content = factory->storage()->load(__qtyListName, factory);
         if (!content.isEmpty()) {
             QDataStream stream(content);
             int nsize = __qtyList.size();
@@ -231,7 +231,7 @@ namespace Srs19 {
         for (int k = 0; k < __qtyList.size(); k++)
             stream << *__qtyList.at(k);
 
-        return KStorage::storage()->save(content);
+        return factory->storage()->save(content);
     }
 
     ConstQuantityList availableQuantities()

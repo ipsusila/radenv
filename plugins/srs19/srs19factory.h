@@ -10,11 +10,18 @@ class SRS19_SHARED_EXPORT Srs19Factory : public QObject, public IModelFactory
     Q_OBJECT
     Q_INTERFACES(IModelFactory)
 public:
+    Srs19Factory();
     virtual ~Srs19Factory();
+
+    void setManager(KPluginManager * mngr);
+    KPluginManager * manager() const;
+    KStorage * storage() const;
 
     bool isTopLevel() const;
     bool initialize();
-    void onFinalized();
+    void finalize();
+    void attachStorage(KStorage * stg);
+    void detachStorage();
     IModel * createModel(const KModelInfo & info);
     const GroupInfoList & groups() const;
     KModelInfo modelInfo(int serId) const;
@@ -31,6 +38,8 @@ private:
     GroupInfoList _groupInfos;
     IParamsEditor * _paramsEditor;
     KSettingManager * _settingManager;
+    KPluginManager * _manager;
+    KStorage * _storage;
 };
 
 #endif // SRS19FACTORY_H

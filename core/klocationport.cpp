@@ -6,6 +6,7 @@
 #include "imodel.h"
 #include "dialoglocation.h"
 #include "kstorage.h"
+#include "imodelfactory.h"
 
 SMargin KLocationPort::Margin = {20, 0, 0, 0};
 
@@ -86,13 +87,20 @@ bool KLocationPort::hasLocation() const
 
 void KLocationPort::promptLocation()
 {
-    DialogLocation dlg;
-    if (dlg.exec() == QDialog::Accepted) {
-        this->setLocation(dlg.selectedLocation());
+    IModel * md = qgraphicsitem_cast<IModel*>(this->parentItem());
+    if (md != 0) {
+        DialogLocation dlg(md->factory()->storage());
+        if (dlg.exec() == QDialog::Accepted) {
+            this->setLocation(dlg.selectedLocation());
+        }
     }
 }
 void KLocationPort::refresh()
 {
     //reassign location
-    _location = KStorage::storage()->location(_location.code());
+    IModel * md = qgraphicsitem_cast<IModel*>(this->parentItem());
+    if (md != 0) {
+        qDebug() << "Location port: " << md->tagName();
+        _location = md->factory()->storage()->location(_location.code());
+    }
 }

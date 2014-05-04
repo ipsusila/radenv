@@ -7,7 +7,6 @@ class K_CORE_EXPORT KStorage
 {
     RadionuclideList loadNuclides();
     LocationList loadLocations();
-    AssessmentList loadAssessments();
 
     bool initialize();
     bool initStorageTable();
@@ -19,6 +18,8 @@ public:
     ~KStorage();
 
     bool loadAll();
+    AssessmentList loadAssessments(const QStringList & names) const;
+    AssessmentList loadAssessmentPreviews(const QStringList & excludes) const;
 
     bool isNull() const;
     bool isOpen() const;
@@ -43,18 +44,11 @@ public:
 
     KLocation location(const QString& code) const;
     const LocationList * locations() const;
-    const AssessmentList * assessments() const;
 
-    static KStorage * storage(const QString& name = QString());
-    static KStorage * addStorage(const QString& nm);
-    static void removeStorage(const QString& nm);
-    static void removeStorages();
-    
 private:
     QString _stgName;
     RadionuclideList _radionuclides;
     LocationList _locations;
-    AssessmentList _assessments;
 
     KStorage(const KStorage &);
     KStorage &operator=(const KStorage &);

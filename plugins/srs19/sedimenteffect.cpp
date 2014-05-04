@@ -110,7 +110,7 @@ bool SedimentEffect::calculate(const KCalculationInfo &ci, const KLocation & loc
 
 void SedimentEffect::calculate(const KDataItem & cwItem, qreal Ss, qreal Te, qreal Kd, KDataArray * result)
 {
-    const KRadionuclide & rn = KStorage::storage()->radionuclide(cwItem.name());
+    const KRadionuclide & rn = factory()->storage()->radionuclide(cwItem.name());
     qreal l = rn.halfLife().decayConstant();
     qreal Cwtot = cwItem.numericValue();
     qreal lTe = (1-qExp(-l*Te)) / (l * Te);

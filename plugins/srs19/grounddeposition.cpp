@@ -61,7 +61,7 @@ bool GroundDeposition::calculate(const KCalculationInfo& ci, const KLocation & l
         DataItemArray lsItems;
         for(int k = 0; k < di.count(); k++) {
             const KDataItem & d = di.at(k);
-            const KRadionuclide & rn = KStorage::storage()->radionuclide(d.name());
+            const KRadionuclide & rn = factory()->storage()->radionuclide(d.name());
             qreal l = rn.halfLife().decayConstant(KHalfLife::Day);
 
             //get default ls value
@@ -90,7 +90,7 @@ bool GroundDeposition::calculate(const KCalculationInfo& ci, const KLocation & l
     else {
         for(int k = 0; k < di.count(); k++) {
             const KDataItem & d = di.at(k);
-            const KRadionuclide & rn = KStorage::storage()->radionuclide(d.name());
+            const KRadionuclide & rn = factory()->storage()->radionuclide(d.name());
             qreal l = rn.halfLife().decayConstant(KHalfLife::Day);
             qreal ls = ui->find(Srs19::ReductionOnSoil).numericValue(d.name());
 

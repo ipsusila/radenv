@@ -1,12 +1,13 @@
 #include "widgetwaterdischarge.h"
 #include "ui_widgetwaterdischarge.h"
 
-WidgetWaterDischarge::WidgetWaterDischarge(KDataArray * userParam, QWidget *parent) :
+WidgetWaterDischarge::WidgetWaterDischarge(KStorage * storage, KDataArray * userParam, QWidget *parent) :
     IUserInput(parent),
     ui(new Ui::WidgetWaterDischarge),
     userParameter(userParam)
 {
     ui->setupUi(this);
+    ui->tblDiscarges->setStorage(storage);
     ui->tblDiscarges->setVariable(&Srs19::WaterDischargeRate);
     ui->tblDiscarges->setData(*userParam);
 

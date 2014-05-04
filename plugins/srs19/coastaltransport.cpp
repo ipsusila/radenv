@@ -44,7 +44,7 @@ bool CoastalTransport::calculate(const KCalculationInfo& ci, const KLocation& lo
     DataItemArray cwsList;
     for(int k = 0; k < qiW.count(); k++) {
         const KDataItem & qi = qiW.at(k);
-        const KRadionuclide & rn = KStorage::storage()->radionuclide(qi.name());
+        const KRadionuclide & rn = factory()->storage()->radionuclide(qi.name());
         qreal l = rn.halfLife().decayConstant();
 
         // maximum concentration
@@ -188,7 +188,7 @@ bool GenericCoastalTransport::calculate(const KCalculationInfo& ci, const KLocat
         (*calcResult) << KData(&Srs19::CommentQuantity, QObject::tr("Using eq. VI-46, page 183."));
         for(int k = 0; k < qiW.count(); k++) {
             const KDataItem & qi = qiW.at(k);
-            const KRadionuclide & rn = KStorage::storage()->radionuclide(qi.name());
+            const KRadionuclide & rn = factory()->storage()->radionuclide(qi.name());
             qreal l = rn.halfLife().decayConstant();
 
             //equation VI-46, page 183
@@ -203,7 +203,7 @@ bool GenericCoastalTransport::calculate(const KCalculationInfo& ci, const KLocat
         (*calcResult) << KData(&Srs19::CommentQuantity, QObject::tr("Ey not available, using eq. VI-52, page 184."));
         for(int k = 0; k < qiW.count(); k++) {
             const KDataItem & qi = qiW.at(k);
-            const KRadionuclide & rn = KStorage::storage()->radionuclide(qi.name());
+            const KRadionuclide & rn = factory()->storage()->radionuclide(qi.name());
             qreal l = rn.halfLife().decayConstant();
 
             //equation VI-52, page 184

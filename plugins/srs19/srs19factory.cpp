@@ -28,9 +28,29 @@
 
 Q_EXPORT_PLUGIN2(srs19, Srs19Factory)
 
+Srs19Factory::Srs19Factory() : _paramsEditor(0), _settingManager(0),
+    _manager(0), _storage(0)
+{
+    qDebug() << "#Creating factory instance: " << name();
+}
+
 Srs19Factory::~Srs19Factory()
 {
     //nothing todo
+}
+
+void Srs19Factory::setManager(KPluginManager * mngr)
+{
+    _manager = mngr;
+}
+
+KPluginManager * Srs19Factory::manager() const
+{
+    return _manager;
+}
+KStorage * Srs19Factory::storage() const
+{
+    return _storage;
 }
 
 QString Srs19Factory::name() const
@@ -86,12 +106,9 @@ KSettingManager * Srs19Factory::settingManager()
     return _settingManager;
 }
 
-void Srs19Factory::onFinalized()
+void Srs19Factory::finalize()
 {
     qDebug() << "Finalizing SRS-19 factory";
-    Srs19::saveQuantities(this);
-    _settingManager->save();
-
     delete _paramsEditor;
     delete _settingManager;
 }
@@ -106,31 +123,48 @@ KModelInfo Srs19Factory::modelInfo(int serId) const
     }
     return KModelInfo();
 }
+void Srs19Factory::attachStorage(KStorage * stg)
+{
+    //assign storage
+    //TODO
+    _storage = stg;
+
+    //load or create new default kd tables if does not exist
+   DistributionCoefficient kd(this);
+   kd.load(true);
+
+   TransferFactor fv(this);
+   fv.load(true);
+
+   BioAccumulationFactor bp(this);
+   bp.load(true);
+
+   ExternalDoseCoefficient edc(this);
+   edc.load(true);
+
+   //reload quantities
+   Srs19::reloadQuantities(this);
+
+   _settingManager->load();
+}
+
+void Srs19Factory::detachStorage()
+{
+    Srs19::saveQuantities(this);
+    _settingManager->save();
+
+    //save other quantities
+}
 
 bool Srs19Factory::initialize()
 {
-    //load or create new default kd tables if does not exist
-    DistributionCoefficient kd(this);
-    kd.load(true);
-
-    TransferFactor fv(this);
-    fv.load(true);
-
-    BioAccumulationFactor bp(this);
-    bp.load(true);
-
-    ExternalDoseCoefficient edc(this);
-    edc.load(true);
-
-    //reload quantities
-    Srs19::reloadQuantities(this);
-
      //parameter editor
     _paramsEditor = 0;
+    _manager = 0;
+    _storage = 0;
 
     //setting manager
     _settingManager = new KSettingManager(this);
-    _settingManager->load();
 
     ModelInfoList mi;
     //model information

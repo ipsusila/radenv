@@ -9,7 +9,7 @@ class K_CORE_EXPORT UiUserInput : public IUserInput
 {
     Q_OBJECT
 public:
-    explicit UiUserInput(KDataGroupArray * ga, QWidget *parent = 0);
+    explicit UiUserInput(IModelFactory * fact, KDataGroupArray * ga, QWidget *parent = 0);
     virtual ~UiUserInput();
     virtual void acceptValues();
     virtual bool validate();
@@ -47,6 +47,7 @@ private:
     void associateQuantityControllers(KDataGroupArray * ga);
     void controlQuantityInput(const Quantity * quantity, bool isSet);
 
+    IModelFactory * factory;
     KDataGroupArray * dataArray;
     QMap<QWidget *, KData *> controlMaps;
     QMap<const Quantity *, QWidget *> quantityMaps;

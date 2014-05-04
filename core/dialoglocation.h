@@ -16,7 +16,7 @@ class K_CORE_EXPORT DialogLocation : public QDialog
     Q_OBJECT
     
 public:
-    explicit DialogLocation(KStorage * storage = 0, QWidget *parent = 0);
+    explicit DialogLocation(KStorage * storage, QWidget *parent = 0);
     ~DialogLocation();
 
     KLocation selectedLocation() const;

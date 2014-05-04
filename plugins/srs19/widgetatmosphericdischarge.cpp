@@ -1,7 +1,7 @@
 #include "widgetatmosphericdischarge.h"
 #include "ui_widgetatmosphericdischarge.h"
 
-WidgetAtmosphericDischarge::WidgetAtmosphericDischarge(KDataArray * userParam, QWidget *parent) :
+WidgetAtmosphericDischarge::WidgetAtmosphericDischarge(KStorage * storage, KDataArray * userParam, QWidget *parent) :
     IUserInput(parent),
     ui(new Ui::WidgetAtmosphericDischarge),
     userParameter(userParam)
@@ -9,11 +9,11 @@ WidgetAtmosphericDischarge::WidgetAtmosphericDischarge(KDataArray * userParam, Q
     Q_ASSERT(userParam);
 
     ui->setupUi(this);
-
-    ui->lblComment->setText("The followings are needed if H <= 2.5Hb and x <= sqrt(Ab), source and receptor *not* on same "
-                            "building surface (Refer to Eq. 8, pp. 24)");
+    ui->lblComment->setText(tr("The followings are needed if H <= 2.5Hb and x <= sqrt(Ab), source and receptor *not* on same "
+                            "building surface (Refer to Eq. 8, pp. 24)"));
 
     //setup data
+    ui->tblDiscarges->setStorage(storage);
     ui->tblDiscarges->setVariable(&Srs19::AtmosphericDischargeRate);
     ui->tblDiscarges->setData(*userParam);
 

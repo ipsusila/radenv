@@ -15,6 +15,7 @@
 #include "ksettingmanager.h"
 #include "kconnector.h"
 #include "kpluginmanager.h"
+#include "kstorage.h"
 
 /**
  * @brief Empty Ports list.
@@ -337,7 +338,7 @@ QDataStream & IModel::serialize(QDataStream &stream) const
     //This serialization order is related to KPluginManager::createMode(QDataStream &)
     const KDataGroupArray & dga = dptr->constUserInputs();
     stream << factory()->name() << info().serialId()
-           << dptr->_tagId << this->pos() << !dga.isEmpty();
+           << dptr->_tagId << this->pos() << location().code() << !dga.isEmpty();
     if (!dga.isEmpty())
         return dga.serialize(stream);
     return stream;
@@ -345,16 +346,23 @@ QDataStream & IModel::serialize(QDataStream &stream) const
 QDataStream & IModel::deserialize(QDataStream &stream)
 {
     //This function must be called after KPluginManager::createMode(QDataStream &)
+    //TODO (location)
     int tid = 0;
     bool hasUserInput = false;
     QPointF mpos = this->pos();
-    stream >> tid >> mpos >> hasUserInput;
+    QString locCode;
+    stream >> tid >> mpos >> locCode >> hasUserInput;
     this->setTagId(tid);
     if (hasUserInput) {
         KDataGroupArray * dga = dptr->userInputsPtr();
         dga->deserialize(stream);
     }
     setPos(mpos);
+
+    //set location
+    if (needLocation() && !locCode.isEmpty()) {
+         setLocation(factory()->storage()->location(locCode));
+    }
 
     return stream;
 }
@@ -572,7 +580,7 @@ IUserInput * IModel::createUserInputWidget(QWidget * parent)
     //generate widget
     KDataGroupArray * ga = userInputs();
     if (ga != 0)
-        return new UiUserInput(ga, parent);
+        return new UiUserInput(factory(), ga, parent);
     return 0;
 }
 

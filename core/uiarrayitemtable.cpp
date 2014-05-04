@@ -2,14 +2,14 @@
 #include "uiarrayitemtable.h"
 #include "uiarrayitemdelegate.h"
 
-UiArrayItemTable::UiArrayItemTable(QWidget * parent)
+UiArrayItemTable::UiArrayItemTable(KStorage * storage, QWidget * parent)
     : UiAutoRowTable(parent), _firstColLabel(tr("Radionuclides"))
 {
     setColumnCount(2);
     setRowCount(1);
     setColumnWidth(0, 120);
 
-    UiArrayItemDelegate * itemDelegate = new UiArrayItemDelegate(this);
+    UiArrayItemDelegate * itemDelegate = new UiArrayItemDelegate(storage, this);
     this->setItemDelegate(itemDelegate);
     this->setToolTip(tr("Double click cell to input radionuclide and associated value"));
 }

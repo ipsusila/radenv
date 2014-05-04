@@ -285,9 +285,11 @@ QDataStream & KLocation::serialize(QDataStream & stream) const
 }
 QDataStream & KLocation::deserialize(QDataStream & stream)
 {
+    /*
     QString c;
     stream >> c;
     *this = KStorage::storage()->location(c);
+    */
 
     return stream;
 }

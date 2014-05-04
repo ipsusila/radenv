@@ -13,7 +13,7 @@ class WidgetConstantValue : public IUserInput
     Q_OBJECT
     
 public:
-    explicit WidgetConstantValue(KDataArray * up, QWidget *parent = 0);
+    explicit WidgetConstantValue(KStorage *storage, KDataArray * up, QWidget *parent = 0);
     ~WidgetConstantValue();
 
     bool validate();

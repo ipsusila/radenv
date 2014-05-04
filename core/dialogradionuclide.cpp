@@ -26,8 +26,7 @@ KRadionuclide DialogRadionuclide::selectedRadionuclide() const
 
 void DialogRadionuclide::setupRadionuclides(KStorage * storage)
 {
-    if (storage == 0)
-        storage = KStorage::storage();
+    Q_ASSERT(storage != 0);
 
     _model = new RadionuclideModel(storage, this);
     ui->tblRadionuclides->setModel(_model);

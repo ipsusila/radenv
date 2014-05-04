@@ -19,6 +19,7 @@ public:
     void setVariable(const Quantity * s);
     void setDecimals(int dec);
     int decimals() const;
+    void setStorage(KStorage * stg);
 
 private:
     const Quantity * _variable;

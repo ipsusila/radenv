@@ -7,24 +7,66 @@
 #include "imodelfactory.h"
 #include "koutput.h"
 #include "imodel.h"
+#include "kstorage.h"
 
 
-//default instance
-static KPluginManager __pluginManager;
-
+//global pointer
+KPluginManager * KPluginManager::pMan = 0;
 class KPluginManagerPrivate : public QSharedData {
 private:
+    KStorage * _storage;
     QMap<QString, IModelFactory *> _factories;
     QMap<const Quantity *, IModelFactory *> _quantityFactories;
-public:
 
-    KPluginManagerPrivate()
+    void detachStorage()
+    {
+        FactoryList factList = factories();
+        for(int k = 0; k < factList.size(); k++) {
+            IModelFactory * fact = factList.at(k);
+            if (fact->storage() != 0)
+                fact->detachStorage();
+        }
+
+        if (_storage != 0) {
+            delete _storage;
+            _storage = 0;
+        }
+    }
+
+    void attachStorage(IModelFactory * factory)
+    {
+        Q_ASSERT(_storage != 0);
+
+        //attach storage to the factory
+        //this should force factory to reload any configuration,
+        //quantity tables, etc
+        factory->attachStorage(_storage);
+
+        //create maps between quantity and factory
+        ConstQuantityList qtyList = factory->availableQuantities();
+        ConstQuantityList::const_iterator qty = qtyList.constBegin();
+        ConstQuantityList::const_iterator end = qtyList.constEnd();
+        while (qty != end) {
+            _quantityFactories[*qty] = factory;
+            qty++;
+        }
+    }
+
+public:
+    KPluginManagerPrivate(KPluginManager * mngr) : _storage(0)
     {
         qDebug() << "#Allocate plugin manager instance";
+        loadPlugins(mngr, QString());
     }
     ~KPluginManagerPrivate()
     {
         qDebug() << "Destroying plugin manager instance";
+        unloadPlugins();
+    }
+
+    inline bool isInitialized() const
+    {
+        return !_quantityFactories.isEmpty();
     }
 
     inline int factoryCount() const
@@ -64,18 +106,24 @@ public:
         return &Rad::EmptyQuantity;
     }
 
-    void mapQuantityFactories(IModelFactory * factory)
+    void setStorage(const QString& name)
     {
-        ConstQuantityList qtyList = factory->availableQuantities();
-        ConstQuantityList::const_iterator qty = qtyList.constBegin();
-        ConstQuantityList::const_iterator end = qtyList.constEnd();
-        while (qty != end) {
-            _quantityFactories[*qty] = factory;
-            qty++;
-        }
+        //detach existing storage
+        detachStorage();
+        _storage = new KStorage(name);
+
+        FactoryList factories = _factories.values();
+        _quantityFactories.clear();
+        for(int k = factories.size() - 1; k >= 0; k--)
+            attachStorage(factories.at(k));
     }
 
-    int loadPlugins(const QString& path)
+    inline KStorage * storage() const
+    {
+        return _storage;
+    }
+
+    int loadPlugins(KPluginManager * mngr, const QString& path)
     {
         QDir pluginsDir;
         if (path.isEmpty()) {
@@ -106,7 +154,7 @@ public:
                 if (factory) {
                     factory->initialize();
                     _factories[factory->name()] = factory;
-                    mapQuantityFactories(factory);
+                    factory->setManager(mngr);
 
                     xTrace() << "Plugin directory: " << pluginsDir.absoluteFilePath(fileName);
                     xInfo() << "Name:" << factory->name() << ",Author:" << factory->author()
@@ -124,26 +172,35 @@ public:
 
     bool unloadPlugins()
     {
+        //detach storage
+        detachStorage();
+
         FactoryList factList = factories();
         for(int k = 0; k < factList.size(); k++)
-            factList.at(k)->onFinalized();
+            factList.at(k)->finalize();
 
         //TODO
         //add unload
 
         _factories.clear();
+        _quantityFactories.clear();
+
+        qDebug() << "Unloading all plugins";
+
         return true;
     }
-
 };
 
 KPluginManager * KPluginManager::instance()
 {
-    return &__pluginManager;
+    //must be allocated elsewere
+    return pMan;
 }
 
-KPluginManager::KPluginManager() : data(new KPluginManagerPrivate)
+KPluginManager::KPluginManager() : data(new KPluginManagerPrivate(this))
 {
+    //allocate manager
+    pMan = this;
 }
 
 KPluginManager::KPluginManager(const KPluginManager &rhs) : data(rhs.data)
@@ -159,6 +216,11 @@ KPluginManager &KPluginManager::operator=(const KPluginManager &rhs)
 
 KPluginManager::~KPluginManager()
 {
+}
+
+bool KPluginManager::isInitialized() const
+{
+    return data->isInitialized();
 }
 
 int KPluginManager::factoryCount() const
@@ -214,6 +276,16 @@ IModel * KPluginManager::createModel(QDataStream &stream) const
     stream >> factName >> serId;
     return createModel(factName, serId);
 }
+void KPluginManager::setStorage(const QString& name)
+{
+    data->setStorage(name);
+}
+
+KStorage * KPluginManager::storage() const
+{
+    return data->storage();
+}
+
 const Quantity * KPluginManager::findQuantity(IModelFactory * fact, unsigned int qid) const
 {
     return data->findQuantity(fact == 0 ? RAD_NULL_FACTORY : fact->name(), qid);
@@ -225,14 +297,41 @@ const Quantity * KPluginManager::findQuantity(const QString &factoryName, unsign
 
 int KPluginManager::loadPlugins()
 {
-    return data->loadPlugins(QString());
+    return data->loadPlugins(this, QString());
 }
 
 int KPluginManager::loadPlugins(const QString& path)
 {
-    return data->loadPlugins(path);
+    return data->loadPlugins(this, path);
 }
 bool KPluginManager::unloadPlugins()
 {
     return data->unloadPlugins();
+}
+
+void KPluginManager::serialize(QDataStream & stream, const Quantity * qty) const
+{
+    if (qty == &Rad::EmptyQuantity) {
+        stream << INV_QTY_ID;
+    }
+    else {
+        IModelFactory * fact = data->factory(qty);
+        if (fact != 0)
+            stream << qty->id << fact->name();
+        else
+            stream << INV_QTY_ID;
+    }
+}
+
+const Quantity * KPluginManager::deserialize(QDataStream & stream) const
+{
+    unsigned int id;
+    stream >> id;
+    if (id == INV_QTY_ID)
+        return &Rad::EmptyQuantity;
+
+    QString factName;
+    stream >> factName;
+
+    return data->findQuantity(factName, id);
 }

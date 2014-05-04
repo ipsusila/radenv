@@ -94,7 +94,7 @@ qreal Vegetation::calculate(const KDataItem& d1, const KDataItem& d2, qreal Fv, 
                            qreal lw, bool defLs, qreal te, qreal tb, qreal th, KDataArray * calcResult)
 {
     QString nuc = d1.name();
-    const KRadionuclide & rn = KStorage::storage()->radionuclide(nuc);
+    const KRadionuclide & rn = factory()->storage()->radionuclide(nuc);
     qreal l = rn.halfLife().decayConstant(KHalfLife::Day);
 
     //get ls value

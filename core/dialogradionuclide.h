@@ -16,7 +16,7 @@ class K_CORE_EXPORT DialogRadionuclide : public QDialog
     Q_OBJECT
     
 public:
-    explicit DialogRadionuclide(KStorage * stg = 0, QWidget *parent = 0);
+    explicit DialogRadionuclide(KStorage * stg, QWidget *parent = 0);
     ~DialogRadionuclide();
 
     KRadionuclide selectedRadionuclide() const;

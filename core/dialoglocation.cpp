@@ -22,8 +22,7 @@ DialogLocation::~DialogLocation()
 
 void DialogLocation::setupLocations(KStorage * stg)
 {
-    if (stg == 0)
-        stg = KStorage::storage();
+    Q_ASSERT(stg != 0);
 
     _model = new LocationModel(stg, this);
     ui->tblLocation->setModel(_model);

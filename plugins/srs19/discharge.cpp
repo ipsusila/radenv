@@ -55,7 +55,7 @@ bool AirDischarge::allocateIoPorts()
 IUserInput * AirDischarge::createUserInputWidget(QWidget *parent)
 {
     WidgetAtmosphericDischarge * w =
-            new WidgetAtmosphericDischarge(&_dataList, parent);
+            new WidgetAtmosphericDischarge(factory()->storage(), &_dataList, parent);
     return w;
 }
 
@@ -136,7 +136,7 @@ bool WaterDischarge::allocateIoPorts()
 IUserInput * WaterDischarge::createUserInputWidget(QWidget *parent)
 {
     WidgetWaterDischarge * w =
-            new WidgetWaterDischarge(&_dataList, parent);
+            new WidgetWaterDischarge(factory()->storage(), &_dataList, parent);
     return w;
 }
 bool WaterDischarge::verify(int * oerr, int * owarn)

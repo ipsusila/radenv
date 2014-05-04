@@ -8,7 +8,7 @@ class K_CORE_EXPORT UiArrayItemTable : public UiAutoRowTable
 {
     Q_OBJECT
 public:
-    explicit UiArrayItemTable(QWidget * parent = 0);
+    explicit UiArrayItemTable(KStorage * storage, QWidget * parent = 0);
     ~UiArrayItemTable();
 
     KData data() const;

@@ -3,6 +3,7 @@
 
 #include <QStyledItemDelegate>
 
+class KStorage;
 class DischargeItemDelegate : public QStyledItemDelegate
 {
     Q_OBJECT
@@ -15,8 +16,10 @@ public:
     virtual void setModelData(QWidget *editor, QAbstractItemModel *model, const QModelIndex &index) const;
     void setDecimals(int dec);
     int decimals() const;
+    void setStorage(KStorage * stg);
 
 private:
+    KStorage * _storage;
     int _decimals;
 };
 

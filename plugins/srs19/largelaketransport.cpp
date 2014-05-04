@@ -41,7 +41,7 @@ bool LargeLakeTransport::calculate(const KCalculationInfo& ci, const KLocation &
     DataItemArray cwsList;
     for(int k = 0; k < qiW.count(); k++) {
         const KDataItem & qi = qiW.at(k);
-        const KRadionuclide & rn = KStorage::storage()->radionuclide(qi.name());
+        const KRadionuclide & rn = factory()->storage()->radionuclide(qi.name());
         qreal l = rn.halfLife().decayConstant();
 
         // maximum concentration

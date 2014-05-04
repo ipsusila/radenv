@@ -36,7 +36,7 @@ class DistributionCoefficient : public DefaultValueTable<KdValue>
 {
 public:
     enum { Freshwater = 0, SaltWater = 1 };
-    explicit DistributionCoefficient(IModelFactory * factory, KStorage * storage = 0);
+    explicit DistributionCoefficient(IModelFactory * factory);
 };
 
 
@@ -71,7 +71,7 @@ class TransferFactor : public DefaultValueTable<FvValue>
 public:
     enum { Forage = 0, Crops = 1, Milk = 2, Meat = 3 };
 
-    explicit TransferFactor(IModelFactory * factory, KStorage * storage = 0);
+    explicit TransferFactor(IModelFactory * factory);
 };
 
 
@@ -105,7 +105,7 @@ class BioAccumulationFactor : public DefaultValueTable<BpValue>
 public:
     enum { FreshwaterFish = 0, MarineFish = 1, MarineShellfish = 2 };
 
-    explicit BioAccumulationFactor(IModelFactory * factory, KStorage * storage = 0);
+    explicit BioAccumulationFactor(IModelFactory * factory);
 };
 
 //////////////////////////////////// table XV //////////////////////////////////////
@@ -137,7 +137,7 @@ class ExternalDoseCoefficient : public DefaultValueTable<ExtDfValue>
 public:
     enum {ImmersionDose = 0, SkinDose = 1, SurfaceDeposit = 2};
 
-    explicit ExternalDoseCoefficient(IModelFactory * fact, KStorage * storage = 0);
+    explicit ExternalDoseCoefficient(IModelFactory * fact);
 };
 
 //////////////////////////////////// table XVI /////////////////////////////////////
@@ -165,7 +165,7 @@ class InhalationDoseCoefficient : public DefaultValueTable<InhDfValue>
 public:
     enum {Infant = 0, Adult = 1};
 
-    explicit InhalationDoseCoefficient(IModelFactory * fact, KStorage * storage = 0);
+    explicit InhalationDoseCoefficient(IModelFactory * fact);
 };
 
 //////////////////////////////////// table XVII /////////////////////////////////////
@@ -193,7 +193,7 @@ class IngestionDoseCoefficient : public DefaultValueTable<IngDfValue>
 public:
     enum {Infant = 0, Adult = 1};
 
-    explicit IngestionDoseCoefficient(IModelFactory * fact, KStorage * storage = 0);
+    explicit IngestionDoseCoefficient(IModelFactory * fact);
 };
 
 //////////////////////////////// table XIX, XX, XXI //////////////////////////////////
@@ -217,18 +217,18 @@ inline QDataStream & operator>>(QDataStream &s, DoseCommValue & item)
 class AtmosphereDoseCommitment : public DefaultValueTable<DoseCommValue>
 {
 public:
-    explicit AtmosphereDoseCommitment(IModelFactory * fact, KStorage * storage = 0);
+    explicit AtmosphereDoseCommitment(IModelFactory * fact);
 };
 
 class MarineWaterDoseCommitment : public DefaultValueTable<DoseCommValue>
 {
 public:
-    explicit MarineWaterDoseCommitment(IModelFactory * fact, KStorage * storage = 0);
+    explicit MarineWaterDoseCommitment(IModelFactory * fact);
 };
 class FreshwaterDoseCommitment : public DefaultValueTable<DoseCommValue>
 {
 public:
-    explicit FreshwaterDoseCommitment(IModelFactory * fact, KStorage * storage = 0);
+    explicit FreshwaterDoseCommitment(IModelFactory * fact);
 };
 
 

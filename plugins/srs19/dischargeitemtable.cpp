@@ -33,6 +33,12 @@ int DischargeItemTable::decimals() const
         return delegate->decimals();
     return 0;
 }
+void DischargeItemTable::setStorage(KStorage * stg)
+{
+    DischargeItemDelegate * delegate = qobject_cast<DischargeItemDelegate *>(this->itemDelegate());
+    if (delegate != 0)
+        delegate->setStorage(stg);
+}
 
 KData DischargeItemTable::data() const
 {

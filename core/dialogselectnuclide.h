@@ -13,7 +13,7 @@ class K_CORE_EXPORT DialogSelectNuclide : public QDialog
     Q_OBJECT
     
 public:
-    explicit DialogSelectNuclide(const QStringList & selectedList = QStringList(),  QWidget *parent = 0);
+    explicit DialogSelectNuclide(KStorage * storage, const QStringList & selectedList = QStringList(),  QWidget *parent = 0);
     ~DialogSelectNuclide();
     QStringList selectedRadionuclides() const;
     
@@ -24,7 +24,7 @@ private slots:
     void on_cmdDeselectAll_clicked();
 
 private:
-    void setupRadionuclides(const QStringList & selectedList);
+    void setupRadionuclides(KStorage * storage, const QStringList & selectedList);
 
     Ui::DialogSelectNuclide *ui;
 };
