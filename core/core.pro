@@ -4,16 +4,16 @@
 #
 #-------------------------------------------------
 
-QT       += xml core gui sql
+QT += xml core gui sql
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
-TARGET = radpfcore
+TARGET = radenvcore
 win32:CONFIG(debug, debug|release): TARGET = $$join(TARGET,,,d)
 
 TEMPLATE = lib
 
 DEFINES += KCORE_LIBRARY
-DESTDIR = $$OUT_PWD/../radpf
+DESTDIR = $$OUT_PWD/../radenv
 
 SOURCES += \
     dialoglocation.cpp \
@@ -111,7 +111,7 @@ symbian {
     TARGET.UID3 = 0xE664C2FB
     TARGET.CAPABILITY = 
     TARGET.EPOCALLOWDLLDATA = 1
-    addFiles.sources = radpfcore.dll
+    addFiles.sources = radenvcore.dll
     addFiles.path = !:/sys/bin
     DEPLOYMENT += addFiles
 }

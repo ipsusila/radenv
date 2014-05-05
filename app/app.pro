@@ -4,15 +4,15 @@
 #
 #-------------------------------------------------
 
-QT       += core gui
+QT += core gui
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
-TARGET = radpf
+TARGET = radenv
 TEMPLATE = app
 win32:CONFIG(debug, debug|release): TARGET = $$join(TARGET,,,d)
 
 SOURCES += main.cpp\
-        mainwindow.cpp \ 
+    mainwindow.cpp \
     xmodelview.cpp \
     xmodelwidget.cpp \
     xactionbutton.cpp
@@ -27,12 +27,12 @@ FORMS    +=
 
 INCLUDEPATH += $$PWD/../core
 DEPENDPATH += $$PWD/../core
-DESTDIR = $$OUT_PWD/../radpf
+DESTDIR = $$OUT_PWD/../radenv
 
-win32:CONFIG(release, debug|release): LIBS += -L$$OUT_PWD/../radpf/ -lradpfcore
-else:win32:CONFIG(debug, debug|release): LIBS += -L$$OUT_PWD/../radpf/ -lradpfcored
-else:symbian: LIBS += -lradpfcore
-else:unix: LIBS += -L$$OUT_PWD/../radpf/ -lradpfcore
+win32:CONFIG(release, debug|release): LIBS += -L$$OUT_PWD/../radenv/ -lradenvcore
+else:win32:CONFIG(debug, debug|release): LIBS += -L$$OUT_PWD/../radenv/ -lradenvcored
+else:symbian: LIBS += -lradenvcore
+else:unix: LIBS += -L$$OUT_PWD/../radenv/ -lradenvcore
 
 RESOURCES += \
     radapp.qrc

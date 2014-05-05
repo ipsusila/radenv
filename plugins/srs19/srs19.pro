@@ -4,7 +4,7 @@
 #
 #-------------------------------------------------
 
-QT       += core gui
+QT += core gui
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
 TARGET = srs19
@@ -101,14 +101,14 @@ unix:!symbian {
     INSTALLS += target
 }
 
-win32:CONFIG(release, debug|release): LIBS += -L$$OUT_PWD/../../radpf/ -lradpfcore
-else:win32:CONFIG(debug, debug|release): LIBS += -L$$OUT_PWD/../../radpf/ -lradpfcored
-else:symbian: LIBS += -lradpfcore
-else:unix: LIBS += -L$$OUT_PWD/../../radpf/ -lradpfcore
+win32:CONFIG(release, debug|release): LIBS += -L$$OUT_PWD/../../radenv/ -lradenvcore
+else:win32:CONFIG(debug, debug|release): LIBS += -L$$OUT_PWD/../../radenv/ -lradenvcored
+else:symbian: LIBS += -lradenvcore
+else:unix: LIBS += -L$$OUT_PWD/../../radenv/ -lradenvcore
 
 INCLUDEPATH += $$PWD/../../core
 DEPENDPATH += $$PWD/../../core
-DESTDIR = $$OUT_PWD/../../radpf/plugins
+DESTDIR = $$OUT_PWD/../../radenv/plugins
 
 RESOURCES += \
     srs19.qrc
