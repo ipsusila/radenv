@@ -26,7 +26,9 @@
 #include "defaultvalues.h"
 #include "doseestimation.h"
 
+#if QT_VERSION < 0x050000
 Q_EXPORT_PLUGIN2(srs19, Srs19Factory)
+#endif
 
 Srs19Factory::Srs19Factory() : _paramsEditor(0), _settingManager(0),
     _manager(0), _storage(0)

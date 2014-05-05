@@ -117,8 +117,13 @@ void DischargeItemTable::setVariable(const Quantity * s)
         //modify resize mode
         QHeaderView * header = this->horizontalHeader();
         if (header != 0) {
+#if QT_VERSION >= 0x050000
+            header->setSectionResizeMode(0, QHeaderView::Interactive);
+            header->setSectionResizeMode(1, QHeaderView::ResizeToContents);
+#else
             header->setResizeMode(0, QHeaderView::Interactive);
             header->setResizeMode(1, QHeaderView::ResizeToContents);
+#endif
         }
     }
 }

@@ -9,7 +9,7 @@
 XModelView::XModelView(QGraphicsScene * scene, QWidget * parent) :
     QGraphicsView(scene,parent)
 {
-    _zoomFactor = 1.0;
+    _zoomFactor = 1.2;
     scene->setParent(this);
     this->setFont(QFont("monospace", 10));
     this->setRenderHint(QPainter::Antialiasing, true);

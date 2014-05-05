@@ -10,11 +10,10 @@ public:
     KPluginManager();
     ~KPluginManager();
 
-    int loadPlugins();
-    int loadPlugins(const QString& path);
+    int loadPlugins(const QString& path = QString());
     bool unloadPlugins();
 
-    bool isInitialized() const;
+    bool isValid() const;
     int factoryCount() const;
     FactoryList factories() const;
     IModelFactory * factory(const Quantity * qty) const;

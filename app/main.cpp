@@ -2,7 +2,7 @@
 #include <QDir>
 #include <QDebug>
 #include "mainwindow.h"
-#include "xoutputview.h"
+#include "uioutputview.h"
 #include "kpluginmanager.h"
 
 int main(int argc, char *argv[])
@@ -18,10 +18,11 @@ int main(int argc, char *argv[])
 
     //create plugin manager
     KPluginManager pm;
-    pm.setStorage("/home/ips/workspace/smea.db");
+    //pm.setStorage("/home/ips/workspace/smea.db");
+    pm.setStorage("E:/Temp/smea.db");
 
     //output handler
-    XOutputView * outview = new XOutputView();
+    UiOutputView * outview = new UiOutputView();
     KOutput::setupHandler(outview);
 
     //display main window

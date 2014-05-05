@@ -8,6 +8,9 @@
 class SRS19_SHARED_EXPORT Srs19Factory : public QObject, public IModelFactory
 {
     Q_OBJECT
+#if QT_VERSION >= 0x050000
+    Q_PLUGIN_METADATA(IID "ips.rad.Plugin.IModelFactory" FILE "srs19.json")
+#endif
     Q_INTERFACES(IModelFactory)
 public:
     Srs19Factory();

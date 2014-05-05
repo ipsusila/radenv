@@ -1,4 +1,9 @@
-#include <QtGui>
+#include <QCheckBox>
+#include <QLabel>
+#include <QLineEdit>
+#include <QSpinBox>
+#include <QDoubleSpinBox>
+#include <QGroupBox>
 #include "uiuserinput.h"
 #include "uiarrayitemtable.h"
 #include "kquantitycontrol.h"

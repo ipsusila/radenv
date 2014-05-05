@@ -1,21 +1,22 @@
-#ifndef KCASE_H
-#define KCASE_H
+#ifndef KASSESSMENT_H
+#define KASSESSMENT_H
 
 #include <QRectF>
 #include "iserializable.h"
 
 class KCasePrivate;
-class K_CORE_EXPORT KCase : public ISerializable
+class K_CORE_EXPORT KAssessment : public ISerializable
 {
 public:
-    KCase(const QDateTime & created = QDateTime());
-    KCase(const KCase &other);
-    KCase &operator=(const KCase &other);
-    ~KCase();
+    KAssessment(const QDateTime & created = QDateTime());
+    KAssessment(const KAssessment &other);
+    KAssessment &operator=(const KAssessment &other);
+    ~KAssessment();
 
-    bool operator==(const KCase &other) const;
-    bool operator!=(const KCase &other) const;
+    bool operator==(const KAssessment &other) const;
+    bool operator!=(const KAssessment &other) const;
 
+    bool isValid() const;
     QDateTime created() const;
     QString name() const;
     void setName(const QString& name);
@@ -32,6 +33,8 @@ public:
 
     KModelScene * createScene(const QRectF & rect = QRectF());
     SceneList scenes() const;
+    bool contains(KModelScene * scene) const;
+    void remove(KModelScene * scene);
     void clear();
 
     void deserialize(const QByteArray & cont);
@@ -42,6 +45,6 @@ public:
 private:
     QExplicitlySharedDataPointer<KCasePrivate> data;
 };
-K_DECLARE_SERIALIZABLE(KCase)
+K_DECLARE_SERIALIZABLE(KAssessment)
 
-#endif // KCASE_H
+#endif // KASSESSMENT_H

@@ -8,7 +8,7 @@
 #include <QSharedData>
 #include <QRectF>
 #include <QDebug>
-#include "kcase.h"
+#include "kassessment.h"
 #include "kmodelscene.h"
 
 //Token identifier
@@ -28,8 +28,13 @@ public:
     KCasePrivate() : created(QDateTime::currentDateTime()) {}
     ~KCasePrivate()
     {
-        qDebug() << "Removing case private";
+        qDebug() << "Removing assessment private";
         this->clear();
+    }
+
+    inline bool isValid() const
+    {
+        return !name.isEmpty();
     }
 
     inline KModelScene * createScene(const QRectF & rect = QRectF())
@@ -42,6 +47,11 @@ public:
         scenes.append(scene);
         return scene;
     }
+    inline void remove(KModelScene * scene)
+    {
+        scenes.removeOne(scene);
+    }
+
     void clear()
     {
         created = QDateTime::currentDateTime();
@@ -52,6 +62,7 @@ public:
         docname.clear();
         document.clear();
 
+        qDebug() << "Delete all scenes";
         while (!scenes.isEmpty()) {
             KModelScene * scene = scenes.takeFirst();
             delete scene;
@@ -109,17 +120,17 @@ public:
     }
 };
 
-KCase::KCase(const QDateTime & c) : data(new KCasePrivate)
+KAssessment::KAssessment(const QDateTime & c) : data(new KCasePrivate)
 {
     if (c.isValid())
         data->created = c;
 }
 
-KCase::KCase(const KCase &rhs) : data(rhs.data)
+KAssessment::KAssessment(const KAssessment &rhs) : data(rhs.data)
 {
 }
 
-KCase &KCase::operator=(const KCase &rhs)
+KAssessment &KAssessment::operator=(const KAssessment &rhs)
 {
     if (this != &rhs) {
         data.operator=(rhs.data);
@@ -127,105 +138,120 @@ KCase &KCase::operator=(const KCase &rhs)
     return *this;
 }
 
-KCase::~KCase()
+KAssessment::~KAssessment()
 {
 }
 
-bool KCase::operator==(const KCase &other) const
+bool KAssessment::operator==(const KAssessment &other) const
 {
     return data->name == other.data->name;
 }
-bool KCase::operator!=(const KCase &other) const
+bool KAssessment::operator!=(const KAssessment &other) const
 {
     return data->name != other.data->name;
 }
 
-QDateTime KCase::created() const
+bool KAssessment::isValid() const
+{
+    return data->isValid();
+}
+QDateTime KAssessment::created() const
 {
     return data->created;
 }
-QString KCase::name() const
+QString KAssessment::name() const
 {
     return data->name;
 }
-void KCase::setName(const QString &name)
+void KAssessment::setName(const QString &name)
 {
     data->name = name;
 }
 
-QString KCase::author() const
+QString KAssessment::author() const
 {
     return data->author;
 }
-void KCase::setAuthor(const QString &author)
+void KAssessment::setAuthor(const QString &author)
 {
     data->author = author;
 }
 
-QString KCase::description() const
+QString KAssessment::description() const
 {
     return data->description;
 }
-void KCase::setDescription(const QString &desc)
+void KAssessment::setDescription(const QString &desc)
 {
     data->description = desc;
 }
 
-QString KCase::remark() const
+QString KAssessment::remark() const
 {
     return data->remark;
 }
-void KCase::setRemark(const QString &remark)
+void KAssessment::setRemark(const QString &remark)
 {
     data->remark = remark;
 }
 
-QString KCase::docname() const
+QString KAssessment::docname() const
 {
     return data->docname;
 }
-void KCase::setDocname(const QString& docname)
+void KAssessment::setDocname(const QString& docname)
 {
     data->docname = docname;
 }
 
-QByteArray KCase::document() const
+QByteArray KAssessment::document() const
 {
     return data->document;
 }
-void KCase::setDocument(const QByteArray &doc)
+void KAssessment::setDocument(const QByteArray &doc)
 {
     data->document = doc;
 }
 
-void KCase::deserialize(const QByteArray & cont)
+void KAssessment::deserialize(const QByteArray & cont)
 {
     data->deserialize(cont);
 }
 
-KModelScene * KCase::createScene(const QRectF &rect)
+KModelScene * KAssessment::createScene(const QRectF &rect)
 {
     return data->createScene(rect);
 }
-SceneList KCase::scenes() const
+SceneList KAssessment::scenes() const
 {
     return data->scenes;
 }
-void KCase::clear()
+bool KAssessment::contains(KModelScene * scene) const
+{
+    return data->scenes.contains(scene);
+}
+void KAssessment::remove(KModelScene * scene)
+{
+    data->remove(scene);
+}
+
+void KAssessment::clear()
 {
     data->clear();
 }
 
-void KCase::serialize(QByteArray &ba) const
+void KAssessment::serialize(QByteArray &ba) const
 {
     data->serialize(ba);
 }
 
-QDataStream & KCase::serialize(QDataStream & stream) const
+QDataStream & KAssessment::serialize(QDataStream & stream) const
 {
+    qDebug() << Q_FUNC_INFO << ", stream pos: " << stream.device()->pos();
     return data->serialize(stream);
 }
-QDataStream & KCase::deserialize(QDataStream & stream)
+QDataStream & KAssessment::deserialize(QDataStream & stream)
 {
+    qDebug() << Q_FUNC_INFO << ", stream pos: " << stream.device()->pos();
     return data->deserialize(stream);
 }

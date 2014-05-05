@@ -6,7 +6,7 @@
 #include "imodelfactory.h"
 #include "klocation.h"
 #include "kradionuclide.h"
-#include "kcase.h"
+#include "kassessment.h"
 
 #include "kradionuclide.hxx"
 
@@ -89,7 +89,7 @@ bool KStorage::open(const QString& nm)
     QSqlDatabase db = QSqlDatabase::addDatabase("QSQLITE");
     db.setDatabaseName(_stgName);
     if (!db.open()) {
-        xError() << QObject::tr("[Storage]: Error when openning database ") << _stgName;
+        xError() << Q_FUNC_INFO << QObject::tr(" [Storage]: Error when openning database ") << _stgName;
         return false;
     }
 
@@ -105,7 +105,7 @@ bool KStorage::initialize()
     QStringList tables = db.tables();
 
     //create tables from SQL
-    xTrace() << QObject::tr("[Storage]: Initializing storage");
+    xTrace() << Q_FUNC_INFO << QObject::tr(" [Storage]: Initializing storage");
 
     /*
      *#define RAD_STORAGEID                 "_x_smea_storage_"
@@ -149,7 +149,7 @@ bool KStorage::initStorageTable()
                           "PRIMARY KEY(name,factory))")
             .arg(RAD_STORAGE);
     if (!query.exec(sql)) {
-        xWarning() << QObject::tr("[Storage]: Failed to execute query -> ") << sql;
+        xWarning() << Q_FUNC_INFO << QObject::tr(" [Storage]: Failed to execute query -> ") << sql;
         xWarning() << QObject::tr("[Storage]: ") << query.lastError().text();
 
         return false;
@@ -167,7 +167,7 @@ bool KStorage::initNuclideTable()
                           "usage INT NOT NULL DEFAULT 0, attr INT NOT NULL DEFAULT 0, "
                           "PRIMARY KEY(nuclide))").arg(RAD_RADIONUCLIDE);
     if (!query.exec(sql)) {
-        xWarning() << QObject::tr("[Storage]: Failed to execute query -> ") << sql;
+        xWarning() << Q_FUNC_INFO << QObject::tr(" [Storage]: Failed to execute query -> ") << sql;
         xWarning() << QObject::tr("[Storage]: ") << query.lastError().text();
 
         return false;
@@ -203,7 +203,8 @@ bool KStorage::initNuclideTable()
     query.addBindValue(lambdas);
     query.addBindValue(attributes);
     if (!query.execBatch()) {
-        xError() << QObject::tr("[Storage]: Insert data error -> ") << query.lastError().text();
+        xError() << Q_FUNC_INFO << QObject::tr(" [Storage]: Insert data error -> ")
+                 << query.lastError().text();
     }
 
     //copy content
@@ -238,7 +239,7 @@ bool KStorage::initLocationTable()
                           "PRIMARY KEY(code))")
             .arg(RAD_LOCATION);
     if (!query.exec(sql)) {
-        xWarning() << QObject::tr("[Storage]: Failed to execute query -> ") << sql;
+        xWarning() << Q_FUNC_INFO << QObject::tr(" [Storage]: Failed to execute query -> ") << sql;
         xWarning() << QObject::tr("[Storage]: ") << query.lastError().text();
 
         return false;
@@ -266,7 +267,7 @@ bool KStorage::initAssessmentTable()
                           "document BLOB, datasz INTEGER, data BLOB, PRIMARY KEY(name))")
             .arg(RAD_ASSESSMENT);
     if (!query.exec(sql)) {
-        xWarning() << QObject::tr("[Storage]: Failed to execute query -> ") << sql;
+        xWarning() << Q_FUNC_INFO << QObject::tr(" [Storage]: Failed to execute query -> ") << sql;
         xWarning() << QObject::tr("[Storage]: ") << query.lastError().text();
 
         return false;
@@ -307,7 +308,7 @@ bool KStorage::save(const KLocation& loc)
     }
 
     if (!query.exec()) {
-        qDebug() << (QObject::tr("[Storage]: Failed to execute query -> ") + sql);
+        qDebug() << Q_FUNC_INFO << (QObject::tr(" [Storage]: Failed to execute query -> ") + sql);
         qDebug() << (QObject::tr("[Storage]: ") + query.lastError().text());
 
         return false;
@@ -350,7 +351,7 @@ bool KStorage::save(const KRadionuclide& nuc)
     query.bindValue(3, nuc.nuclide());
 
     if (!query.exec()) {
-        qDebug() << (QObject::tr("[Storage]: Failed to execute query -> ") + sql);
+        qDebug() << Q_FUNC_INFO << (QObject::tr(" [Storage]: Failed to execute query -> ") + sql);
         qDebug() << (QObject::tr("[Storage]: ") + query.lastError().text());
 
         return false;
@@ -359,7 +360,7 @@ bool KStorage::save(const KRadionuclide& nuc)
     return true;
 }
 
-bool KStorage::save(const KCase &a)
+bool KStorage::save(const KAssessment &a)
 {
     //save to database
     QSqlQuery query;
@@ -382,7 +383,7 @@ bool KStorage::save(const KCase &a)
     query.bindValue(9, ba);
 
     if (!query.exec()) {
-        qDebug() << (QObject::tr("[Storage]: Failed to execute query -> ") + sql);
+        qDebug() << Q_FUNC_INFO << (QObject::tr(" [Storage]: Failed to execute query -> ") + sql);
         qDebug() << (QObject::tr("[Storage]: ") + query.lastError().text());
 
         return false;
@@ -399,7 +400,7 @@ void KStorage::remove(const KLocation& loc)
     query.bindValue(0, loc.code());
 
     if (!query.exec()) {
-        qDebug() << (QObject::tr("[Storage]: Failed to execute query -> ") + sql);
+        qDebug() << Q_FUNC_INFO << (QObject::tr(" [Storage]: Failed to execute query -> ") + sql);
         qDebug() << (QObject::tr("[Storage]: ") + query.lastError().text());
     }
     else {
@@ -407,7 +408,7 @@ void KStorage::remove(const KLocation& loc)
     }
 }
 
-void KStorage::remove(const KCase& a)
+void KStorage::remove(const KAssessment& a)
 {
     //remove from database
     QSqlQuery query;
@@ -416,7 +417,7 @@ void KStorage::remove(const KCase& a)
     query.bindValue(0, a.name());
 
     if (!query.exec()) {
-        qDebug() << (QObject::tr("[Storage]: Failed to execute query -> ") + sql);
+        qDebug() << Q_FUNC_INFO << (QObject::tr(" [Storage]: Failed to execute query -> ") + sql);
         qDebug() << (QObject::tr("[Storage]: ") + query.lastError().text());
     }
 }
@@ -429,7 +430,7 @@ void KStorage::remove(const KRadionuclide &nuc)
     query.bindValue(0, nuc.nuclide());
 
     if (!query.exec()) {
-        qDebug() << (QObject::tr("[Storage]: Failed to execute query -> ") + sql);
+        qDebug() << Q_FUNC_INFO << (QObject::tr(" [Storage]: Failed to execute query -> ") + sql);
         qDebug() << (QObject::tr("[Storage]: ") + query.lastError().text());
     }
     else {
@@ -453,7 +454,7 @@ bool KStorage::save(const KStorageContent& content)
     query.bindValue(5, content);
 
     if (!query.exec()) {
-        qDebug() << (QObject::tr("[Storage]: Failed to execute query -> ") + sql);
+        qDebug() << Q_FUNC_INFO << (QObject::tr(" [Storage]: Failed to execute query -> ") + sql);
         qDebug() << (QObject::tr("[Storage]: ") + query.lastError().text());
 
         return false;
@@ -473,7 +474,8 @@ KStorageContent KStorage::load(const QString& nm, const IModelFactory * f) const
     query.bindValue(1, f == 0 ? RAD_NULL_FACTORY : f->name());
 
     //load from database
-    if (query.exec() && query.next()) {
+    bool ok;
+    if ((ok = query.exec()) && query.next()) {
         KStorageContent content(query.value(2).toDateTime());
 
         content.setName(query.value(0).toString());
@@ -486,8 +488,10 @@ KStorageContent KStorage::load(const QString& nm, const IModelFactory * f) const
 
         return content;
     }
-
-    qDebug() << "Error: " << query.lastError();
+    else if (!ok) {
+        qDebug() << Q_FUNC_INFO << " Error: " << query.lastError();
+        qDebug() << "SQL: " << sql;
+    }
 
     return KStorageContent();
 }
@@ -529,7 +533,7 @@ RadionuclideList KStorage::loadNuclides()
 
     RadionuclideList list;
     if (!query.exec(sql)) {
-        qDebug() << (QObject::tr("[Storage]: Failed to execute query -> ") + sql);
+        qDebug() << Q_FUNC_INFO << (QObject::tr(" [Storage]: Failed to execute query -> ") + sql);
         qDebug() << (QObject::tr("[Storage]: ") + query.lastError().text());
 
         return list;
@@ -556,7 +560,7 @@ LocationList KStorage::loadLocations()
 
     LocationList list;
     if (!query.exec(sql)) {
-        qDebug() << (QObject::tr("[Storage]: Failed to execute query -> ") + sql);
+        qDebug() << Q_FUNC_INFO << (QObject::tr(" [Storage]: Failed to execute query -> ") + sql);
         qDebug() << (QObject::tr("[Storage]: ") + query.lastError().text());
 
         return list;
@@ -585,6 +589,46 @@ LocationList KStorage::loadLocations()
     }
     return list;
 }
+bool KStorage::assessmentExists(const QString& assessment) const
+{
+    /*
+    //TODO
+    //This parameter query give parameter count mismatch ????
+    QSqlQuery query;
+    QString sql = QString("SELECT name FROM %1 WHERE name=?").arg(RAD_ASSESSMENT);
+    query.prepare(sql);
+    query.bindValue(0, assessment);
+    if (query.exec(sql) && query.next()) {
+        return true;
+    }
+    else {
+        qDebug() << (QObject::tr("[Storage]: Failed to execute query -> ") + sql);
+        qDebug() << (QObject::tr("[Storage]: ") + query.lastError().text());
+    }
+    */
+
+    QString val = assessment;
+    val.replace('\'', "");
+
+    QSqlQuery query;
+    QString sql = QString("SELECT name FROM %1 WHERE name='%2'")
+            .arg(RAD_ASSESSMENT)
+            .arg(val);
+
+    if (!query.exec(sql)) {
+        qDebug() << Q_FUNC_INFO << (QObject::tr(" [Storage]: Failed to execute query -> ") + sql);
+        qDebug() << (QObject::tr("[Storage]: ") + query.lastError().text());
+
+        return false;
+    }
+
+    if (query.next()) {
+        Q_ASSERT(query.value(0).toString() == assessment);
+        return true;
+    }
+
+    return false;
+}
 AssessmentList KStorage::loadAssessmentPreviews(const QStringList & excludes) const
 {
     QSqlQuery query;
@@ -593,7 +637,7 @@ AssessmentList KStorage::loadAssessmentPreviews(const QStringList & excludes) co
             .arg(RAD_ASSESSMENT);
 
     if (!query.exec(sql)) {
-        qDebug() << (QObject::tr("[Storage]: Failed to execute query -> ") + sql);
+        qDebug() << Q_FUNC_INFO << (QObject::tr(" [Storage]: Failed to execute query -> ") + sql);
         qDebug() << (QObject::tr("[Storage]: ") + query.lastError().text());
 
         return list;
@@ -604,8 +648,8 @@ AssessmentList KStorage::loadAssessmentPreviews(const QStringList & excludes) co
         if (excludes.contains(name))
             continue;
 
-        KCase a(query.value(1).toDateTime());
-        a.setName(query.value(0).toString());
+        KAssessment a(query.value(1).toDateTime());
+        a.setName(name);
         a.setAuthor(query.value(2).toString());
         a.setDescription(query.value(3).toString());
         a.setRemark(query.value(4).toString());
@@ -622,23 +666,27 @@ AssessmentList KStorage::loadAssessments(const QStringList & names) const
     QSqlQuery query;
     AssessmentList list;
 
+    //TODO
+    //Prepared statement is not working in SELECT
+    //Error: parameter count mismatch
     QString sql = QString("SELECT name, created, author, description, remark,"
-                          "docname, docsz, document, datasz, data FROM %1 WHERE name=?")
+                          "docname, docsz, document, datasz, data FROM %1 WHERE name=")
             .arg(RAD_ASSESSMENT);
-    query.prepare(sql);
 
     //load designated assessments
     for(int k = 0; k < names.size(); k++) {
-        query.bindValue(0, names.at(k));
-        if (!query.exec(sql)) {
-            qDebug() << (QObject::tr("[Storage]: Failed to execute query -> ") + sql);
+        QString name = names.at(k);
+        name.replace('\'', "");
+        name = "'" + name + "'";
+        if (!query.exec(sql+name)) {
+            qDebug() << Q_FUNC_INFO << (QObject::tr(" [Storage]: Failed to execute query -> ") + sql);
             qDebug() << (QObject::tr("[Storage]: ") + query.lastError().text());
 
             continue;
         }
 
         while (query.next()) {
-            KCase a(query.value(1).toDateTime());
+            KAssessment a(query.value(1).toDateTime());
             a.setName(query.value(0).toString());
             a.setAuthor(query.value(2).toString());
             a.setDescription(query.value(3).toString());

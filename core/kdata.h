@@ -212,4 +212,12 @@ extern K_CORE_EXPORT QTextStream & operator<<(QTextStream & s, const KData & d);
 extern K_CORE_EXPORT QTextStream & operator<<(QTextStream & s, const KDataArray & da);
 extern K_CORE_EXPORT QTextStream & operator<<(QTextStream & s, const KDataTable & table);
 
+//TODO
+//more effective way to calculate hash
+//this is needed when compiling the project in windows with Qt ?
+inline uint qHash(const KData& d)
+{
+    return qHash(d.displayText());
+}
+
 #endif // KDATA_H

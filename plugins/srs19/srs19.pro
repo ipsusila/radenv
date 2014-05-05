@@ -5,11 +5,12 @@
 #-------------------------------------------------
 
 QT       += core gui
+greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
 TARGET = srs19
 TEMPLATE = lib
 CONFIG += plugin
-win32:CONFIG(debug, debug|release):join(TARGET,,,d)
+win32:CONFIG(debug, debug|release): TARGET = $$join(TARGET,,,d)
 
 DEFINES += SRS19_LIBRARY
 
@@ -46,8 +47,7 @@ SOURCES += \
     aquaticfoodransport.cpp \
     doseestimation.cpp
 
-HEADERS += $$PWD/../smeacore/imodelfactory.h\
-    srs19.h\
+HEADERS += srs19.h\
     srs19factory.h \
     discharge.h \
     dischargeitemdelegate.h \
@@ -117,3 +117,6 @@ FORMS += \
     widgetatmosphericdischarge.ui \
     widgetwaterdischarge.ui \
     widgetconstantvalue.ui
+
+OTHER_FILES += \
+    srs19.json

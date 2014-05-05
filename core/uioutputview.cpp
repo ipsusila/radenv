@@ -1,27 +1,28 @@
-#include <QtDebug>
-#include "xoutputview.h"
+#include<QtDebug>
+#include "uioutputview.h"
 
-XOutputView::XOutputView(QWidget *parent) :
+UiOutputView::UiOutputView(QWidget *parent) :
     QTextEdit(parent)
 {
     setReadOnly(true);
+    this->setFont(QFont("monospace", 10));
 
     connect(this, SIGNAL(outputClear()), this, SLOT(onOutputClear()));
     connect(this, SIGNAL(outputNewLine()), this, SLOT(onOutputNewLine()));
     connect(this, SIGNAL(outputReady(QString)), this, SLOT(onOutputReady(QString)));
 }
-XOutputView::~XOutputView()
+UiOutputView::~UiOutputView()
 {
     qDebug() << "Output handler (view) destroyed";
 }
 
-void XOutputView::onOutputReady(const QString& msg)
+void UiOutputView::onOutputReady(const QString& msg)
 {
     this->writeTimestamp();
     this->insertHtml(msg);
 }
 
-void XOutputView::onOutputNewLine()
+void UiOutputView::onOutputNewLine()
 {
     if (!this->document()->isEmpty()) {
         this->moveCursor(QTextCursor::End);
@@ -29,13 +30,13 @@ void XOutputView::onOutputNewLine()
     }
 }
 
-void XOutputView::onOutputClear()
+void UiOutputView::onOutputClear()
 {
     _timestamp = QDateTime();
     this->clear();
 }
 
-void XOutputView::writeTimestamp()
+void UiOutputView::writeTimestamp()
 {
     //ensure cursor at end position
     this->moveCursor(QTextCursor::End);
@@ -50,21 +51,21 @@ void XOutputView::writeTimestamp()
     }
 }
 
-bool XOutputView::isHtml() const
+bool UiOutputView::isHtml() const
 {
     return true;
 }
 
-void XOutputView::clearContents()
+void UiOutputView::clearContents()
 {
     emit outputClear();
 }
-void XOutputView::newLine()
+void UiOutputView::newLine()
 {
     emit outputNewLine();
 }
 
-void XOutputView::traceOut(const QString& text)
+void UiOutputView::traceOut(const QString& text)
 {
     QString msg = QString(tr("<font color='#0000aa'>%1 </font>"))
             .arg(text);
@@ -72,7 +73,7 @@ void XOutputView::traceOut(const QString& text)
             .replace("\t", "&nbsp;&nbsp;").replace("  ", "&nbsp;&nbsp;");
     emit outputReady(msg);
 }
-void XOutputView::infoOut(const QString& text)
+void UiOutputView::infoOut(const QString& text)
 {
     QString msg = QString(tr("<font color='#000000'>%1 </font>"))
             .arg(text);
@@ -80,7 +81,7 @@ void XOutputView::infoOut(const QString& text)
             .replace("\t", "&nbsp;&nbsp;").replace("  ", "&nbsp;&nbsp;");
     emit outputReady(msg);
 }
-void XOutputView::warningOut(const QString& text)
+void UiOutputView::warningOut(const QString& text)
 {
     QString msg = QString(tr("<font color='#6d5608'>%1 </font>"))
             .arg(text);
@@ -88,7 +89,7 @@ void XOutputView::warningOut(const QString& text)
             .replace("\t", "&nbsp;&nbsp;").replace("  ", "&nbsp;&nbsp;");
     emit outputReady(msg);
 }
-void XOutputView::errorOut(const QString& text)
+void UiOutputView::errorOut(const QString& text)
 {
     QString msg = QString(tr("<font color='#bb0000'>%1 </font>"))
             .arg(text);

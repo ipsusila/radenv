@@ -1,5 +1,6 @@
-#include <QtGui>
+#include <QDialog>
 #include <QtDebug>
+#include <QMessageBox>
 #include "dialogradionuclide.h"
 #include "ui_dialogradionuclide.h"
 #include "kstorage.h"

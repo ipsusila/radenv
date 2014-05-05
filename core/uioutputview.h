@@ -1,15 +1,15 @@
-#ifndef XOUTPUTVIEW_H
-#define XOUTPUTVIEW_H
+#ifndef UIOUTPUTVIEW_H
+#define UIOUTPUTVIEW_H
 
 #include <QTextEdit>
 #include "koutput.h"
 
-class XOutputView : public QTextEdit, public KOutput
+class K_CORE_EXPORT UiOutputView : public QTextEdit, public KOutput
 {
     Q_OBJECT
 public:
-    explicit XOutputView(QWidget *parent = 0);
-    ~XOutputView();
+    explicit UiOutputView(QWidget *parent = 0);
+    ~UiOutputView();
 
     virtual void clearContents();
     virtual void newLine();
@@ -25,18 +25,18 @@ private:
     void writeTimestamp();
 
     QDateTime _timestamp;
-    
+
 signals:
     void outputReady(const QString& msg);
     void outputNewLine();
     void outputClear();
-    
+
 public slots:
 
     void onOutputReady(const QString& msg);
     void onOutputNewLine();
     void onOutputClear();
-    
+
 };
 
-#endif // XOUTPUTVIEW_H
+#endif // UIOUTPUTVIEW_H

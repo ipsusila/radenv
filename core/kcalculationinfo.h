@@ -11,12 +11,13 @@ public:
         Continuous = 0,
         Once = 1
     };
-    explicit KCalculationInfo(int interval, int runCnt, int runId = 0, bool contOnError = false);
-    explicit KCalculationInfo(IModel * model, int interval, int runCnt, int runId = 0, bool contOnError = false);
+    explicit KCalculationInfo(int interval, int runCnt, int runId, bool queueMode, bool contOnError);
+    explicit KCalculationInfo(IModel * model, int interval, int runCnt, int runId, bool queueMode, bool contOnError);
     KCalculationInfo(const KCalculationInfo& ci);
     KCalculationInfo& operator=(const KCalculationInfo& ci);
     virtual ~KCalculationInfo();
 
+    bool isQueuedMode() const;
     int intervalMilisecond() const;
     bool isContinuous() const;
     int runCount() const;

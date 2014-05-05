@@ -19,24 +19,26 @@ public:
     inline QDataStream & serialize(QDataStream &s) const
     {
         s << _enableOnSet;
-        Rad::serialize(s, _controller);
+        KPluginManager::instance()->serialize(s, _controller);
+        //Rad::serialize(s, _controller);
 
-        int nz = _controlledQuantities.size();
+        qint32 nz = _controlledQuantities.size();
         s << nz;
         for(int k = 0; k < nz; k++)
-            Rad::serialize(s, _controlledQuantities.at(k));
+            KPluginManager::instance()->serialize(s, _controlledQuantities.at(k));
+            //Rad::serialize(s, _controlledQuantities.at(k));
 
         return s;
     }
     inline QDataStream & deserialize(QDataStream &s)
     {
         s >> _enableOnSet;
-        _controller = Rad::deserialize(s);
-        int nz;
+        _controller = KPluginManager::instance()->deserialize(s); //Rad::deserialize(s);
+        qint32 nz;
         s >> nz;
         _controlledQuantities.clear();
         for(int k = 0; k < nz; k++) {
-            const Quantity * qty = Rad::deserialize(s);
+            const Quantity * qty = KPluginManager::instance()->deserialize(s); //Rad::deserialize(s);
             if (qty != 0)
                 _controlledQuantities.append(qty);
         }
@@ -128,10 +130,12 @@ KQuantityControl & KQuantityControl::operator<<(const DataGroup& group)
 
 QDataStream & KQuantityControl::serialize(QDataStream &s) const
 {
+    qDebug() << Q_FUNC_INFO << ", stream pos: " << s.device()->pos();
     return data->serialize(s);
 }
 
 QDataStream & KQuantityControl::deserialize(QDataStream &s)
 {
+    qDebug() << Q_FUNC_INFO << ", stream pos: " << s.device()->pos();
     return data->deserialize(s);
 }

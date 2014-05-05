@@ -63,7 +63,8 @@ public:
 };
 
 QT_BEGIN_NAMESPACE
-Q_DECLARE_INTERFACE(IModelFactory, "ips.rad.Plugin.IModelFactory/1.0")
+#define IModelFactory_iid "ips.rad.Plugin.IModelFactory"
+Q_DECLARE_INTERFACE(IModelFactory, IModelFactory_iid)
 QT_END_NAMESPACE
 
 #endif // IMODELFACTORY_H

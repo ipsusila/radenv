@@ -1,9 +1,11 @@
 #include <QSharedData>
 #include <QtCore/qmath.h>
 #include <QStringList>
+#include <QDebug>
 #include "klocation.h"
 #include "kcalculationinfo.h"
 #include "kstorage.h"
+#include "kpluginmanager.h"
 
 class KLocationPrivate : public QSharedData
 {
@@ -280,16 +282,16 @@ QString KLocation::detailDisplayText() const
 
 QDataStream & KLocation::serialize(QDataStream & stream) const
 {
+    qDebug() << Q_FUNC_INFO << ", stream pos: " << stream.device()->pos();
     stream << this->code();
     return stream;
 }
 QDataStream & KLocation::deserialize(QDataStream & stream)
 {
-    /*
+    qDebug() << Q_FUNC_INFO << ", stream pos: " << stream.device()->pos();
     QString c;
     stream >> c;
-    *this = KStorage::storage()->location(c);
-    */
+    *this = KPluginManager::instance()->storage()->location(c);
 
     return stream;
 }

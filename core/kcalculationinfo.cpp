@@ -6,8 +6,8 @@ static const KDataArray __nullInput;
 class KCalculationInfoPrivate : public QSharedData
 {
 public:
-    KCalculationInfoPrivate(IModel * m, int msec, int rcnt, int rid, bool c)
-        : model(m), interval(msec), runCount(rcnt), runId(rid), continueOnError(c),
+    KCalculationInfoPrivate(IModel * m, int msec, int rcnt, int rid, bool q, bool c)
+        : model(m), interval(msec), runCount(rcnt), runId(rid), queueMode(q), continueOnError(c),
           timestamp(QDateTime::currentDateTime())
     {
         //now get input and stored to this object
@@ -25,18 +25,19 @@ public:
     int interval;
     int runCount;
     int runId;
+    bool queueMode;
     bool continueOnError;
     QDateTime timestamp;
     DataArrayList inputs;
     KDataArray result;
 };
 
-KCalculationInfo::KCalculationInfo(IModel * model, int interval, int runCnt, int runId, bool contOnError)
-    : data(new KCalculationInfoPrivate(model, interval, runCnt, runId, contOnError))
+KCalculationInfo::KCalculationInfo(IModel * model, int interval, int runCnt, int runId, bool queueMode, bool contOnError)
+    : data(new KCalculationInfoPrivate(model, interval, runCnt, runId, queueMode, contOnError))
 {
 }
-KCalculationInfo::KCalculationInfo(int interval, int runCnt, int runId, bool contOnError)
-    : data(new KCalculationInfoPrivate(0, interval, runCnt, runId, contOnError))
+KCalculationInfo::KCalculationInfo(int interval, int runCnt, int runId, bool queueMode, bool contOnError)
+    : data(new KCalculationInfoPrivate(0, interval, runCnt, runId, queueMode, contOnError))
 {
 }
 KCalculationInfo::KCalculationInfo(const KCalculationInfo& ci) : data(ci.data)
@@ -54,6 +55,11 @@ KCalculationInfo& KCalculationInfo::operator=(const KCalculationInfo& ci)
 
 KCalculationInfo::~KCalculationInfo()
 {
+}
+
+bool KCalculationInfo::isQueuedMode() const
+{
+    return data->queueMode;
 }
 
 int KCalculationInfo::intervalMilisecond() const

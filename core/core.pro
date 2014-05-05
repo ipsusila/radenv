@@ -5,9 +5,10 @@
 #-------------------------------------------------
 
 QT       += xml core gui sql
+greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
 TARGET = radpfcore
-win32:CONFIG(debug, debug|release):join(TARGET,,,d)
+win32:CONFIG(debug, debug|release): TARGET = $$join(TARGET,,,d)
 
 TEMPLATE = lib
 
@@ -20,7 +21,6 @@ SOURCES += \
     radionuclidemodel.cpp \
     locationmodel.cpp \
     dialogselectnuclide.cpp \
-    kcase.cpp \
     khalflife.cpp \
     kelement.cpp \
     kmodelinfo.cpp \
@@ -51,7 +51,10 @@ SOURCES += \
     uiarrayitemtable.cpp \
     uiarrayitemdelegate.cpp \
     kpluginmanager.cpp \
-    testclass.cpp
+    testclass.cpp \
+    kassessment.cpp \
+    uiassessmentexplorer.cpp \
+    uioutputview.cpp
 
 HEADERS +=\
     kradionuclide.hxx \
@@ -60,7 +63,6 @@ HEADERS +=\
     radionuclidemodel.h \
     locationmodel.h \
     dialogselectnuclide.h \
-    kcase.h \
     khalflife.h \
     kelement.h \
     kmodelinfo.h \
@@ -99,7 +101,10 @@ HEADERS +=\
     uiarrayitemdelegate.h \
     kpluginmanager.h \
     testclass.h \
-    iserializable.h
+    iserializable.h \
+    kassessment.h \
+    uiassessmentexplorer.h \
+    uioutputview.h
 
 symbian {
     MMP_RULES += EXPORTUNFROZEN

@@ -20,6 +20,7 @@ public:
     bool loadAll();
     AssessmentList loadAssessments(const QStringList & names) const;
     AssessmentList loadAssessmentPreviews(const QStringList & excludes) const;
+    bool assessmentExists(const QString& assessment) const;
 
     bool isNull() const;
     bool isOpen() const;
@@ -30,12 +31,12 @@ public:
     void optimize();
 
     void remove(const KLocation& loc);
-    void remove(const KCase& a);
+    void remove(const KAssessment& a);
     void remove(const KRadionuclide& nuc);
 
     bool save(const KLocation& loc);
     bool save(const KRadionuclide& nuc);
-    bool save(const KCase& a);
+    bool save(const KAssessment& a);
     bool save(const KStorageContent& content);
     KStorageContent load(const QString& nm, const IModelFactory * f) const;
 

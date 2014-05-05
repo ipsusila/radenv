@@ -64,7 +64,7 @@ public:
         unloadPlugins();
     }
 
-    inline bool isInitialized() const
+    inline bool isValid() const
     {
         return !_quantityFactories.isEmpty();
     }
@@ -199,7 +199,7 @@ KPluginManager * KPluginManager::instance()
 
 KPluginManager::KPluginManager() : data(new KPluginManagerPrivate(this))
 {
-    //allocate manager
+    //allocate manager elsewhere
     pMan = this;
 }
 
@@ -218,9 +218,9 @@ KPluginManager::~KPluginManager()
 {
 }
 
-bool KPluginManager::isInitialized() const
+bool KPluginManager::isValid() const
 {
-    return data->isInitialized();
+    return data->isValid();
 }
 
 int KPluginManager::factoryCount() const
@@ -293,11 +293,6 @@ const Quantity * KPluginManager::findQuantity(IModelFactory * fact, unsigned int
 const Quantity * KPluginManager::findQuantity(const QString &factoryName, unsigned int qid) const
 {
     return data->findQuantity(factoryName, qid);
-}
-
-int KPluginManager::loadPlugins()
-{
-    return data->loadPlugins(this, QString());
 }
 
 int KPluginManager::loadPlugins(const QString& path)

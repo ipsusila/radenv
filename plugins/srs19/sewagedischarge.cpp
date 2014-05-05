@@ -28,14 +28,6 @@ void SewageDischarge::defineParameters()
     ui->append(dg2);
 }
 
-/*
-IUserInput * SewageDischarge::createUserInputWidget(QWidget *parent)
-{
-    WidgetSewageDischarge * w =
-            new WidgetSewageDischarge(&_dataList, parent);
-    return w;
-}
-*/
 bool SewageDischarge::verify(int * oerr, int * owarn)
 {
     int err = 0, warn = 0;

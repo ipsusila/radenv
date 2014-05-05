@@ -1,6 +1,7 @@
 #include <QSharedData>
 #include <QVector>
 #include <QStringList>
+#include <QDebug>
 #include "kdata.h"
 #include "kgroup.h"
 #include "koutput.h"
@@ -73,18 +74,19 @@ public:
 
     QDataStream & serialize(QDataStream & s) const
     {
-        s << (int)_types;
-        Rad::serialize(s, _quantity);
+        s << (qint32)_types;
+        //Rad::serialize(s, _quantity);
+        KPluginManager::instance()->serialize(s, _quantity);
         s << _items;
 
         return s;
     }
     inline QDataStream & deserialize(QDataStream & s)
     {
-        int itypes;
+        qint32 itypes;
         s >> itypes;
         _types = KData::ContentTypes(itypes);
-        _quantity = Rad::deserialize(s);
+        _quantity = KPluginManager::instance()->deserialize(s); //Rad::deserialize(s);
         s >> _items;
 
         return s;
@@ -275,11 +277,13 @@ KDataItem & KDataItem::operator/=(qreal c)
 }
 QDataStream & KDataItem::serialize(QDataStream &stream) const
 {
+    qDebug() << Q_FUNC_INFO << ", stream pos: " << stream.device()->pos();
     stream << _name << (int)_types << _value;
     return stream;
 }
 QDataStream & KDataItem::deserialize(QDataStream &stream)
 {
+    qDebug() << Q_FUNC_INFO << ", stream pos: " << stream.device()->pos();
     int itypes;
     stream >> _name >> itypes >> _value;
     _types = KData::ContentTypes(itypes);
@@ -465,10 +469,12 @@ QString KData::displayText() const
 }
 QDataStream & KData::serialize(QDataStream &stream) const
 {
+    qDebug() << Q_FUNC_INFO << ", stream pos: " << stream.device()->pos();
     return data->serialize(stream);
 }
 QDataStream & KData::deserialize(QDataStream &stream)
 {
+    qDebug() << Q_FUNC_INFO << ", stream pos: " << stream.device()->pos();
     return data->deserialize(stream);
 }
 
@@ -616,6 +622,7 @@ void KDataArray::appendOrReplace(const KData &di)
 }
 QDataStream & KDataArray::serialize(QDataStream &stream) const
 {
+    qDebug() << Q_FUNC_INFO << ", stream pos: " << stream.device()->pos();
     const DataList * dList = this;
     stream << *dList << _location;
 
@@ -623,6 +630,7 @@ QDataStream & KDataArray::serialize(QDataStream &stream) const
 }
 QDataStream & KDataArray::deserialize(QDataStream &stream)
 {
+    qDebug() << Q_FUNC_INFO << ", stream pos: " << stream.device()->pos();
     DataList * dList = this;
     stream >> *dList >> _location;
     return stream;
@@ -871,6 +879,7 @@ const QuantityControlList & KDataGroupArray::quantityControls() const
 
 QDataStream & KDataGroupArray::serialize(QDataStream &stream) const
 {
+    qDebug() << Q_FUNC_INFO << ", stream pos: " << stream.device()->pos();
     const QVector<DataGroup> * vItems = this;
     stream << *vItems << _controlList;
 
@@ -878,6 +887,7 @@ QDataStream & KDataGroupArray::serialize(QDataStream &stream) const
 }
 QDataStream & KDataGroupArray::deserialize(QDataStream &stream)
 {
+    qDebug() << Q_FUNC_INFO << ", stream pos: " << stream.device()->pos();
     QVector<DataGroup> * vItems = this;
     stream >> *vItems >> _controlList;
     return stream;

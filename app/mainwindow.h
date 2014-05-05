@@ -12,12 +12,12 @@ class KModelScene;
 class XModelView;
 class IModelFactory;
 class XModelWidget;
-class XOutputView;
+class UiOutputView;
 class MainWindow : public QMainWindow
 {
     Q_OBJECT
 public:
-    explicit MainWindow(KPluginManager * pm, XOutputView * vw, QWidget *parent = 0);
+    explicit MainWindow(KPluginManager * pm, UiOutputView * vw, QWidget *parent = 0);
     ~MainWindow();
 
 private slots:
@@ -60,7 +60,7 @@ private:
     void populatePluginMenus(QMenu * groupMenu, IModelFactory * factory, GroupInfoList groupList);
 
     KPluginManager * plugMan;
-    XOutputView * outView;
+    UiOutputView * outView;
     KModelScene * scene;
     XModelView * view;
     QStackedWidget * pages;

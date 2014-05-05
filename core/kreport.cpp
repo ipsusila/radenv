@@ -1,7 +1,7 @@
 #include <QTextStream>
 #include "kreport.h"
 #include "koutput.h"
-#include "kcase.h"
+#include "kassessment.h"
 #include "imodel.h"
 #include "kgroup.h"
 
@@ -75,7 +75,7 @@ void KReport::printData(const KData& d)
 }
 */
 
-void KReport::addAssessment(const KCase& caseObj)
+void KReport::addAssessment(const KAssessment& caseObj)
 {
     Q_ASSERT(_stream);
     //display to info

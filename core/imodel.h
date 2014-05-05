@@ -29,6 +29,9 @@ public:
     virtual bool verify(int * err = 0, int * warn = 0) = 0;
     virtual KDataArray result() const = 0;
     virtual KData modelData(const Quantity & qty) const = 0;
+
+    //this method is called by different thread
+    //make sure that calculation, data access is thread-safe
     virtual bool calculate(const KCalculationInfo& ci) = 0;
 
     //virtual QuantityList outputQuantities() = 0;
@@ -44,7 +47,7 @@ public:
     virtual IModel * copyTo(KModelScene * mscene) const;
     virtual void copyDataTo(IModel * model) const;
 
-    int type() const;
+    virtual int type() const;
     void askUserParameters();
     KData data(const Quantity & qty) const;
     int tagId() const;

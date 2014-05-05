@@ -561,6 +561,7 @@ void KModelScene::reannotateModels()
 
 QDataStream & KModelScene::serialize(QDataStream & stream) const
 {
+    qDebug() << Q_FUNC_INFO << ", stream pos: " << stream.device()->pos();
     ModelList lModels = models();
     ConnectorList lCons = connectors();
 
@@ -583,6 +584,7 @@ QDataStream & KModelScene::serialize(QDataStream & stream) const
 }
 QDataStream & KModelScene::deserialize(QDataStream & stream)
 {
+    qDebug() << Q_FUNC_INFO << ", stream pos: " << stream.device()->pos();
     QRectF rect;
     data->deserialize(stream);
     stream >> rect;

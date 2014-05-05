@@ -335,6 +335,7 @@ KData IModel::data(const Quantity & qty) const
 }
 QDataStream & IModel::serialize(QDataStream &stream) const
 {
+    qDebug() << Q_FUNC_INFO << ", stream pos: " << stream.device()->pos();
     //This serialization order is related to KPluginManager::createMode(QDataStream &)
     const KDataGroupArray & dga = dptr->constUserInputs();
     stream << factory()->name() << info().serialId()
@@ -345,8 +346,8 @@ QDataStream & IModel::serialize(QDataStream &stream) const
 }
 QDataStream & IModel::deserialize(QDataStream &stream)
 {
+    qDebug() << Q_FUNC_INFO << ", stream pos: " << stream.device()->pos();
     //This function must be called after KPluginManager::createMode(QDataStream &)
-    //TODO (location)
     int tid = 0;
     bool hasUserInput = false;
     QPointF mpos = this->pos();

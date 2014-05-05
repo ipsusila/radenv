@@ -370,11 +370,13 @@ void KConnector::paint(QPainter * painter, const QStyleOptionGraphicsItem * opti
 
 QDataStream & KConnector::serialize(QDataStream &stream) const
 {
+    qDebug() << Q_FUNC_INFO << ", stream pos: " << stream.device()->pos();
     return data->serialize(stream);
 }
 
 QDataStream & KConnector::deserialize(QDataStream &stream)
 {
+    qDebug() << Q_FUNC_INFO << ", stream pos: " << stream.device()->pos();
     prepareGeometryChange();
     return data->deserialize(stream);
 }

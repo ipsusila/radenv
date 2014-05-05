@@ -150,9 +150,6 @@ inline QDataStream & operator>>(QDataStream &s, Quantity & item)
 namespace Rad {
     extern K_CORE_EXPORT const char LatinEndLine;
     extern K_CORE_EXPORT const Quantity EmptyQuantity;
-
-    extern K_CORE_EXPORT void serialize(QDataStream & stream, const Quantity * qty);
-    extern K_CORE_EXPORT const Quantity * deserialize(QDataStream & stream);
 }
 
 #endif // RADQUANTITY_H

@@ -10,9 +10,10 @@ DialogCalculation::DialogCalculation(QWidget *parent) :
     ui->rbOnce->setChecked(true);
     ui->numNTimes->setEnabled(false);
     ui->numInterval->setEnabled(false);
+    ui->chkQueueMode->setChecked(true);
 
-    //continous is disabled
     //TODO
+    //continous is disabled
     ui->rbContinuous->setEnabled(false);
 }
 
@@ -55,5 +56,5 @@ KCalculationInfo DialogCalculation::calculationInfo() const
         runCnt = KCalculationInfo::Once;
 
     int nsec = ui->numInterval->value();
-    return KCalculationInfo(nsec, runCnt, 0, ui->chkContinueOnError->isChecked());
+    return KCalculationInfo(nsec, runCnt, 0, ui->chkQueueMode->isChecked(), ui->chkContinueOnError->isChecked());
 }

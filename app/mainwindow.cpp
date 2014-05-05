@@ -1,8 +1,15 @@
-#include <QtGui>
+#include <QDockWidget>
+#include <QStackedWidget>
+#include <QMenu>
+#include <QToolBar>
+#include <QMenuBar>
+#include <QStatusBar>
+#include <QCloseEvent>
+#include <QFileDialog>
 #include "mainwindow.h"
 #include "xmodelview.h"
 
-#include "xoutputview.h"
+#include "uioutputview.h"
 #include "kstorage.h"
 #include "kstoragecontent.h"
 #include "kmodelscene.h"
@@ -19,25 +26,45 @@
 #include "dialogradionuclide.h"
 #include "kmath.h"
 #include "kpluginmanager.h"
-#include "kcase.h"
+#include "kassessment.h"
 
 //test
 #include "testclass.h"
 
-MainWindow::MainWindow(KPluginManager *pm, XOutputView * vw, QWidget *parent) :
+MainWindow::MainWindow(KPluginManager *pm, UiOutputView * vw, QWidget *parent) :
     QMainWindow(parent), plugMan(pm), outView(vw)
 {
     //create scene
     scene = new KModelScene(-800, -400, 1600, 800);
-
-    //setup default storage
-    //pm->setStorage("/home/ips/workspace/smea.db");
 
     createView();
     createActions();
     createToolBars();
     createMenus();
     createStatusBar();
+
+    /*
+    //Create dock widget to display the models
+    QDockWidget *dock = new QDockWidget("", this);
+    dock->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
+    QTreeWidget * mw = new QTreeWidget(dock);
+    mw->setColumnCount(2);
+    mw->setHeaderLabels(QStringList() << "Assessments" << "Description");
+    QList<QTreeWidgetItem *> items;
+    for (int i = 0; i < 10; ++i) {
+        QStringList list;
+        list << ("Item" + QString::number(i+1)) << "Test description";
+        QTreeWidgetItem * item = new QTreeWidgetItem(mw, list);
+        if (i % 3 == 0) {
+            QTreeWidgetItem * citem = new QTreeWidgetItem(QStringList("Child" + QString::number(i)));
+            item->addChild(citem);
+        }
+        items.append(item);
+    }
+    mw->addTopLevelItems(items);
+    dock->setWidget(mw);
+    addDockWidget(Qt::LeftDockWidgetArea, dock);
+    */
 
     setWindowTitle(tr("SMEA Dose Assessments"));
     setUnifiedTitleAndToolBarOnMac(true);
@@ -633,11 +660,19 @@ void MainWindow::helpContent()
 {
     //TEST
     AssessmentList list;
-    list.append(KCase());
-    list.append(KCase());
+    list.append(KAssessment());
+    list.append(KAssessment());
 
     AssessmentList list2 = list;
     list = AssessmentList();
+
+    //test
+    bool a = KPluginManager::instance()->storage()->assessmentExists("PRSG");
+    qDebug() << "Assessment exists?" << a;
+
+    QStringList names;
+    names << "abcde" << "cdef" << "avvv'vd";
+    KPluginManager::instance()->storage()->loadAssessments(names);
 }
 void MainWindow::helpAbout()
 {
