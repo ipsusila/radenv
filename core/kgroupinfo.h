@@ -3,7 +3,7 @@
 
 #include "kmodelinfo.h"
 
-class K_CORE_EXPORT KGroupInfo
+class RADENV_API KGroupInfo
 {
 public:
     KGroupInfo();

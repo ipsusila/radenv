@@ -5,7 +5,7 @@
 #include "khalflife.h"
 
 class KRadionuclidePrivate;
-class K_CORE_EXPORT KRadionuclide
+class RADENV_API KRadionuclide
 {
 public:
     KRadionuclide();
@@ -34,7 +34,7 @@ public:
     static QString elementName(const QString &nuc);
 
 private:
-    QSharedDataPointer<KRadionuclidePrivate> data;
+    QSharedDataPointer<KRadionuclidePrivate> dptr;
 };
 
 #endif // KRADIONUCLIDE_H

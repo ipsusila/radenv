@@ -6,7 +6,7 @@
 #include "iserializable.h"
 
 class KModelInfoPrivate;
-class K_CORE_EXPORT KModelInfo
+class RADENV_API KModelInfo
 {
 public:
     KModelInfo();
@@ -27,7 +27,7 @@ public:
     int serialId() const;
 
 private:
-    QSharedDataPointer<KModelInfoPrivate> data;
+    QSharedDataPointer<KModelInfoPrivate> dptr;
 };
 
 #endif // KMODELINFO_H

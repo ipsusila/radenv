@@ -5,7 +5,7 @@
 #include "iuserinput.h"
 #include "imodel.h"
 
-class K_CORE_EXPORT DialogUserInput : public QDialog
+class RADENV_API DialogUserInput : public QDialog
 {
     Q_OBJECT
 public:

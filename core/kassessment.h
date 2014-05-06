@@ -5,7 +5,7 @@
 #include "iserializable.h"
 
 class KCasePrivate;
-class K_CORE_EXPORT KAssessment : public ISerializable
+class RADENV_API KAssessment : public ISerializable
 {
 public:
     KAssessment(const QDateTime & created = QDateTime());
@@ -43,7 +43,7 @@ public:
     virtual QDataStream & deserialize(QDataStream & stream);
 
 private:
-    QExplicitlySharedDataPointer<KCasePrivate> data;
+    QExplicitlySharedDataPointer<KCasePrivate> dptr;
 };
 K_DECLARE_SERIALIZABLE(KAssessment)
 

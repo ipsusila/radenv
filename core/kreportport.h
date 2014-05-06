@@ -4,7 +4,7 @@
 #include <QGraphicsItem>
 #include "kreport.h"
 
-class K_CORE_EXPORT KReportPort : public QGraphicsItem
+class RADENV_API KReportPort : public QGraphicsItem
 {
 public:
     enum { Type = UserType + TYPE_REPORT_PORT};

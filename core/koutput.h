@@ -9,7 +9,7 @@ class QPointF;
 class QRect;
 class QRectF;
 
-class K_CORE_EXPORT KOutputProxy
+class RADENV_API KOutputProxy
 {
 public:
     KOutputProxy();
@@ -28,7 +28,7 @@ public:
     static void infoUseDefaultValue(IModel * model, const Quantity& qty);
 };
 
-class K_CORE_EXPORT KOutput
+class RADENV_API KOutput
 {
 public:
     enum OutputType {

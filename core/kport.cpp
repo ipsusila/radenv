@@ -265,7 +265,6 @@ KData KPort::data(int idx) const
     return dptr->data(idx);
 }
 
-
 bool KPort::isConnected() const
 {
     return !dptr->_conPorts.isEmpty();
@@ -312,7 +311,9 @@ bool KPort::canConnect(KPort * port) const
         //return (port->quantity() == this->quantity()) != 0;
         //TODO
         //validate quantity
+
         return true;
+        //return port->quantity()->symbol == quantity()->symbol;
     }
     else {
         return false;

@@ -4,7 +4,7 @@
 #include "kdata.h"
 
 class QTextStream;
-class K_CORE_EXPORT KReport
+class RADENV_API KReport
 {
 public:
     KReport();

@@ -1,0 +1,6 @@
+<RCC>
+    <qresource prefix="/core">
+        <file alias="assessment-expanded.png">images/burn--minus.png</file>
+        <file alias="assessment-collapsed.png">images/burn--plus.png</file>
+    </qresource>
+</RCC>

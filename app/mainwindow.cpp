@@ -27,47 +27,45 @@
 #include "kmath.h"
 #include "kpluginmanager.h"
 #include "kassessment.h"
+#include "uiassessmentexplorer.h"
 
 //test
 #include "testclass.h"
 
 MainWindow::MainWindow(KPluginManager *pm, UiOutputView * vw, QWidget *parent) :
-    QMainWindow(parent), plugMan(pm), outView(vw)
+    QMainWindow(parent), plugMan(pm), outView(vw), asExplorer(0)
 {
     //create scene
     scene = new KModelScene(-800, -400, 1600, 800);
 
-    createView();
+    createViews();
     createActions();
     createToolBars();
     createMenus();
     createStatusBar();
 
-    /*
-    //Create dock widget to display the models
-    QDockWidget *dock = new QDockWidget("", this);
-    dock->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
-    QTreeWidget * mw = new QTreeWidget(dock);
-    mw->setColumnCount(2);
-    mw->setHeaderLabels(QStringList() << "Assessments" << "Description");
-    QList<QTreeWidgetItem *> items;
-    for (int i = 0; i < 10; ++i) {
-        QStringList list;
-        list << ("Item" + QString::number(i+1)) << "Test description";
-        QTreeWidgetItem * item = new QTreeWidgetItem(mw, list);
-        if (i % 3 == 0) {
-            QTreeWidgetItem * citem = new QTreeWidgetItem(QStringList("Child" + QString::number(i)));
-            item->addChild(citem);
-        }
-        items.append(item);
-    }
-    mw->addTopLevelItems(items);
-    dock->setWidget(mw);
-    addDockWidget(Qt::LeftDockWidgetArea, dock);
-    */
-
     setWindowTitle(tr("SMEA Dose Assessments"));
     setUnifiedTitleAndToolBarOnMac(true);
+
+    //test
+    KAssessment a;
+    a.setName("Test assessment 1");
+    a.setAuthor("IP Susila");
+    KModelScene * sc = a.createScene();
+    sc->setSceneName("Case 01");
+    sc = a.createScene();
+    sc->setSceneName("Case 02");
+    asExplorer->addAssessment(a);
+
+    KAssessment a2;
+    a2.setName("Test assessment 2");
+    a2.setAuthor("IP Susila");
+    sc = a2.createScene();
+    sc->setSceneName("Case 11");
+    sc = a2.createScene();
+    sc->setSceneName("Case 12");
+    asExplorer->addAssessment(a2);
+
 }
 
 MainWindow::~MainWindow()
@@ -83,7 +81,7 @@ void MainWindow::closeEvent(QCloseEvent *event)
 /**
  * @brief MainWindow::createView
  */
-void MainWindow::createView()
+void MainWindow::createViews()
 {
     view = new XModelView(scene, this);
 
@@ -106,8 +104,23 @@ void MainWindow::createView()
     QDockWidget *dock = new QDockWidget(tr("Output window"), this);
     dock->setAllowedAreas(Qt::BottomDockWidgetArea);
     dock->setWidget(outView);
+    dock->setContentsMargins(2,2,2,2);
     addDockWidget(Qt::BottomDockWidgetArea, dock);
-    viewMenu->addAction(dock->toggleViewAction());
+    QAction * action = dock->toggleViewAction();
+    action->setText(tr("Show Output Window"));
+    viewMenu->addAction(action);
+
+    //Create dock widget to display the models
+    dock = new QDockWidget(tr("Assessment Explorer"), this);
+    dock->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
+    asExplorer = new UiAssessmentExplorer(dock);
+    dock->setContentsMargins(2,2,2,0);
+    dock->setWidget(asExplorer);
+    addDockWidget(Qt::LeftDockWidgetArea, dock);
+    action = dock->toggleViewAction();
+    action->setText(tr("Show Assessment Explorer"));
+    viewMenu->addAction(action);
+
 }
 
 void MainWindow::createActions()
@@ -443,7 +456,8 @@ void MainWindow::createMenus()
 void MainWindow::createPluginMenus()
 {
     //add top menus
-    bool hasSeparator = false;    
+    bool hasSeparator = false;
+    bool hasViewSeparator = false;
     FactoryList factories = KPluginManager::instance()->factories();
     foreach(IModelFactory * factory, factories) {
         //if is top level factory, add as new menu item (placed after model)
@@ -451,12 +465,20 @@ void MainWindow::createPluginMenus()
             QMenu * group = menuBar()->addMenu(factory->name());
 
             //Create dock widget to display the models
-            QDockWidget *dock = new QDockWidget(factory->name() + tr(" Tools"), this);
+            QDockWidget *dock = new QDockWidget(factory->name(), this);
             dock->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
             XModelWidget * mw = new XModelWidget(dock);
             dock->setWidget(mw);
             addDockWidget(Qt::RightDockWidgetArea, dock);
-            viewMenu->addAction(dock->toggleViewAction());
+
+            //adding separator in view menu
+            if (!hasViewSeparator) {
+                viewMenu->addSeparator();
+                hasViewSeparator = true;
+            }
+            QAction * action = dock->toggleViewAction();
+            action->setText(tr("Show ") + factory->name() + " Models");
+            viewMenu->addAction(action);
 
             //Populate menus and its submneu
             populatePluginMenus(mw, group, factory, factory->groups());

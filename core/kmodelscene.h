@@ -7,7 +7,7 @@
 #include "iserializable.h"
 
 class KModelScenePrivate;
-class K_CORE_EXPORT KModelScene : public QGraphicsScene, public ISerializable
+class RADENV_API KModelScene : public QGraphicsScene, public ISerializable
 {
 public:
     enum EditMode {
@@ -30,6 +30,10 @@ public:
     void stop();
 
     const CalculationList & calculationResults() const;
+    QString sceneName() const;
+    void setSceneName(const QString& name);
+    QString sceneDescription() const;
+    void setSceneDescription(const QString& desc);
 
     void setDisplayGrid(bool v);
     void setSnapToGrid(bool v);

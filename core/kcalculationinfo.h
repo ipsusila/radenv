@@ -4,7 +4,7 @@
 #include "radglobal.h"
 
 class KCalculationInfoPrivate;
-class K_CORE_EXPORT KCalculationInfo
+class RADENV_API KCalculationInfo
 {
 public:
     enum {
@@ -32,7 +32,7 @@ public:
     void setResult(const KDataArray & da);
 
 private:
-    QSharedDataPointer<KCalculationInfoPrivate> data;
+    QSharedDataPointer<KCalculationInfoPrivate> dptr;
 };
 
 #endif // KCALCULATIONINFO_H

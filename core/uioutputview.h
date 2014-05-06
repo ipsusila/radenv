@@ -4,7 +4,7 @@
 #include <QTextEdit>
 #include "koutput.h"
 
-class K_CORE_EXPORT UiOutputView : public QTextEdit, public KOutput
+class RADENV_API UiOutputView : public QTextEdit, public KOutput
 {
     Q_OBJECT
 public:

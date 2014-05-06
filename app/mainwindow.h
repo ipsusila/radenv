@@ -13,6 +13,7 @@ class XModelView;
 class IModelFactory;
 class XModelWidget;
 class UiOutputView;
+class UiAssessmentExplorer;
 class MainWindow : public QMainWindow
 {
     Q_OBJECT
@@ -48,7 +49,7 @@ protected:
 
 private:
 
-    void createView();
+    void createViews();
     void createActions();
     void createMenus();
     void createToolBars();
@@ -61,6 +62,7 @@ private:
 
     KPluginManager * plugMan;
     UiOutputView * outView;
+    UiAssessmentExplorer * asExplorer;
     KModelScene * scene;
     XModelView * view;
     QStackedWidget * pages;

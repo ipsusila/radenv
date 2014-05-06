@@ -11,7 +11,7 @@ namespace Ui {
 class DialogRadionuclide;
 }
 
-class K_CORE_EXPORT DialogRadionuclide : public QDialog
+class RADENV_API DialogRadionuclide : public QDialog
 {
     Q_OBJECT
     

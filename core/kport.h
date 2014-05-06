@@ -4,7 +4,7 @@
 #include <QGraphicsItem>
 #include "kdata.h"
 
-class K_CORE_EXPORT KPortList : public QList<KPort *>
+class RADENV_API KPortList : public QList<KPort *>
 {
 public:
     KData data(const Quantity& qty) const;
@@ -16,7 +16,7 @@ public:
 };
 
 class KPortPrivate;
-class K_CORE_EXPORT KPort : public QGraphicsItem
+class RADENV_API KPort : public QGraphicsItem
 {
 public:
     enum { Type = UserType + TYPE_PORT};

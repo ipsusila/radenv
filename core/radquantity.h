@@ -1,14 +1,14 @@
 #ifndef RADQUANTITY_H
 #define RADQUANTITY_H
 
-#include <QtCore/qglobal.h>
+#include <QtGlobal>
 #include <QDataStream>
 #include <QVariant>
 
-#if defined(KCORE_LIBRARY)
-#  define K_CORE_EXPORT Q_DECL_EXPORT
+#if defined(RADENV_BUILD_MODULE)
+#  define RADENV_API Q_DECL_EXPORT
 #else
-#  define K_CORE_EXPORT Q_DECL_IMPORT
+#  define RADENV_API Q_DECL_IMPORT
 #endif
 
 /**
@@ -148,8 +148,8 @@ inline QDataStream & operator>>(QDataStream &s, Quantity & item)
 }
 
 namespace Rad {
-    extern K_CORE_EXPORT const char LatinEndLine;
-    extern K_CORE_EXPORT const Quantity EmptyQuantity;
+    extern RADENV_API const char LatinEndLine;
+    extern RADENV_API const Quantity EmptyQuantity;
 }
 
 #endif // RADQUANTITY_H

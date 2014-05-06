@@ -3,7 +3,7 @@
 
 #include "radglobal.h"
 
-class K_CORE_EXPORT KHalfLife
+class RADENV_API KHalfLife
 {
 public:
     /// Type of unit for the half-life value.

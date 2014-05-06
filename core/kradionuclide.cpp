@@ -19,22 +19,22 @@ public:
     }
 };
 
-KRadionuclide::KRadionuclide() : data(new KRadionuclidePrivate)
+KRadionuclide::KRadionuclide() : dptr(new KRadionuclidePrivate)
 {
 }
 KRadionuclide::KRadionuclide(const QString& n, const KHalfLife& hl, int usg)
-    : data(new KRadionuclidePrivate(n, hl, usg))
+    : dptr(new KRadionuclidePrivate(n, hl, usg))
 {
 }
 
-KRadionuclide::KRadionuclide(const KRadionuclide &rhs) : data(rhs.data)
+KRadionuclide::KRadionuclide(const KRadionuclide &rhs) : dptr(rhs.dptr)
 {
 }
 
 KRadionuclide &KRadionuclide::operator=(const KRadionuclide &rhs)
 {
     if (this != &rhs)
-        data.operator=(rhs.data);
+        dptr.operator=(rhs.dptr);
     return *this;
 }
 
@@ -44,16 +44,16 @@ KRadionuclide::~KRadionuclide()
 
 bool KRadionuclide::operator !=(const KRadionuclide& other) const
 {
-    return data->nuclide != other.data->nuclide;
+    return dptr->nuclide != other.dptr->nuclide;
 }
 bool KRadionuclide::operator ==(const KRadionuclide& other) const
 {
-    return data->nuclide == other.data->nuclide;
+    return dptr->nuclide == other.dptr->nuclide;
 }
 
 bool KRadionuclide::isValid() const
 {
-    return data->element.isValid();
+    return dptr->element.isValid();
 }
 bool KRadionuclide::isVeryShortLived() const
 {
@@ -68,11 +68,11 @@ bool KRadionuclide::isNobleGas() const
 }
 bool KRadionuclide::isTritium() const
 {
-    return data->nuclide == "H-3";
+    return dptr->nuclide == "H-3";
 }
 bool KRadionuclide::isCarbon14() const
 {
-    return data->nuclide == "C-14";
+    return dptr->nuclide == "C-14";
 }
 bool KRadionuclide::isDepositedInGround() const
 {
@@ -81,31 +81,31 @@ bool KRadionuclide::isDepositedInGround() const
 
 const KElement& KRadionuclide::element() const
 {
-    return data->element;
+    return dptr->element;
 }
 QString KRadionuclide::nuclide() const
 {
-    return data->nuclide;
+    return dptr->nuclide;
 }
 KHalfLife KRadionuclide::halfLife() const
 {
-    return data->halfLife;
+    return dptr->halfLife;
 }
 int KRadionuclide::usage() const
 {
-    return data->usage;
+    return dptr->usage;
 }
 void KRadionuclide::use()
 {
-    data->usage += 1;
+    dptr->usage += 1;
 }
 int KRadionuclide::attributes() const
 {
-    return data->attribute;
+    return dptr->attribute;
 }
 void KRadionuclide::addAttribute(int attr)
 {
-    data->attribute |= attr;
+    dptr->attribute |= attr;
 }
 
 QString KRadionuclide::elementName(const QString &nuc)

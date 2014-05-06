@@ -5,7 +5,7 @@
 #include "kassessment.h"
 
 class UiAssessmentExplorerPrivate;
-class K_CORE_EXPORT UiAssessmentExplorer : public QTreeWidget
+class RADENV_API UiAssessmentExplorer : public QTreeWidget
 {
     Q_OBJECT
 public:
@@ -13,6 +13,7 @@ public:
     virtual ~UiAssessmentExplorer();
 
     void addAssessment(const KAssessment & a);
+    void addAssessments(const AssessmentList & aList);
     void removeAssessment(const KAssessment & a);
     KAssessment currentAssessment() const;
     KModelScene * currentScene() const;
@@ -21,7 +22,12 @@ public:
     
 signals:
     
-public slots:
+protected slots:
+    void setDecoration(QTreeWidgetItem * item);
+    void handleCurrentItem(QTreeWidgetItem * current, QTreeWidgetItem * previous);
+
+protected:
+    void addScene(QTreeWidgetItem * aItem, KModelScene * scene);
 
 private:
     Q_DISABLE_COPY(UiAssessmentExplorer)

@@ -5,7 +5,7 @@
 #include "iuserinput.h"
 #include "kdata.h"
 
-class K_CORE_EXPORT UiUserInput : public IUserInput
+class RADENV_API UiUserInput : public IUserInput
 {
     Q_OBJECT
 public:

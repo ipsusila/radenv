@@ -1,4 +1,4 @@
-#include <QDebug>
+#include <QtDebug>
 #include <QtSql>
 #include <QStringList>
 #include "kstorage.h"

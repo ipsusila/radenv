@@ -3,7 +3,7 @@
 
 #include "radglobal.h"
 
-class K_CORE_EXPORT KMath
+class RADENV_API KMath
 {
 public:
 

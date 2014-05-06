@@ -1,5 +1,5 @@
 #include <QMessageBox>
-#include <QDebug>
+#include <QtDebug>
 #include <QFileDialog>
 #include "dialoglocation.h"
 #include "ui_dialoglocation.h"

@@ -4,7 +4,7 @@
 #include "radglobal.h"
 
 class KPluginManagerPrivate;
-class K_CORE_EXPORT KPluginManager
+class RADENV_API KPluginManager
 {
 public:
     KPluginManager();
@@ -36,7 +36,7 @@ public:
     
 private:
     Q_DISABLE_COPY(KPluginManager)
-    QSharedDataPointer<KPluginManagerPrivate> data;
+    QSharedDataPointer<KPluginManagerPrivate> dptr;
 };
 
 #endif // KPLUGINMANAGER_H

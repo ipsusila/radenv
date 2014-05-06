@@ -1,12 +1,12 @@
 #ifndef SRS19_H
 #define SRS19_H
 
-#include <QtCore/qglobal.h>
+#include <QtGlobal>
 
-#if defined(SRS19_LIBRARY)
-#  define SRS19_SHARED_EXPORT Q_DECL_EXPORT
+#if defined(SRS19_BUILD_MODULE)
+#  define SRS19_API Q_DECL_EXPORT
 #else
-#  define SRS19_SHARED_EXPORT Q_DECL_IMPORT
+#  define SRS19_API Q_DECL_IMPORT
 #endif
 
 //TODO

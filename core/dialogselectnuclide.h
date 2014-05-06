@@ -8,7 +8,7 @@ namespace Ui {
 class DialogSelectNuclide;
 }
 
-class K_CORE_EXPORT DialogSelectNuclide : public QDialog
+class RADENV_API DialogSelectNuclide : public QDialog
 {
     Q_OBJECT
     

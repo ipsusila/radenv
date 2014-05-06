@@ -12,7 +12,7 @@ TEMPLATE = lib
 CONFIG += plugin
 win32:CONFIG(debug, debug|release): TARGET = $$join(TARGET,,,d)
 
-DEFINES += SRS19_LIBRARY
+DEFINES += SRS19_BUILD_MODULE
 
 SOURCES += \
     srs19factory.cpp \

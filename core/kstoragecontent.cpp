@@ -15,21 +15,21 @@ public:
     }
 };
 
-KStorageContent::KStorageContent() : data(new KStorageContentPrivate)
+KStorageContent::KStorageContent() : dptr(new KStorageContentPrivate)
 {
 }
-KStorageContent::KStorageContent(const QDateTime &c) : data(new KStorageContentPrivate(c))
+KStorageContent::KStorageContent(const QDateTime &c) : dptr(new KStorageContentPrivate(c))
 {
 }
 
-KStorageContent::KStorageContent(const KStorageContent &rhs) : QByteArray(rhs), data(rhs.data)
+KStorageContent::KStorageContent(const KStorageContent &rhs) : QByteArray(rhs), dptr(rhs.dptr)
 {
 }
 
 KStorageContent &KStorageContent::operator=(const KStorageContent &rhs)
 {
     if (this != &rhs) {
-        data.operator=(rhs.data);
+        dptr.operator=(rhs.dptr);
         QByteArray::operator=(rhs);
     }
     return *this;
@@ -40,35 +40,35 @@ KStorageContent::~KStorageContent()
 }
 QString KStorageContent::name() const
 {
-    return data->name;
+    return dptr->name;
 }
 void KStorageContent::setName(const QString& nm)
 {
-    data->name = nm;
+    dptr->name = nm;
 }
 QString KStorageContent::factoryName() const
 {
-    return data->factory == 0 ? RAD_NULL_FACTORY : data->factory->name();
+    return dptr->factory == 0 ? RAD_NULL_FACTORY : dptr->factory->name();
 }
 const IModelFactory * KStorageContent::factory() const
 {
-    return data->factory;
+    return dptr->factory;
 }
 void KStorageContent::setFactory(const IModelFactory *f)
 {
-    data->factory = f;
+    dptr->factory = f;
 }
 
 QString KStorageContent::description() const
 {
-    return data->description;
+    return dptr->description;
 }
 void KStorageContent::setDescription(const QString& desc)
 {
-    data->description = desc;
+    dptr->description = desc;
 }
 
 QDateTime KStorageContent::created() const
 {
-    return data->created;
+    return dptr->created;
 }

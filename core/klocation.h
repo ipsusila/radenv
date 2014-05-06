@@ -5,10 +5,10 @@
 #include "iserializable.h"
 
 class KLocationPrivate;
-class K_CORE_EXPORT KLocation : public ISerializable
+class RADENV_API KLocation : public ISerializable
 {
 private:
-    QExplicitlySharedDataPointer<KLocationPrivate> data;
+    QExplicitlySharedDataPointer<KLocationPrivate> dptr;
 public:
     static const char * Delimiter;
 

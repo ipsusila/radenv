@@ -2,7 +2,7 @@
 #include <QPluginLoader>
 #include <QDir>
 #include <QCoreApplication>
-#include <QDebug>
+#include <QtDebug>
 #include "kpluginmanager.h"
 #include "imodelfactory.h"
 #include "koutput.h"
@@ -197,20 +197,20 @@ KPluginManager * KPluginManager::instance()
     return pMan;
 }
 
-KPluginManager::KPluginManager() : data(new KPluginManagerPrivate(this))
+KPluginManager::KPluginManager() : dptr(new KPluginManagerPrivate(this))
 {
     //allocate manager elsewhere
     pMan = this;
 }
 
-KPluginManager::KPluginManager(const KPluginManager &rhs) : data(rhs.data)
+KPluginManager::KPluginManager(const KPluginManager &rhs) : dptr(rhs.dptr)
 {
 }
 
 KPluginManager &KPluginManager::operator=(const KPluginManager &rhs)
 {
     if (this != &rhs)
-        data.operator=(rhs.data);
+        dptr.operator=(rhs.dptr);
     return *this;
 }
 
@@ -220,24 +220,24 @@ KPluginManager::~KPluginManager()
 
 bool KPluginManager::isValid() const
 {
-    return data->isValid();
+    return dptr->isValid();
 }
 
 int KPluginManager::factoryCount() const
 {
-    return data->factoryCount();
+    return dptr->factoryCount();
 }
 FactoryList KPluginManager::factories() const
 {
-    return data->factories();
+    return dptr->factories();
 }
 IModelFactory * KPluginManager::factory(const Quantity * qty) const
 {
-    return data->factory(qty);
+    return dptr->factory(qty);
 }
 IModelFactory * KPluginManager::factory(const QString & name) const
 {
-    return data->factory(name);
+    return dptr->factory(name);
 }
 IModel * KPluginManager::createModel(IModelFactory * fact, const KModelInfo & mi) const
 {
@@ -252,7 +252,7 @@ IModel * KPluginManager::createModel(IModelFactory * fact, const KModelInfo & mi
 }
 IModel * KPluginManager::createModel(const QString &factName, int infoId) const
 {
-    IModelFactory * fact = data->factory(factName);
+    IModelFactory * fact = dptr->factory(factName);
     if (fact == 0)
         return 0;
     KModelInfo mi = fact->modelInfo(infoId);
@@ -278,30 +278,30 @@ IModel * KPluginManager::createModel(QDataStream &stream) const
 }
 void KPluginManager::setStorage(const QString& name)
 {
-    data->setStorage(name);
+    dptr->setStorage(name);
 }
 
 KStorage * KPluginManager::storage() const
 {
-    return data->storage();
+    return dptr->storage();
 }
 
 const Quantity * KPluginManager::findQuantity(IModelFactory * fact, unsigned int qid) const
 {
-    return data->findQuantity(fact == 0 ? RAD_NULL_FACTORY : fact->name(), qid);
+    return dptr->findQuantity(fact == 0 ? RAD_NULL_FACTORY : fact->name(), qid);
 }
 const Quantity * KPluginManager::findQuantity(const QString &factoryName, unsigned int qid) const
 {
-    return data->findQuantity(factoryName, qid);
+    return dptr->findQuantity(factoryName, qid);
 }
 
 int KPluginManager::loadPlugins(const QString& path)
 {
-    return data->loadPlugins(this, path);
+    return dptr->loadPlugins(this, path);
 }
 bool KPluginManager::unloadPlugins()
 {
-    return data->unloadPlugins();
+    return dptr->unloadPlugins();
 }
 
 void KPluginManager::serialize(QDataStream & stream, const Quantity * qty) const
@@ -310,7 +310,7 @@ void KPluginManager::serialize(QDataStream & stream, const Quantity * qty) const
         stream << INV_QTY_ID;
     }
     else {
-        IModelFactory * fact = data->factory(qty);
+        IModelFactory * fact = dptr->factory(qty);
         if (fact != 0)
             stream << qty->id << fact->name();
         else
@@ -328,5 +328,5 @@ const Quantity * KPluginManager::deserialize(QDataStream & stream) const
     QString factName;
     stream >> factName;
 
-    return data->findQuantity(factName, id);
+    return dptr->findQuantity(factName, id);
 }

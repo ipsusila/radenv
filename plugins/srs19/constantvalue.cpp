@@ -1,4 +1,4 @@
-#include <QDebug>
+#include <QtDebug>
 #include "constantvalue.h"
 #include "kport.h"
 #include "koutput.h"

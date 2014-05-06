@@ -66,23 +66,23 @@ public:
 };
 
 KQuantityControl::KQuantityControl()
-    : data(new KQuantityControlPrivate(&Rad::EmptyQuantity, false))
+    : dptr(new KQuantityControlPrivate(&Rad::EmptyQuantity, false))
 {
 }
 
 KQuantityControl::KQuantityControl(const Quantity * ctrl, bool enableOnSet)
-    : data(new KQuantityControlPrivate(ctrl, enableOnSet))
+    : dptr(new KQuantityControlPrivate(ctrl, enableOnSet))
 {
 }
 
-KQuantityControl::KQuantityControl(const KQuantityControl &rhs) : data(rhs.data)
+KQuantityControl::KQuantityControl(const KQuantityControl &rhs) : dptr(rhs.dptr)
 {
 }
 
 KQuantityControl &KQuantityControl::operator=(const KQuantityControl &rhs)
 {
     if (this != &rhs)
-        data.operator=(rhs.data);
+        dptr.operator=(rhs.dptr);
     return *this;
 }
 
@@ -92,50 +92,50 @@ KQuantityControl::~KQuantityControl()
 
 bool KQuantityControl::isEnabledOnSet() const
 {
-    return data->_enableOnSet;
+    return dptr->_enableOnSet;
 }
 const Quantity * KQuantityControl::controller() const
 {
-    return data->_controller;
+    return dptr->_controller;
 }
 const ConstQuantityList & KQuantityControl::controlledQuantities() const
 {
-    return data->_controlledQuantities;
+    return dptr->_controlledQuantities;
 }
 
 void KQuantityControl::append(const Quantity * qty)
 {
-    data->append(qty);
+    dptr->append(qty);
 }
 void KQuantityControl::append(const DataGroup & group)
 {
-    data->append(group);
+    dptr->append(group);
 }
 
 void KQuantityControl::remove(const Quantity * qty)
 {
-    data->remove(qty);
+    dptr->remove(qty);
 }
 
 KQuantityControl & KQuantityControl::operator<<(const Quantity * qty)
 {
-    data->append(qty);
+    dptr->append(qty);
     return *this;
 }
 KQuantityControl & KQuantityControl::operator<<(const DataGroup& group)
 {
-    data->append(group);
+    dptr->append(group);
     return *this;
 }
 
 QDataStream & KQuantityControl::serialize(QDataStream &s) const
 {
     qDebug() << Q_FUNC_INFO << ", stream pos: " << s.device()->pos();
-    return data->serialize(s);
+    return dptr->serialize(s);
 }
 
 QDataStream & KQuantityControl::deserialize(QDataStream &s)
 {
     qDebug() << Q_FUNC_INFO << ", stream pos: " << s.device()->pos();
-    return data->deserialize(s);
+    return dptr->deserialize(s);
 }

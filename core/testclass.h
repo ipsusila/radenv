@@ -4,7 +4,7 @@
 #include "radglobal.h"
 
 class TestClassData;
-class K_CORE_EXPORT TestClass
+class RADENV_API TestClass
 {
 public:
     TestClass();

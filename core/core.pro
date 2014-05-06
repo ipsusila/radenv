@@ -4,7 +4,7 @@
 #
 #-------------------------------------------------
 
-QT += xml core gui sql
+QT += core gui sql
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
 TARGET = radenvcore
@@ -12,7 +12,7 @@ win32:CONFIG(debug, debug|release): TARGET = $$join(TARGET,,,d)
 
 TEMPLATE = lib
 
-DEFINES += KCORE_LIBRARY
+DEFINES += RADENV_BUILD_MODULE
 DESTDIR = $$OUT_PWD/../radenv
 
 SOURCES += \
@@ -130,3 +130,6 @@ FORMS += \
     dialogradionuclide.ui \
     dialogselectnuclide.ui \
     dialogcalculation.ui
+
+RESOURCES += \
+    core.qrc

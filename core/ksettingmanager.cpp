@@ -67,18 +67,18 @@ public:
 };
 
 KSettingManager::KSettingManager(IModelFactory * factory)
-    : data(new KSettingManagerPrivate(factory))
+    : dptr(new KSettingManagerPrivate(factory))
 {
 }
 
-KSettingManager::KSettingManager(const KSettingManager &rhs) : data(rhs.data)
+KSettingManager::KSettingManager(const KSettingManager &rhs) : dptr(rhs.dptr)
 {
 }
 
 KSettingManager &KSettingManager::operator=(const KSettingManager &rhs)
 {
     if (this != &rhs)
-        data.operator=(rhs.data);
+        dptr.operator=(rhs.dptr);
     return *this;
 }
 
@@ -88,13 +88,13 @@ KSettingManager::~KSettingManager()
 
 bool KSettingManager::save()
 {
-    data->save();
+    dptr->save();
     return doSave();
 }
 
 bool KSettingManager::load()
 {
-    data->load();
+    dptr->load();
     return doLoad();
 }
 bool KSettingManager::doSave()
@@ -108,10 +108,10 @@ bool KSettingManager::doLoad()
 }
 void KSettingManager::saveGeometry(IModel * model, const QRect& rect)
 {
-    data->saveGeometry(model, rect);
+    dptr->saveGeometry(model, rect);
 }
 
 QRect KSettingManager::geometry(IModel * model) const
 {
-    return data->geometry(model);
+    return dptr->geometry(model);
 }

@@ -1,7 +1,7 @@
 #include <QSharedData>
 #include <QtCore/qmath.h>
 #include <QStringList>
-#include <QDebug>
+#include <QtDebug>
 #include "klocation.h"
 #include "kcalculationinfo.h"
 #include "kstorage.h"
@@ -90,16 +90,16 @@ public:
 };
 
 const char * KLocation::Delimiter = ";";    //default delimiter
-KLocation::KLocation(const QString& c) : data(new KLocationPrivate(c))
+KLocation::KLocation(const QString& c) : dptr(new KLocationPrivate(c))
 {
 }
-KLocation::KLocation(const KLocation &rhs) : data(rhs.data)
+KLocation::KLocation(const KLocation &rhs) : dptr(rhs.dptr)
 {
 }
 KLocation & KLocation::operator=(const KLocation &rhs)
 {
     if (this != &rhs)
-        data.operator=(rhs.data);
+        dptr.operator=(rhs.dptr);
     return *this;
 }
 
@@ -110,86 +110,86 @@ KLocation::~KLocation()
 
 bool KLocation::operator==(const KLocation &other) const
 {
-    return data->code() == other.data->code();
+    return dptr->code() == other.dptr->code();
 }
 bool KLocation::operator!=(const KLocation &other) const
 {
-    return data->code() != other.data->code();
+    return dptr->code() != other.dptr->code();
 }
 
 bool KLocation::isValid() const
 {
-    return !data->code().isEmpty() && !data->name().isEmpty();
+    return !dptr->code().isEmpty() && !dptr->name().isEmpty();
 }
 
 void KLocation::setLatitude(qreal lat)
 {
-    data->setLatitude(lat);
+    dptr->setLatitude(lat);
 }
 
 qreal KLocation::latitude() const
 {
-    return data->latitude();
+    return dptr->latitude();
 }
 
 void KLocation::setLongitude(qreal lo)
 {
-    data->setLongitude(lo);
+    dptr->setLongitude(lo);
 }
 
 qreal KLocation::longitude() const
 {
-    return data->longitude();
+    return dptr->longitude();
 }
 
 void KLocation::setAngle(qreal theta)
 {
-    data->setAngle(theta);
+    dptr->setAngle(theta);
 }
 
 qreal KLocation::angle() const
 {
-    return data->angle();
+    return dptr->angle();
 }
 
 void KLocation::setName(const QString& n)
 {
-    data->setName(n);
+    dptr->setName(n);
 }
 
 QString KLocation::name() const
 {
-    return data->name();
+    return dptr->name();
 }
 
 QString KLocation::code() const
 {
-    return data->code();
+    return dptr->code();
 }
 
 void KLocation::setDescription(const QString& d)
 {
-    data->setDescription(d);
+    dptr->setDescription(d);
 }
 
 QString KLocation::description() const
 {
-    return data->description();
+    return dptr->description();
 }
 
 void KLocation::setDistance(const QString& strDistance, const QString& sep)
 {
-    data->setDistance(strDistance, sep);
+    dptr->setDistance(strDistance, sep);
 }
 
 void KLocation::addDistance(const qreal & d)
 {
-    data->addDistance(d);
+    dptr->addDistance(d);
 }
 
 QString KLocation::distances(const QString& sep) const
 {
-    const QList<qreal> & dList = data->distances();
+    const QList<qreal> & dList = dptr->distances();
     QList<qreal>::const_iterator iter = dList.constBegin();
     QList<qreal>::const_iterator end = dList.constEnd();
 
@@ -214,36 +214,36 @@ QString KLocation::distances(const QString& sep) const
 
 QList<qreal> KLocation::distances() const
 {
-    return data->distances();
+    return dptr->distances();
 }
 
 qreal KLocation::distance() const
 {
-    return data->distance();
+    return dptr->distance();
 }
 qreal KLocation::distance(const KCalculationInfo& ci) const
 {
-    return data->distance(ci);
+    return dptr->distance(ci);
 }
 
 void KLocation::setMarker(const QString& path)
 {
-    data->setMarker(path);
+    dptr->setMarker(path);
 }
 
 void KLocation::setMarker(const QImage &img)
 {
-    data->setMarker(img);
+    dptr->setMarker(img);
 }
 QImage KLocation::marker() const
 {
-    return data->marker();
+    return dptr->marker();
 }
 
 KLocation KLocation::clone() const
 {
     KLocation loc = *this;
-    loc.data.detach();
+    loc.dptr.detach();
 
     return loc;
 }
@@ -273,7 +273,7 @@ QString KLocation::displayText() const
 QString KLocation::detailDisplayText() const
 {
     QString txt = displayText();
-    QString desc = data->description();
+    QString desc = dptr->description();
     if (!desc.isEmpty())
         txt += "\n" + desc;
 

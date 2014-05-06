@@ -1,4 +1,4 @@
-#include <QDebug>
+#include <QtDebug>
 #include "dialogcalculation.h"
 #include "ui_dialogcalculation.h"
 

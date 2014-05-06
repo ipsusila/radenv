@@ -258,18 +258,18 @@ public:
 };
 
 KElement::KElement(const QString& e, const QString& n)
-    : data(new KElementPrivate(e,n))
+    : dptr(new KElementPrivate(e,n))
 {
 }
 
-KElement::KElement(const KElement &rhs) : data(rhs.data)
+KElement::KElement(const KElement &rhs) : dptr(rhs.dptr)
 {
 }
 
 KElement &KElement::operator=(const KElement &rhs)
 {
     if (this != &rhs)
-        data.operator=(rhs.data);
+        dptr.operator=(rhs.dptr);
     return *this;
 }
 
@@ -279,25 +279,25 @@ KElement::~KElement()
 
 bool KElement::isValid() const
 {
-    return !data->name.isEmpty();
+    return !dptr->name.isEmpty();
 }
 
 QString KElement::symbol() const
 {
-    return data->symbol;
+    return dptr->symbol;
 }
 QString KElement::name() const
 {
-    return data->name;
+    return dptr->name;
 }
 
 bool KElement::operator==(const KElement &other) const
 {
-    return (data->symbol == other.data->symbol);
+    return (dptr->symbol == other.dptr->symbol);
 }
 bool KElement::operator!=(const KElement &other) const
 {
-    return (data->symbol != other.data->symbol);
+    return (dptr->symbol != other.dptr->symbol);
 }
 
 KElement ** KElement::elements()

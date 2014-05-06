@@ -8,7 +8,7 @@ class KElementPrivate;
 /**
  * @brief Class for representing chemical element and its name.
  */
-class K_CORE_EXPORT KElement
+class RADENV_API KElement
 {
 private:
     KElement(const QString& e, const QString& n);
@@ -158,7 +158,7 @@ public:
     static KElement Zr;
 
 private:
-    QSharedDataPointer<KElementPrivate> data;
+    QSharedDataPointer<KElementPrivate> dptr;
 };
 
 #endif // KELEMENT_H

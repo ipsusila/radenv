@@ -135,37 +135,37 @@ private:
 public:
     explicit DefaultValueTable(IModelFactory * factory, const T * defValues, int defValuesCnt,
                           const QString &name, const QString &desc, bool isElement)
-        : data(new DefaultValuePrivate(factory, defValues, defValuesCnt, name, desc, isElement))
+        : dptr(new DefaultValuePrivate(factory, defValues, defValuesCnt, name, desc, isElement))
     {
     }
 
-    DefaultValueTable(const DefaultValueTable &rhs) : data(rhs.data)
+    DefaultValueTable(const DefaultValueTable &rhs) : dptr(rhs.dptr)
     {
     }
 
     DefaultValueTable &operator=(const DefaultValueTable &rhs)
     {
         if (this != &rhs)
-            data.operator=(rhs.data);
+            dptr.operator=(rhs.dptr);
         return *this;
     }
 
     ~DefaultValueTable() {}
 
     inline bool save() {
-        return data->save();
+        return dptr->save();
     }
 
     inline bool saveDefault() {
-        data->createDefault();
-        return data->save();
+        dptr->createDefault();
+        return dptr->save();
     }
 
     inline bool load(bool createOnEmpty = false) {
-        bool res = data->load();
+        bool res = dptr->load();
         if (!res && createOnEmpty) {
-            data->createDefault();
-            res = data->save();
+            dptr->createDefault();
+            res = dptr->save();
         }
 
         return res;
@@ -173,15 +173,15 @@ public:
 
     inline qreal value(const QString& key, int idx) const
     {
-        return data->coeff(key, idx);
+        return dptr->coeff(key, idx);
     }
     inline T value(const QString& key) const
     {
-        return data->coeff(key);
+        return dptr->coeff(key);
     }
 
 private:
-    QSharedDataPointer<DefaultValuePrivate> data;
+    QSharedDataPointer<DefaultValuePrivate> dptr;
 };
 
 #endif // DEFAULTVALUETABLE_H

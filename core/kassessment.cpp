@@ -7,7 +7,7 @@
 
 #include <QSharedData>
 #include <QRectF>
-#include <QDebug>
+#include <QtDebug>
 #include "kassessment.h"
 #include "kmodelscene.h"
 
@@ -28,7 +28,7 @@ public:
     KCasePrivate() : created(QDateTime::currentDateTime()) {}
     ~KCasePrivate()
     {
-        qDebug() << "Removing assessment private";
+        qDebug() << "Removing assessment private : " << name;
         this->clear();
     }
 
@@ -62,7 +62,7 @@ public:
         docname.clear();
         document.clear();
 
-        qDebug() << "Delete all scenes";
+        qDebug() << "Delete all scenes:" << scenes.size();
         while (!scenes.isEmpty()) {
             KModelScene * scene = scenes.takeFirst();
             delete scene;
@@ -120,20 +120,20 @@ public:
     }
 };
 
-KAssessment::KAssessment(const QDateTime & c) : data(new KCasePrivate)
+KAssessment::KAssessment(const QDateTime & c) : dptr(new KCasePrivate)
 {
     if (c.isValid())
-        data->created = c;
+        dptr->created = c;
 }
 
-KAssessment::KAssessment(const KAssessment &rhs) : data(rhs.data)
+KAssessment::KAssessment(const KAssessment &rhs) : dptr(rhs.dptr)
 {
 }
 
 KAssessment &KAssessment::operator=(const KAssessment &rhs)
 {
     if (this != &rhs) {
-        data.operator=(rhs.data);
+        dptr.operator=(rhs.dptr);
     }
     return *this;
 }
@@ -144,114 +144,114 @@ KAssessment::~KAssessment()
 
 bool KAssessment::operator==(const KAssessment &other) const
 {
-    return data->name == other.data->name;
+    return dptr->name == other.dptr->name;
 }
 bool KAssessment::operator!=(const KAssessment &other) const
 {
-    return data->name != other.data->name;
+    return dptr->name != other.dptr->name;
 }
 
 bool KAssessment::isValid() const
 {
-    return data->isValid();
+    return dptr->isValid();
 }
 QDateTime KAssessment::created() const
 {
-    return data->created;
+    return dptr->created;
 }
 QString KAssessment::name() const
 {
-    return data->name;
+    return dptr->name;
 }
 void KAssessment::setName(const QString &name)
 {
-    data->name = name;
+    dptr->name = name;
 }
 
 QString KAssessment::author() const
 {
-    return data->author;
+    return dptr->author;
 }
 void KAssessment::setAuthor(const QString &author)
 {
-    data->author = author;
+    dptr->author = author;
 }
 
 QString KAssessment::description() const
 {
-    return data->description;
+    return dptr->description;
 }
 void KAssessment::setDescription(const QString &desc)
 {
-    data->description = desc;
+    dptr->description = desc;
 }
 
 QString KAssessment::remark() const
 {
-    return data->remark;
+    return dptr->remark;
 }
 void KAssessment::setRemark(const QString &remark)
 {
-    data->remark = remark;
+    dptr->remark = remark;
 }
 
 QString KAssessment::docname() const
 {
-    return data->docname;
+    return dptr->docname;
 }
 void KAssessment::setDocname(const QString& docname)
 {
-    data->docname = docname;
+    dptr->docname = docname;
 }
 
 QByteArray KAssessment::document() const
 {
-    return data->document;
+    return dptr->document;
 }
 void KAssessment::setDocument(const QByteArray &doc)
 {
-    data->document = doc;
+    dptr->document = doc;
 }
 
 void KAssessment::deserialize(const QByteArray & cont)
 {
-    data->deserialize(cont);
+    dptr->deserialize(cont);
 }
 
 KModelScene * KAssessment::createScene(const QRectF &rect)
 {
-    return data->createScene(rect);
+    return dptr->createScene(rect);
 }
 SceneList KAssessment::scenes() const
 {
-    return data->scenes;
+    return dptr->scenes;
 }
 bool KAssessment::contains(KModelScene * scene) const
 {
-    return data->scenes.contains(scene);
+    return dptr->scenes.contains(scene);
 }
 void KAssessment::remove(KModelScene * scene)
 {
-    data->remove(scene);
+    dptr->remove(scene);
 }
 
 void KAssessment::clear()
 {
-    data->clear();
+    dptr->clear();
 }
 
 void KAssessment::serialize(QByteArray &ba) const
 {
-    data->serialize(ba);
+    dptr->serialize(ba);
 }
 
 QDataStream & KAssessment::serialize(QDataStream & stream) const
 {
     qDebug() << Q_FUNC_INFO << ", stream pos: " << stream.device()->pos();
-    return data->serialize(stream);
+    return dptr->serialize(stream);
 }
 QDataStream & KAssessment::deserialize(QDataStream & stream)
 {
     qDebug() << Q_FUNC_INFO << ", stream pos: " << stream.device()->pos();
-    return data->deserialize(stream);
+    return dptr->deserialize(stream);
 }

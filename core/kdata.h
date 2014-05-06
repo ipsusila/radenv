@@ -6,10 +6,10 @@
 #include "kquantitycontrol.h"
 
 class KDataPrivate;
-class K_CORE_EXPORT KData : public ISerializable
+class RADENV_API KData : public ISerializable
 {
 private:
-    QSharedDataPointer<KDataPrivate> data;
+    QSharedDataPointer<KDataPrivate> dptr;
 public:
     enum ContentType {
         Undefined = 0x00,
@@ -86,7 +86,7 @@ public:
 Q_DECLARE_OPERATORS_FOR_FLAGS(KData::ContentTypes)
 K_DECLARE_SERIALIZABLE(KData)
 
-class K_CORE_EXPORT KDataItem : public ISerializable
+class RADENV_API KDataItem : public ISerializable
 {
 public:
     KDataItem();
@@ -116,7 +116,7 @@ private:
 };
 K_DECLARE_SERIALIZABLE(KDataItem)
 
-class K_CORE_EXPORT KDataArray : public DataList, public ISerializable
+class RADENV_API KDataArray : public DataList, public ISerializable
 {
 public:
     KDataArray();
@@ -147,7 +147,7 @@ private:
 };
 K_DECLARE_SERIALIZABLE(KDataArray)
 
-class K_CORE_EXPORT KDataGroupArray : public QVector<DataGroup>, public ISerializable
+class RADENV_API KDataGroupArray : public QVector<DataGroup>, public ISerializable
 {
 public:
     KDataGroupArray();
@@ -178,7 +178,7 @@ private:
 K_DECLARE_SERIALIZABLE(KDataGroupArray)
 
 class KDataTablePrivate;
-class K_CORE_EXPORT KDataTable
+class RADENV_API KDataTable
 {
 public:
     KDataTable();
@@ -205,12 +205,12 @@ public:
     void replace(int row, int col, const QVariant& v);
 
 private:
-    QSharedDataPointer<KDataTablePrivate> data;
+    QSharedDataPointer<KDataTablePrivate> dptr;
 };
 
-extern K_CORE_EXPORT QTextStream & operator<<(QTextStream & s, const KData & d);
-extern K_CORE_EXPORT QTextStream & operator<<(QTextStream & s, const KDataArray & da);
-extern K_CORE_EXPORT QTextStream & operator<<(QTextStream & s, const KDataTable & table);
+extern RADENV_API QTextStream & operator<<(QTextStream & s, const KData & d);
+extern RADENV_API QTextStream & operator<<(QTextStream & s, const KDataArray & da);
+extern RADENV_API QTextStream & operator<<(QTextStream & s, const KDataTable & table);
 
 //TODO
 //more effective way to calculate hash

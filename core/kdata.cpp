@@ -1,7 +1,7 @@
 #include <QSharedData>
 #include <QVector>
 #include <QStringList>
-#include <QDebug>
+#include <QtDebug>
 #include "kdata.h"
 #include "kgroup.h"
 #include "koutput.h"
@@ -292,54 +292,54 @@ QDataStream & KDataItem::deserialize(QDataStream &stream)
 
 /***********************************************************************************/
 KData::KData()
-    : data(new KDataPrivate())
+    : dptr(new KDataPrivate())
 {
 }
 
 KData::KData(const Quantity *qty)
-    : data(new KDataPrivate(qty, qty->defaultValue))
+    : dptr(new KDataPrivate(qty, qty->defaultValue))
 {
 }
 
 KData::KData(const Quantity * qty, const QVariant& v)
-    : data(new KDataPrivate(qty, v))
+    : dptr(new KDataPrivate(qty, v))
 {
 }
 KData::KData(const Quantity * qty, ContentTypes  types, const QVariant & v)
-    : data(new KDataPrivate(qty, types, v))
+    : dptr(new KDataPrivate(qty, types, v))
 {
 
 }
 
 KData::KData(const Quantity * qty, const QString& nm, const QVariant& v, ContentTypes t)
-    : data(new KDataPrivate(qty, nm, v, t))
+    : dptr(new KDataPrivate(qty, nm, v, t))
 {
 }
 
 KData::KData(const Quantity * qty, const DataItemArray & items)
-    : data(new KDataPrivate(qty, items))
+    : dptr(new KDataPrivate(qty, items))
 {
 }
 KData::KData(const Quantity * qty, const QMap<QString, qreal> & items, ContentTypes f)
-    : data(new KDataPrivate(qty, items, f))
+    : dptr(new KDataPrivate(qty, items, f))
 {
 }
 
-KData::KData(const KData& rhs) : data(rhs.data)
+KData::KData(const KData& rhs) : dptr(rhs.dptr)
 {
 }
-KData::KData(const Quantity * qty, const KData& other) : data(other.data)
+KData::KData(const Quantity * qty, const KData& other) : dptr(other.dptr)
 {
     if (this != &other) {
-        data.operator=(other.data);
-        data->_quantity = qty;
+        dptr.operator=(other.dptr);
+        dptr->_quantity = qty;
     }
 }
 
 KData & KData::operator=(const KData& rhs)
 {
     if (this != &rhs)
-        data.operator=(rhs.data);
+        dptr.operator=(rhs.dptr);
     return *this;
 }
 KData::~KData()
@@ -348,78 +348,78 @@ KData::~KData()
 
 const Quantity & KData::quantity() const
 {
-    return *(data->_quantity);
+    return *(dptr->_quantity);
 }
 const Quantity * KData::quantityPtr() const
 {
-    return data->_quantity;
+    return dptr->_quantity;
 }
 KData::ContentTypes KData::contentTypes() const
 {
-    return data->_types;
+    return dptr->_types;
 }
 bool KData::contains(ContentType type) const
 {
-    return data->_types.testFlag(type);
+    return dptr->_types.testFlag(type);
 }
 
 int KData::count() const
 {
-    return data->_items.size();
+    return dptr->_items.size();
 }
 void KData::resize(int cnt)
 {
-    data->_items.resize(cnt);
+    dptr->_items.resize(cnt);
 }
 
 bool KData::isValid() const
 {
     //return !data->_items.isEmpty();
-    return data->_types != KData::Undefined;
+    return dptr->_types != KData::Undefined;
 }
 bool KData::isEmpty() const
 {
-    return data->_items.isEmpty();
+    return dptr->_items.isEmpty();
 }
 void KData::append(const QString& nm, const QVariant& v, ContentTypes t)
 {
-    data->append(nm, v, t);
+    dptr->append(nm, v, t);
 }
 void KData::remove(const QString &nm)
 {
-    data->remove(nm);
+    dptr->remove(nm);
 }
 
 QVariant KData::value(int idx) const
 {
-    return data->value(idx);
+    return dptr->value(idx);
 }
 void KData::setValue(const QVariant &v)
 {
-    data->setValue(0, v);
+    dptr->setValue(0, v);
 }
 void KData::setValue(int idx, const QVariant& v)
 {
-    data->setValue(idx, v);
+    dptr->setValue(idx, v);
 }
 qreal KData::numericValue(int idx) const
 {
-    return data->value(idx).toDouble();
+    return dptr->value(idx).toDouble();
 }
 qreal KData::numericValue(const QString& name, qreal defValue) const
 {
-    return data->numericValue(name, defValue);
+    return dptr->numericValue(name, defValue);
 }
 
 const KDataItem & KData::at(const QString& name) const
 {
-    return data->itemAt(name);
+    return dptr->itemAt(name);
 }
 
 const KDataItem & KData::at(int idx) const
 {
     Q_ASSERT(!isEmpty());
-    return data->_items.at(idx);
+    return dptr->_items.at(idx);
 }
 KData KData::operator*(qreal c) const
 {
@@ -439,18 +439,18 @@ KData KData::operator/(qreal c) const
 
 KData & KData::operator*=(qreal c)
 {
-    int sz = data->_items.size();
+    int sz = dptr->_items.size();
     for (int k = 0; k < sz; k++) {
-        data->_items[k] *= c;
+        dptr->_items[k] *= c;
     }
     return *this;
 }
 
 KData & KData::operator/=(qreal c)
 {
-    int sz = data->_items.size();
+    int sz = dptr->_items.size();
     for (int k = 0; k < sz; k++) {
-        data->_items[k] /= c;
+        dptr->_items[k] /= c;
     }
     return *this;
 }
@@ -465,17 +465,17 @@ bool KData::operator!=(const KData& o) const
 
 QString KData::displayText() const
 {
-    return data->displayText();
+    return dptr->displayText();
 }
 QDataStream & KData::serialize(QDataStream &stream) const
 {
     qDebug() << Q_FUNC_INFO << ", stream pos: " << stream.device()->pos();
-    return data->serialize(stream);
+    return dptr->serialize(stream);
 }
 QDataStream & KData::deserialize(QDataStream &stream)
 {
     qDebug() << Q_FUNC_INFO << ", stream pos: " << stream.device()->pos();
-    return data->deserialize(stream);
+    return dptr->deserialize(stream);
 }
 
 /***********************************************************************************/
@@ -1036,18 +1036,18 @@ public:
     }
 };
 
-KDataTable::KDataTable() : data(new KDataTablePrivate())
+KDataTable::KDataTable() : dptr(new KDataTablePrivate())
 {
 }
 
-KDataTable::KDataTable(const KDataTable& rhs) : data(rhs.data)
+KDataTable::KDataTable(const KDataTable& rhs) : dptr(rhs.dptr)
 {
 }
 
 KDataTable & KDataTable::operator=(const KDataTable& rhs)
 {
     if (this != &rhs)
-        data.operator=(rhs.data);
+        dptr.operator=(rhs.dptr);
     return *this;
 }
 
@@ -1057,67 +1057,67 @@ KDataTable::~KDataTable()
 
 void KDataTable::clear()
 {
-    data->clear();
+    dptr->clear();
 }
 
 void KDataTable::append(const KData& d)
 {
-    data->append(d);
+    dptr->append(d);
 }
 void KDataTable::transpose()
 {
-    data->transpose();
+    dptr->transpose();
 }
 
 bool KDataTable::isTransposed() const
 {
-    return data->isTransposed();
+    return dptr->isTransposed();
 }
 
 bool KDataTable::isEmpty() const
 {
-    return data->isEmpty();
+    return dptr->isEmpty();
 }
 
 int KDataTable::rowCount() const
 {
-    return data->rowCount();
+    return dptr->rowCount();
 }
 int KDataTable::columnCount() const
 {
-    return data->columnCount();
+    return dptr->columnCount();
 }
 int KDataTable::maxRowHeaderLength() const
 {
-    return data->maxRowHeaderLength();
+    return dptr->maxRowHeaderLength();
 }
 int KDataTable::maxColumnLength(int col) const
 {
-    return data->maxColumnLength(col);
+    return dptr->maxColumnLength(col);
 }
 const Quantity * KDataTable::quantity(int idx) const
 {
-    return data->quantity(idx);
+    return dptr->quantity(idx);
 }
 QString KDataTable::name(int idx) const
 {
-    return data->name(idx);
+    return dptr->name(idx);
 }
 QString KDataTable::columnHeader(int col) const
 {
-    return data->columnHeader(col);
+    return dptr->columnHeader(col);
 }
 QString KDataTable::rowHeader(int row) const
 {
-    return data->rowHeader(row);
+    return dptr->rowHeader(row);
 }
 QVariant KDataTable::value(int row, int col) const
 {
-    return data->value(row, col);
+    return dptr->value(row, col);
 }
 void KDataTable::replace(int row, int col, const QVariant& v)
 {
-    data->replace(row, col, v);
+    dptr->replace(row, col, v);
 }
 
 QTextStream & operator<<(QTextStream & s, const KData & d)

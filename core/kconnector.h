@@ -5,7 +5,7 @@
 #include "iserializable.h"
 
 class KConnectorPrivate;
-class K_CORE_EXPORT KConnector : public QGraphicsItem, public ISerializable
+class RADENV_API KConnector : public QGraphicsItem, public ISerializable
 {
 public:
     enum { Type = UserType + TYPE_CONNECTOR};
@@ -24,6 +24,7 @@ public:
     KPort * oppositePort(KPort * port) const;
     void movePos(KPort * p, const QPointF & oldPos, const QPointF & newPos);
 
+    bool isValid() const;
     bool isConnected() const;
     void connect();
     void disconnect();
@@ -36,7 +37,7 @@ public:
     virtual QDataStream & deserialize(QDataStream &stream);
     
 private:
-    QSharedDataPointer<KConnectorPrivate> data;
+    QSharedDataPointer<KConnectorPrivate> dptr;
 };
 
 K_DECLARE_SERIALIZABLE(KConnector)

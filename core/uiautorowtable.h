@@ -4,7 +4,7 @@
 #include "radglobal.h"
 #include <QTableWidget>
 
-class K_CORE_EXPORT UiAutoRowTable : public QTableWidget
+class RADENV_API UiAutoRowTable : public QTableWidget
 {
     Q_OBJECT
 protected:

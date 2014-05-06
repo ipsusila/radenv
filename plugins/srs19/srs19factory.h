@@ -5,7 +5,7 @@
 #include "imodelfactory.h"
 #include "kgroupinfo.h"
 
-class SRS19_SHARED_EXPORT Srs19Factory : public QObject, public IModelFactory
+class SRS19_API Srs19Factory : public QObject, public IModelFactory
 {
     Q_OBJECT
 #if QT_VERSION >= 0x050000

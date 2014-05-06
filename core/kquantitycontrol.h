@@ -4,7 +4,7 @@
 #include "iserializable.h"
 
 class KQuantityControlPrivate;
-class K_CORE_EXPORT KQuantityControl : public ISerializable
+class RADENV_API KQuantityControl : public ISerializable
 {
 public:
     KQuantityControl();
@@ -27,7 +27,7 @@ public:
     virtual QDataStream & deserialize(QDataStream &stream);
 
 private:
-    QSharedDataPointer<KQuantityControlPrivate> data;
+    QSharedDataPointer<KQuantityControlPrivate> dptr;
 };
 
 K_DECLARE_SERIALIZABLE(KQuantityControl)

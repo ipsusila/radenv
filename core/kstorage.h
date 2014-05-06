@@ -3,7 +3,7 @@
 
 #include "kstoragecontent.h"
 
-class K_CORE_EXPORT KStorage
+class RADENV_API KStorage
 {
     RadionuclideList loadNuclides();
     LocationList loadLocations();

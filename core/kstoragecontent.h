@@ -5,7 +5,7 @@
 #include "radglobal.h"
 
 class KStorageContentPrivate;
-class K_CORE_EXPORT KStorageContent : public QByteArray
+class RADENV_API KStorageContent : public QByteArray
 {
 public:
     KStorageContent();
@@ -24,7 +24,7 @@ public:
     QDateTime created() const;
 
 private:
-    QSharedDataPointer<KStorageContentPrivate> data;
+    QSharedDataPointer<KStorageContentPrivate> dptr;
 };
 
 #endif // KSTORAGECONTENT_H

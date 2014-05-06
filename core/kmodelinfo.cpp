@@ -32,26 +32,26 @@ public:
     inline int serialId() const { return _serId; }
 };
 
-KModelInfo::KModelInfo() : data(new KModelInfoPrivate)
+KModelInfo::KModelInfo() : dptr(new KModelInfoPrivate)
 {
 }
 
-KModelInfo::KModelInfo(int id) : data(new KModelInfoPrivate(id))
+KModelInfo::KModelInfo(int id) : dptr(new KModelInfoPrivate(id))
 {
 }
 KModelInfo::KModelInfo(int id, const QString& n, const QString& t, const QString& d, const QIcon& i)
-    : data(new KModelInfoPrivate(id, n,t,d,i))
+    : dptr(new KModelInfoPrivate(id, n,t,d,i))
 {
 }
 
-KModelInfo::KModelInfo(const KModelInfo &rhs) : data(rhs.data)
+KModelInfo::KModelInfo(const KModelInfo &rhs) : dptr(rhs.dptr)
 {
 }
 
 KModelInfo &KModelInfo::operator=(const KModelInfo &rhs)
 {
     if (this != &rhs)
-        data.operator=(rhs.data);
+        dptr.operator=(rhs.dptr);
     return *this;
 }
 
@@ -61,40 +61,40 @@ KModelInfo::~KModelInfo()
 
 QString KModelInfo::name() const
 {
-    return data->name();
+    return dptr->name();
 }
 void KModelInfo::setName(const QString &n)
 {
-    data->setName(n);
+    dptr->setName(n);
 }
 
 QString KModelInfo::text() const
 {
-    return data->text();
+    return dptr->text();
 }
 void KModelInfo::setText(const QString &t)
 {
-    data->setText(t);
+    dptr->setText(t);
 }
 
 QString KModelInfo::description() const
 {
-    return data->description();
+    return dptr->description();
 }
 void KModelInfo::setDescription(const QString &d)
 {
-    data->setDescription(d);
+    dptr->setDescription(d);
 }
 
 QIcon KModelInfo::icon() const
 {
-    return data->icon();
+    return dptr->icon();
 }
 void KModelInfo::setIcon(const QIcon &i)
 {
-    data->setIcon(i);
+    dptr->setIcon(i);
 }
 int KModelInfo::serialId() const
 {
-    return data->serialId();
+    return dptr->serialId();
 }

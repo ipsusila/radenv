@@ -11,7 +11,7 @@ namespace Ui {
 class DialogLocation;
 }
 
-class K_CORE_EXPORT DialogLocation : public QDialog
+class RADENV_API DialogLocation : public QDialog
 {
     Q_OBJECT
     

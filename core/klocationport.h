@@ -4,7 +4,7 @@
 #include <QGraphicsItem>
 #include "klocation.h"
 
-class K_CORE_EXPORT KLocationPort : public QGraphicsItem
+class RADENV_API KLocationPort : public QGraphicsItem
 {
 public:
     enum { Type = UserType + TYPE_LOCATION_PORT};

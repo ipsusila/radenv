@@ -5,7 +5,7 @@
 #include "imodelfactory.h"
 
 class KSettingManagerPrivate;
-class K_CORE_EXPORT KSettingManager
+class RADENV_API KSettingManager
 {
 public:
     explicit KSettingManager(IModelFactory * factory);
@@ -24,7 +24,7 @@ protected:
     virtual bool doLoad();
     
 private:
-    QSharedDataPointer<KSettingManagerPrivate> data;
+    QSharedDataPointer<KSettingManagerPrivate> dptr;
 };
 
 #endif // KSETTINGMANAGER_H

@@ -1,4 +1,4 @@
-#include <QDebug>
+#include <QtDebug>
 #include <QSharedData>
 #include <QGraphicsScene>
 #include <QPainter>
@@ -158,6 +158,16 @@ public:
     inline bool isConnected() const {
         return input != 0 && output != 0;
     }
+    inline bool isValid() const {
+        return isConnected() && input->canConnect(output);
+    }
+    inline KPort * oppositePort(KPort * port) const {
+        if (input == port)
+            return output;
+        else if (output == port)
+            return input;
+        return 0;
+    }
     inline void disconnect() {
         if (isConnected()) {
             input->disconnectFrom(output, connector);
@@ -208,21 +218,61 @@ public:
         }
         recalculateRect();
     }
+    void paint(QPainter * painter, const QStyleOptionGraphicsItem * option, QWidget * widget) const
+    {
+        Q_UNUSED(option);
+        Q_UNUSED(widget);
+        if (isEmpty())
+            return;
+
+        painter->save();
+        painter->setPen(QPen(Qt::darkGreen));
+        //painter->setRenderHint(QPainter::Antialiasing, false);
+
+        QPointF pt2;
+        QPointF pt1 = points.first();
+        for(int k = 1; k < points.size(); k++) {
+            pt2 = points.at(k);
+            painter->drawLine(pt1, pt2);
+            pt1 = pt2;
+        }
+
+        //has temporary
+        if (!tempPoint.isNull()) {
+            painter->drawLine(pt1, tempPoint);
+            pt1 = tempPoint;
+        }
+
+        //invalid
+        if (isConnected() && !isValid()) {
+            painter->setPen(Qt::red);
+            QRect r(pt1.x()-3, pt1.y()-3, 6, 6);
+            painter->drawLine(r.topLeft(), r.bottomRight());
+            painter->drawLine(r.bottomLeft(), r.topRight());
+
+            r.adjust(2, 2, -2, -2);
+            QPainterPath pp;
+            pp.addEllipse(r);
+            painter->fillPath(pp, QBrush(Qt::red));
+        }
+
+        painter->restore();
+    }
 };
 
-KConnector::KConnector() : data(new KConnectorPrivate(this))
+KConnector::KConnector() : dptr(new KConnectorPrivate(this))
 {
 }
 
 KConnector::KConnector(const KConnector &rhs)
-    : QGraphicsItem(rhs.parentItem()), data(rhs.data)
+    : QGraphicsItem(rhs.parentItem()), dptr(rhs.dptr)
 {
 }
 
 KConnector &KConnector::operator=(const KConnector &rhs)
 {
     if (this != &rhs) {
-        data.operator=(rhs.data);
+        dptr.operator=(rhs.dptr);
         this->setParentItem(rhs.parentItem());
     }
     return *this;
@@ -234,60 +284,59 @@ KConnector::~KConnector()
 }
 void KConnector::copyTo(KConnector * con, KPort * out, KPort * inp) const
 {
-    data->copyTo(con->data, out, inp);
+    dptr->copyTo(con->dptr, out, inp);
 }
 void KConnector::disconnect()
 {
-    data->disconnect();
+    dptr->disconnect();
 }
 void KConnector::connect()
 {
-    data->connect();
+    dptr->connect();
 }
 
 void KConnector::addPoint(const QPointF &pt)
 {
     //prepare geometri change
     prepareGeometryChange();
-    data->addPoint(pt);
+    dptr->addPoint(pt);
 }
 void KConnector::setTemporaryPoint(const QPointF& pt)
 {
     prepareGeometryChange();
-    data->setTempPoint(pt);
+    dptr->setTempPoint(pt);
 }
 
 void KConnector::setPort(KPort * p)
 {
     prepareGeometryChange();
-    data->setPort(p);
+    dptr->setPort(p);
 }
 
 KPort * KConnector::inputPort() const
 {
-    return data->input;
+    return dptr->input;
 }
 KPort * KConnector::outputPort() const
 {
-    return data->output;
+    return dptr->output;
 }
 KPort * KConnector::oppositePort(KPort *port) const
 {
-    if (data->input == port)
-        return data->output;
-    else if (data->output == port)
-        return data->input;
-    return 0;
+    return dptr->oppositePort(port);
 }
 void KConnector::movePos(KPort * p, const QPointF & oldPos, const QPointF & newPos)
 {
     prepareGeometryChange();
-    data->moveByPort(p, oldPos, newPos);
+    dptr->moveByPort(p, oldPos, newPos);
 }
-
+bool KConnector::isValid() const
+{
+    return dptr->isValid();
+}
 bool KConnector::isConnected() const
 {
-    return data->isConnected();
+    return dptr->isConnected();
 }
 
 int KConnector::type() const
@@ -296,10 +345,12 @@ int KConnector::type() const
 }
 QRectF KConnector::boundingRect () const
 {
-    return data->rect;
+    return dptr->rect;
 }
 void KConnector::paint(QPainter * painter, const QStyleOptionGraphicsItem * option, QWidget * widget)
 {
+    dptr->paint(painter, option, widget);
+    /*
     Q_UNUSED(option);
     Q_UNUSED(widget);
     if (data->isEmpty())
@@ -320,7 +371,9 @@ void KConnector::paint(QPainter * painter, const QStyleOptionGraphicsItem * opti
     //has temporary
     if (!data->tempPoint.isNull()) {
         painter->drawLine(pt1, data->tempPoint);
+        pt1 = data->tempPoint;
     }
+    */
 
     //test
     //QRectF r = data->rect.adjusted(0, 0, -1, -1);
@@ -365,18 +418,18 @@ void KConnector::paint(QPainter * painter, const QStyleOptionGraphicsItem * opti
         }
         */
 
-    painter->restore();
+    //painter->restore();
 }
 
 QDataStream & KConnector::serialize(QDataStream &stream) const
 {
     qDebug() << Q_FUNC_INFO << ", stream pos: " << stream.device()->pos();
-    return data->serialize(stream);
+    return dptr->serialize(stream);
 }
 
 QDataStream & KConnector::deserialize(QDataStream &stream)
 {
     qDebug() << Q_FUNC_INFO << ", stream pos: " << stream.device()->pos();
     prepareGeometryChange();
-    return data->deserialize(stream);
+    return dptr->deserialize(stream);
 }

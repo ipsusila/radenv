@@ -4,7 +4,7 @@
 #include "kdata.h"
 #include <QStyledItemDelegate>
 
-class K_CORE_EXPORT UiArrayItemDelegate : public QStyledItemDelegate
+class RADENV_API UiArrayItemDelegate : public QStyledItemDelegate
 {
     Q_OBJECT
 public:

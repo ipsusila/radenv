@@ -4,7 +4,7 @@
 #include "kcalculationinfo.h"
 #include <QThread>
 
-class K_CORE_EXPORT KModelRunner : public QThread
+class RADENV_API KModelRunner : public QThread
 {
     Q_OBJECT
 public:

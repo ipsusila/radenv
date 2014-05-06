@@ -4,7 +4,7 @@
 #include "uiautorowtable.h"
 #include "kdata.h"
 
-class K_CORE_EXPORT UiArrayItemTable : public UiAutoRowTable
+class RADENV_API UiArrayItemTable : public UiAutoRowTable
 {
     Q_OBJECT
 public:

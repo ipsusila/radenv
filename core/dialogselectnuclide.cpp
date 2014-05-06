@@ -1,4 +1,4 @@
-#include <QDebug>
+#include <QtDebug>
 #include "dialogselectnuclide.h"
 #include "ui_dialogselectnuclide.h"
 #include "kstorage.h"

@@ -26,6 +26,8 @@ class KModelScenePrivate
     KConnector * _tempConnector;
     DialogCalculation  * _calcDialog;
     KModelRunner * _modelRunner;
+    QString _sceneName;
+    QString _sceneDesc;
 
     QStringList _modelNames;
     ModelList _verifiedNodes;     ///< List of verified nodes
@@ -62,22 +64,37 @@ public:
     inline void clearTempConnector() {
         _tempConnector = 0;
     }
+    inline QString sceneName() const {
+        return _sceneName;
+    }
+    inline void setSceneName(const QString& name) {
+        _sceneName = name;
+    }
+    inline QString sceneDescription() const {
+        return _sceneDesc;
+    }
+    inline void setSceneDescription(const QString& desc) {
+        _sceneDesc = desc;
+    }
 
     inline void serialize(QDataStream & s) const
     {
-        s << __sceneToken << _snapToGrid << _gridPixel
-          << _displayGrid << (qint32)_editMode << _modelNames;
+        s << __sceneToken << _sceneName << _sceneDesc << _snapToGrid
+          << _gridPixel << _displayGrid << (qint32)_editMode << _modelNames;
     }
-    inline void deserialize(QDataStream & s)
+    inline bool deserialize(QDataStream & s)
     {
         QString token;
         s >> token;
-        Q_ASSERT(token == __sceneToken);
+        if(token != __sceneToken)
+            return false;
 
         qint32 mode;
-        s >> _snapToGrid >> _gridPixel
-          >> _displayGrid >> mode >> _modelNames;
+        s >> _sceneName >> _sceneDesc >> _snapToGrid
+          >> _gridPixel >> _displayGrid >> mode >> _modelNames;
         _editMode = (KModelScene::EditMode)mode;
+
+        return true;
     }
 
     inline void addCalculationInfo(const KCalculationInfo& info)
@@ -409,6 +426,23 @@ const CalculationList & KModelScene::calculationResults() const
 {
     return data->calculationInfo();
 }
+QString KModelScene::sceneName() const
+{
+    return data->sceneName();
+}
+void KModelScene::setSceneName(const QString& name)
+{
+    data->setSceneName(name);
+}
+
+QString KModelScene::sceneDescription() const
+{
+    return data->sceneDescription();
+}
+void KModelScene::setSceneDescription(const QString& desc)
+{
+    data->setSceneDescription(desc);
+}
 
 bool KModelScene::snapToGrid() const
 {
@@ -586,7 +620,10 @@ QDataStream & KModelScene::deserialize(QDataStream & stream)
 {
     qDebug() << Q_FUNC_INFO << ", stream pos: " << stream.device()->pos();
     QRectF rect;
-    data->deserialize(stream);
+    if (!data->deserialize(stream)) {
+        xTrace() << "Aborted: Can not load scene from stream due to incompatible format";
+        return stream;
+    }
     stream >> rect;
     this->setSceneRect(rect);
 

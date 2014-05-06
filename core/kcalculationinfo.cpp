@@ -33,21 +33,21 @@ public:
 };
 
 KCalculationInfo::KCalculationInfo(IModel * model, int interval, int runCnt, int runId, bool queueMode, bool contOnError)
-    : data(new KCalculationInfoPrivate(model, interval, runCnt, runId, queueMode, contOnError))
+    : dptr(new KCalculationInfoPrivate(model, interval, runCnt, runId, queueMode, contOnError))
 {
 }
 KCalculationInfo::KCalculationInfo(int interval, int runCnt, int runId, bool queueMode, bool contOnError)
-    : data(new KCalculationInfoPrivate(0, interval, runCnt, runId, queueMode, contOnError))
+    : dptr(new KCalculationInfoPrivate(0, interval, runCnt, runId, queueMode, contOnError))
 {
 }
-KCalculationInfo::KCalculationInfo(const KCalculationInfo& ci) : data(ci.data)
+KCalculationInfo::KCalculationInfo(const KCalculationInfo& ci) : dptr(ci.dptr)
 {
 }
 
 KCalculationInfo& KCalculationInfo::operator=(const KCalculationInfo& ci)
 {
     if (this != &ci) {
-        data.operator = (ci.data);
+        dptr.operator = (ci.dptr);
     }
 
     return *this;
@@ -59,63 +59,63 @@ KCalculationInfo::~KCalculationInfo()
 
 bool KCalculationInfo::isQueuedMode() const
 {
-    return data->queueMode;
+    return dptr->queueMode;
 }
 
 int KCalculationInfo::intervalMilisecond() const
 {
-    return data->interval;
+    return dptr->interval;
 }
 
 bool KCalculationInfo::isContinuous() const
 {
-    return (data->runCount <= 0);
+    return (dptr->runCount <= 0);
 }
 int KCalculationInfo::runCount() const
 {
-    return data->runCount;
+    return dptr->runCount;
 }
 const IModel * KCalculationInfo::model() const
 {
-    return data->model;
+    return dptr->model;
 }
 void KCalculationInfo::setModel(IModel *model)
 {
-    data->setModel(model);
+    dptr->setModel(model);
 }
 
 int KCalculationInfo::runId() const
 {
-    return data->runId;
+    return dptr->runId;
 }
 QDateTime KCalculationInfo::timestamp() const
 {
-    return data->timestamp;
+    return dptr->timestamp;
 }
 bool KCalculationInfo::continueOnError() const
 {
-    return data->continueOnError;
+    return dptr->continueOnError;
 }
 
 const KDataArray& KCalculationInfo::input() const
 {
-    if (data->inputs.isEmpty())
+    if (dptr->inputs.isEmpty())
         return __nullInput;
-    return data->inputs.first();
+    return dptr->inputs.first();
 }
 
 const KDataArray& KCalculationInfo::inputAt(int idx) const
 {
-    if (idx < 0 || idx >= data->inputs.size())
+    if (idx < 0 || idx >= dptr->inputs.size())
         return __nullInput;
-    return data->inputs.at(idx);
+    return dptr->inputs.at(idx);
 }
 const KDataArray& KCalculationInfo::result() const
 {
-    return data->result;
+    return dptr->result;
 }
 void KCalculationInfo::setResult(const KDataArray & da)
 {
-    data->result = da;
+    dptr->result = da;
 }
 

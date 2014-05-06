@@ -17,7 +17,7 @@ class IModelPrivate;
 /**
  * @brief Base class for generic models
  */
-class K_CORE_EXPORT IModel : public QGraphicsItem, public ISerializable
+class RADENV_API IModel : public QGraphicsItem, public ISerializable
 {
     friend class IModelPrivate;
 public:
