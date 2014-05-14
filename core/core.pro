@@ -7,6 +7,7 @@
 QT += core gui sql
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
+VERSION = 1.0.0
 TARGET = radenvcore
 win32:CONFIG(debug, debug|release): TARGET = $$join(TARGET,,,d)
 
@@ -36,12 +37,10 @@ SOURCES += \
     kconnector.cpp \
     kreport.cpp \
     kreportport.cpp \
-    kmodelscene.cpp \
     kdata.cpp \
     kcalculationinfo.cpp \
     dialogcalculation.cpp \
     kmath.cpp \
-    kmodelrunner.cpp \
     uiuserinput.cpp \
     uiautorowtable.cpp \
     ksettingmanager.cpp \
@@ -54,7 +53,14 @@ SOURCES += \
     testclass.cpp \
     kassessment.cpp \
     uiassessmentexplorer.cpp \
-    uioutputview.cpp
+    uioutputview.cpp \
+    kscenario.cpp \
+    kscenarioevaluator.cpp \
+    dialogscenario.cpp \
+    dialogassessment.cpp \
+    dialogassessmentbrowser.cpp \
+    kdbconnector.cpp \
+    khtmlreport.cpp
 
 HEADERS +=\
     kradionuclide.hxx \
@@ -81,7 +87,6 @@ HEADERS +=\
     iparamseditor.h \
     kreport.h \
     kreportport.h \
-    kmodelscene.h \
     kgroup.h \
     iuserinput.h \
     kdata.h \
@@ -90,7 +95,6 @@ HEADERS +=\
     kmath.h \
     radcore.h \
     radglobal.h \
-    kmodelrunner.h \
     uiuserinput.h \
     uiautorowtable.h \
     ksettingmanager.h \
@@ -104,7 +108,14 @@ HEADERS +=\
     iserializable.h \
     kassessment.h \
     uiassessmentexplorer.h \
-    uioutputview.h
+    uioutputview.h \
+    kscenario.h \
+    kscenarioevaluator.h \
+    dialogscenario.h \
+    dialogassessment.h \
+    dialogassessmentbrowser.h \
+    kdbconnector.h \
+    khtmlreport.h
 
 symbian {
     MMP_RULES += EXPORTUNFROZEN
@@ -129,7 +140,10 @@ FORMS += \
     dialoglocation.ui \
     dialogradionuclide.ui \
     dialogselectnuclide.ui \
-    dialogcalculation.ui
+    dialogcalculation.ui \
+    dialogscenario.ui \
+    dialogassessment.ui \
+    dialogassessmentbrowser.ui
 
 RESOURCES += \
     core.qrc

@@ -5,12 +5,12 @@
 #include "xmodelview.h"
 #include "imodel.h"
 #include "kconnector.h"
+#include "kassessment.h"
 
-XModelView::XModelView(QGraphicsScene * scene, QWidget * parent) :
-    QGraphicsView(scene,parent)
+XModelView::XModelView(QWidget * parent) :
+    QGraphicsView(parent)
 {
-    _zoomFactor = 1.2;
-    scene->setParent(this);
+    this->_isFitInView = false;
     this->setFont(QFont("monospace", 10));
     this->setRenderHint(QPainter::Antialiasing, true);
     this->setRenderHint(QPainter::TextAntialiasing, true);
@@ -21,16 +21,22 @@ void XModelView::resizeEvent(QResizeEvent *event)
     Q_UNUSED(event);
 #if defined(Q_OS_SYMBIAN)
     fitInView(sceneRect(), Qt::KeepAspectRatio);
+#else
+    if (_isFitInView)
+        fitInView(sceneRect(), Qt::KeepAspectRatio);
 #endif
+
 }
 
 void XModelView::drawBackground(QPainter * painter, const QRectF & rect)
 {
     QGraphicsView::drawBackground(painter, rect);
 
-    //add grid
-    KModelScene * mc = reinterpret_cast<KModelScene *>(scene());
-    Q_ASSERT(mc != 0);
+    //add grid add frame
+    KScenario * mc = reinterpret_cast<KScenario *>(scene());
+    if (mc == 0)
+        return;
+
     if (mc->displayGrid()) {
         QRectF arect = mc->sceneRect();
         int grid = mc->grid();
@@ -77,25 +83,32 @@ void XModelView::drawBackground(QPainter * painter, const QRectF & rect)
             //next grid line
             y += grid;
         }
+
+        //draw
     }
 
     //draw the frame
     painter->setPen(QPen(Qt::darkGray, 1));
     painter->drawRect(mc->sceneRect());
+
+    //display name
+    QString txt = mc->name() + " (" + mc->assessment()->name() + ")";
+    painter->drawText(mc->sceneRect(), Qt::AlignTop | Qt::AlignLeft, txt);
 }
 void XModelView::mousePressEvent(QMouseEvent * event)
 {
     //handle event
-    KModelScene * mc = reinterpret_cast<KModelScene *>(scene());
-    Q_ASSERT(mc != 0);
+    KScenario * mc = reinterpret_cast<KScenario *>(scene());
+    if (mc == 0)
+        return;
 
-    if (mc->editMode() == KModelScene::Connect && event->button() == Qt::RightButton) {
+    if (mc->editMode() == KScenario::Connect && event->button() == Qt::RightButton) {
         mc->cancelConnection();
         event->accept();
         return;
     }
 
-    if (mc == 0 || event->button() != Qt::LeftButton || mc->editMode() == KModelScene::None) {
+    if (mc == 0 || event->button() != Qt::LeftButton || mc->editMode() == KScenario::None) {
         QGraphicsView::mousePressEvent(event);
         return;
     }
@@ -103,15 +116,15 @@ void XModelView::mousePressEvent(QMouseEvent * event)
     QPointF pos = this->mapToScene(event->pos());
     QGraphicsItem * item = mc->itemAt(pos, this->transform());
     switch(mc->editMode()) {
-    case KModelScene::Connect:
+    case KScenario::Connect:
         mc->connectItem(item, pos);
         event->accept();
         break;
-    case KModelScene::RemoveConnection:
+    case KScenario::RemoveConnection:
         removeConnection(item);
         event->accept();
         break;
-    case KModelScene::RemoveModel:
+    case KScenario::RemoveModel:
         removeItem(item);
         event->accept();
         break;
@@ -122,25 +135,25 @@ void XModelView::mousePressEvent(QMouseEvent * event)
 }
 void XModelView::mouseMoveEvent(QMouseEvent * event)
 {
-    //qDebug() << "Mouse move event " << event->pos();
-    KModelScene * mc = reinterpret_cast<KModelScene *>(scene());
-    Q_ASSERT(mc != 0);
-    if (mc->editMode() == KModelScene::Connect) {
+    KScenario * mc = reinterpret_cast<KScenario *>(scene());
+    if (mc != 0 && mc->editMode() == KScenario::Connect) {
         mc->tryDrawConnector(mapToScene(event->pos()));
     }
     QGraphicsView::mouseMoveEvent(event);
 }
-void XModelView::setEditMode(KModelScene::EditMode mode)
+void XModelView::setEditMode(KScenario::EditMode mode)
 {
-    KModelScene * mc = reinterpret_cast<KModelScene *>(scene());
-    Q_ASSERT(mc != 0);
-    KModelScene::EditMode oldMode = mc->editMode();
+    KScenario * mc = reinterpret_cast<KScenario *>(scene());
+    if (mc == 0)
+        return;
+
+    KScenario::EditMode oldMode = mc->editMode();
     if (oldMode == mode)
         return;
 
-    if (oldMode == KModelScene::Connect)
+    if (oldMode == KScenario::Connect)
         setMouseTracking(false);
-    else if (mode == KModelScene::Connect)
+    else if (mode == KScenario::Connect)
         setMouseTracking(true);
     mc->setEditMode(mode);
 }
@@ -152,14 +165,14 @@ void XModelView::removeItem(QGraphicsItem *item)
 
     //get clicked model
     IModel * model = 0;
-    KModelScene * mc = reinterpret_cast<KModelScene *>(scene());
+    KScenario * mc = reinterpret_cast<KScenario *>(scene());
     if (item->parentItem() == 0)
         model = qgraphicsitem_cast<IModel *>(item);
     else
         model = qgraphicsitem_cast<IModel *>(item->parentItem());
 
     //remove clicked model
-    if (model != 0) {
+    if (model != 0 && mc != 0) {
         int ret = QMessageBox::question(this, tr("Remove model?"),
             QString(tr("Do you really want to remove model %1?")).arg(model->tagName()),
             QMessageBox::Yes, QMessageBox::No);
@@ -174,115 +187,78 @@ void XModelView::removeConnection(QGraphicsItem * selItem)
         return;
 
     //is this connector? if yes, remove connection
-    KModelScene * mc = reinterpret_cast<KModelScene *>(scene());
+    KScenario * mc = reinterpret_cast<KScenario *>(scene());
     KConnector * con = qgraphicsitem_cast<KConnector *>(selItem);
-    if (con != 0) {
+    if (mc != 0 && con != 0) {
         mc->removeConnector(con);
     }
 }
 
-void XModelView::report()
-{
-    KModelScene * mc = reinterpret_cast<KModelScene *>(scene());
-    Q_ASSERT(mc);
-
-    mc->generateReport();
-}
 
 void XModelView::snapToGrid(bool v)
 {
-    KModelScene * mc = reinterpret_cast<KModelScene *>(scene());
-    mc->setSnapToGrid(v);
-    mc->update();
+    KScenario * mc = reinterpret_cast<KScenario *>(scene());
+    if (mc != 0) {
+        mc->setSnapToGrid(v);
+        mc->update();
+    }
 }
 
 void XModelView::displayGrid(bool v)
 {
-    KModelScene * mc = reinterpret_cast<KModelScene *>(scene());
-    mc->setDisplayGrid(v);
-    mc->update();
+    KScenario * mc = reinterpret_cast<KScenario *>(scene());
+    if (mc != 0) {
+        mc->setDisplayGrid(v);
+        mc->update();
+    }
 }
 void XModelView::zoomFit()
 {
     this->fitInView(scene()->sceneRect(), Qt::KeepAspectRatio);
-    //_zoomFactor = 1.0;
+    this->_isFitInView = true;
 }
 void XModelView::zoomIn()
 {
-    //_zoomFactor *= 1.2;
+    this->_isFitInView = false;
     scale(1.2, 1.2);
 }
 void XModelView::zoomOut()
 {
-    //_zoomFactor /= 1.2;
+    this->_isFitInView = false;
     scale(1.0/1.2, 1.0/1.2);
 }
 void XModelView::zoomOriginal()
 {
-    //scale(1.0/_zoomFactor, 1.0/_zoomFactor);
-    //_zoomFactor = 1.0;
+    this->_isFitInView = false;
     this->resetTransform();
 }
-
-void XModelView::clearModel()
+void XModelView::detachScenario(KScenario * scenario)
 {
-    KModelScene * mc = reinterpret_cast<KModelScene *>(scene());
-    Q_ASSERT(mc != 0);
-    if (mc->items().isEmpty())
-        return;
-
-    //ask
-    int ret = QMessageBox::question(this, tr("Clear model(s)?"),
-        tr("Remove all models from scene?"), QMessageBox::Yes, QMessageBox::No);
-    if (ret == QMessageBox::Yes)
-        mc->clearModels();
+    if (scenario == scene()) {
+        setScene(0);
+        this->_isFitInView = false;
+    }
 }
 
-void XModelView::reannotateModel()
+void XModelView::attachScenario(KScenario * scenario)
 {
-    KModelScene * mc = reinterpret_cast<KModelScene *>(scene());
-    Q_ASSERT(mc != 0);
-    mc->reannotateModels();
+    if (scenario != scene()) {
+        setScene(scenario);
+        zoomFit();
+    }
 }
 
 bool XModelView::isDisplayGrid() const
 {
-    KModelScene * mc = reinterpret_cast<KModelScene *>(scene());
+    KScenario * mc = reinterpret_cast<KScenario *>(scene());
     if (mc != 0)
         return mc->displayGrid();
     return false;
 }
 bool XModelView::isSnapToGrid() const
 {
-    KModelScene * mc = reinterpret_cast<KModelScene *>(scene());
+    KScenario * mc = reinterpret_cast<KScenario *>(scene());
     if (mc != 0)
         return mc->snapToGrid();
     return false;
-}
-void XModelView::createModel(IModelFactory * factory, const KModelInfo & info)
-{
-    KModelScene * mc = reinterpret_cast<KModelScene *>(scene());
-    if (mc != 0)
-        mc->createModel(factory, info);
-}
-
-void XModelView::refreshModels()
-{
-    KModelScene * mc = reinterpret_cast<KModelScene *>(scene());
-    if (mc != 0)
-        mc->refresh();
-}
-
-void XModelView::verifyModels()
-{
-    KModelScene * mc = reinterpret_cast<KModelScene *>(scene());
-    if (mc != 0)
-        mc->verify();
-}
-
-void XModelView::calculate()
-{
-    KModelScene * mc = reinterpret_cast<KModelScene *>(scene());
-    if (mc != 0)
-        mc->calculate();
 }

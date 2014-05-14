@@ -9,7 +9,7 @@
 #include "kport.h"
 #include "imodel.h"
 #include "klocationport.h"
-#include "kmodelscene.h"
+#include "kscenario.h"
 #include "koutput.h"
 #include "uiuserinput.h"
 #include "ksettingmanager.h"
@@ -158,7 +158,7 @@ void IModel::copyDataTo(IModel * model) const
     Q_UNUSED(model);
 }
 
-IModel * IModel::copyTo(KModelScene * mscene) const
+IModel * IModel::copyTo(KScenario * mscene) const
 {
     // for visitors (will bi assigned by scene)
     IModel * model = mscene->createModel(factory(), info());
@@ -381,10 +381,10 @@ void IModel::generateReport()
     if (rep == 0)
         return;
 
-    rep->addModel(this);
+    rep->add(this);
     KLocationPort * lp = locationPort();
     if (lp) {
-        rep->addLocation(lp->location());
+        rep->add(lp->location());
     }
 
     KDataTable table;
@@ -392,15 +392,15 @@ void IModel::generateReport()
     if (userInp != 0) {
         KDataGroupArray dga;
         userInp->separateTo(&dga, &table);
-        rep->addUserInputs(dga);
+        rep->add(dga);
     }
 
     KDataArray da;
     result().separateTo(&da, &table);
-    rep->addResult(da);
+    rep->add(da);
 
     table.transpose();
-    rep->addResult(table);
+    rep->add(table);
 }
 
 const KPortList & IModel::inputs() const
@@ -696,7 +696,7 @@ void IModel::setPortsVisible(bool v)
 QVariant IModel::itemChange(GraphicsItemChange change, const QVariant &value)
 {
     if (change == ItemPositionChange && scene()) {
-        KModelScene * mc = reinterpret_cast<KModelScene *>(scene());
+        KScenario * mc = reinterpret_cast<KScenario *>(scene());
         QPointF newPos = value.toPointF();
         QPointF oldPos = this->pos();
 

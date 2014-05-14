@@ -15,15 +15,21 @@ public:
     QString name() const;
     void setName(const QString& n);
 
-    virtual void addAssessment(const KAssessment& caseObj);
-    virtual void addModel(IModel * model);
-    virtual void addLocation(const KLocation& loc);
-    virtual void addUserInputs(const KDataGroupArray & dga);
-    virtual void addResult(const KDataArray & da);
-    virtual void addResult(const KDataTable & table);
-    virtual QString toPlainText();
+    virtual void add(const KAssessment& caseObj);
+    virtual void add(const KScenario& scenario);
+    virtual void add(IModel * model);
+    virtual void add(const KLocation& loc);
+    virtual void add(const KDataGroupArray & dga);
+    virtual void add(const KDataArray & da);
+    virtual void add(const KDataTable & table);
+    virtual QString toString();
     virtual void beginReport();
     virtual void endReport();
+    virtual void clear();
+
+protected:
+    QTextStream * textStream() const;
+    void releaseStream();
 
 private:
     QString _name;

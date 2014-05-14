@@ -145,7 +145,7 @@ bool KStorage::initStorageTable()
     QSqlQuery query;
     QString sql = QString("CREATE TABLE %1 (name VARCHAR(255) NOT NULL,"
                           "factory VARCHAR(255) NOT NULL, created DATETIME, "
-                          "description VARCHAR(255), size INTEGER, data BLOB, "
+                          "description TEXT, size INTEGER, data BLOB, "
                           "PRIMARY KEY(name,factory))")
             .arg(RAD_STORAGE);
     if (!query.exec(sql)) {
@@ -233,7 +233,7 @@ bool KStorage::initLocationTable()
     //create location tables
     QSqlQuery query;
     QString sql = QString("CREATE TABLE %1 (code VARCHAR(32) NOT NULL, "
-                          "name VARCHAR(255) NOT NULL, description VARCHAR(255), "
+                          "name VARCHAR(255) NOT NULL, description TEXT, "
                           "latitude DOUBLE, longitude DOUBLE, angle DOUBLE, "
                           "distance TEXT, size INTEGER, marker BLOB, "
                           "PRIMARY KEY(code))")
@@ -262,8 +262,8 @@ bool KStorage::initAssessmentTable()
     //create assessment tables
     QSqlQuery query;
     QString sql = QString("CREATE TABLE %1 (name VARCHAR(255) NOT NULL, created DATETIME,"
-                          "author VARCHAR(255) NOT NULL, description VARCHAR(255), "
-                          "remark VARCHAR(255), docname VARCHAR(255), docsz INTEGER, "
+                          "author VARCHAR(255) NOT NULL, description TEXT, "
+                          "remark TEXT, docname VARCHAR(255), docsz INTEGER, "
                           "document BLOB, datasz INTEGER, data BLOB, PRIMARY KEY(name))")
             .arg(RAD_ASSESSMENT);
     if (!query.exec(sql)) {
@@ -629,7 +629,7 @@ bool KStorage::assessmentExists(const QString& assessment) const
 
     return false;
 }
-AssessmentList KStorage::loadAssessmentPreviews(const QStringList & excludes) const
+AssessmentList KStorage::loadAssessmentPreviews(const QStringList & excludes, QObject *parent) const
 {
     QSqlQuery query;
     AssessmentList list;
@@ -648,20 +648,20 @@ AssessmentList KStorage::loadAssessmentPreviews(const QStringList & excludes) co
         if (excludes.contains(name))
             continue;
 
-        KAssessment a(query.value(1).toDateTime());
-        a.setName(name);
-        a.setAuthor(query.value(2).toString());
-        a.setDescription(query.value(3).toString());
-        a.setRemark(query.value(4).toString());
-        a.setDocname(query.value(5).toString());
+        KAssessment *aP = new KAssessment(query.value(1).toDateTime(), parent);
+        aP->setName(name);
+        aP->setAuthor(query.value(2).toString());
+        aP->setDescription(query.value(3).toString());
+        aP->setRemark(query.value(4).toString());
+        aP->setDocname(query.value(5).toString());
 
-        list.append(a);
+        list.append(aP);
     }
 
     return list;
 }
 
-AssessmentList KStorage::loadAssessments(const QStringList & names) const
+AssessmentList KStorage::loadAssessments(const QStringList & names, QObject * parent) const
 {
     QSqlQuery query;
     AssessmentList list;
@@ -686,24 +686,24 @@ AssessmentList KStorage::loadAssessments(const QStringList & names) const
         }
 
         while (query.next()) {
-            KAssessment a(query.value(1).toDateTime());
-            a.setName(query.value(0).toString());
-            a.setAuthor(query.value(2).toString());
-            a.setDescription(query.value(3).toString());
-            a.setRemark(query.value(4).toString());
-            a.setDocname(query.value(5).toString());
+            KAssessment *aP = new KAssessment(query.value(1).toDateTime(), parent);
+            aP->setName(query.value(0).toString());
+            aP->setAuthor(query.value(2).toString());
+            aP->setDescription(query.value(3).toString());
+            aP->setRemark(query.value(4).toString());
+            aP->setDocname(query.value(5).toString());
 
             int docsz = query.value(6).toInt();
             QByteArray doc = query.value(7).toByteArray();
             if (docsz > 0 && docsz == doc.size())
-                a.setDocument(doc);
+                aP->setDocument(doc);
 
             int datasz = query.value(8).toInt();
             QByteArray content = query.value(9).toByteArray();
             if (datasz > 0 && content.size() == datasz)
-                a.deserialize(content);
+                aP->deserialize(content);
 
-            list.append(a);
+            list.append(aP);
         }
     }
 

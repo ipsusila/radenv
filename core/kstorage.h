@@ -18,8 +18,8 @@ public:
     ~KStorage();
 
     bool loadAll();
-    AssessmentList loadAssessments(const QStringList & names) const;
-    AssessmentList loadAssessmentPreviews(const QStringList & excludes) const;
+    AssessmentList loadAssessments(const QStringList & names, QObject * parent) const;
+    AssessmentList loadAssessmentPreviews(const QStringList & excludes, QObject * parent) const;
     bool assessmentExists(const QString& assessment) const;
 
     bool isNull() const;

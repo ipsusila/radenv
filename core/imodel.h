@@ -44,7 +44,7 @@ public:
     virtual QString displayText() const;
     virtual bool isSource() const;
     virtual bool isSink() const;
-    virtual IModel * copyTo(KModelScene * mscene) const;
+    virtual IModel * copyTo(KScenario * mscene) const;
     virtual void copyDataTo(IModel * model) const;
 
     virtual int type() const;
@@ -58,6 +58,7 @@ public:
     KLocationPort * locationPort() const;
     KReportPort * reportPort() const;
     KReport * report() const;
+    void setReport(KReport * rep);
     bool initialize();
     KLocation location() const;
     void removeConnections();
@@ -100,7 +101,6 @@ protected:
     void setInfo(const KModelInfo& i);
     void setLocationPort(KLocationPort * port);
     void setLocation(const KLocation & loc);
-    void setReport(KReport * rep);
     void notifyConnectionsChanged(bool connected);
     void setPortsVisible(bool v);
     KDataGroupArray * userInputs();

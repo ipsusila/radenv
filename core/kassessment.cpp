@@ -9,12 +9,12 @@
 #include <QRectF>
 #include <QtDebug>
 #include "kassessment.h"
-#include "kmodelscene.h"
+#include "kscenario.h"
 
 //Token identifier
 static const QString __assessmentToken = "@Assessment_v-1.0";
 
-class KCasePrivate : public QSharedData {
+class KAssessmentPrivate : public QSharedData {
 public:
     QDateTime created;
     QString name;
@@ -23,10 +23,10 @@ public:
     QString remark;
     QString docname;
     QByteArray document;
-    SceneList scenes;
+    ScenarioList scenarios;
 
-    KCasePrivate() : created(QDateTime::currentDateTime()) {}
-    ~KCasePrivate()
+    KAssessmentPrivate(const QDateTime & c) : created(c) {}
+    ~KAssessmentPrivate()
     {
         qDebug() << "Removing assessment private : " << name;
         this->clear();
@@ -36,20 +36,27 @@ public:
     {
         return !name.isEmpty();
     }
-
-    inline KModelScene * createScene(const QRectF & rect = QRectF())
+    inline KScenario * firstScenario() const
     {
-        KModelScene * scene;
-        if (rect.isValid())
-            scene = new KModelScene(rect.x(), rect.y(), rect.width(), rect.height());
-        else
-            scene = new KModelScene(-800, -400, 1600, 800);
-        scenes.append(scene);
-        return scene;
+        if (scenarios.isEmpty())
+            return 0;
+        return scenarios.first();
     }
-    inline void remove(KModelScene * scene)
+
+    inline KScenario * createScenario(KAssessment * aP, const QRectF & rect = QRectF())
     {
-        scenes.removeOne(scene);
+        KScenario * scenario;
+        if (rect.isValid())
+            scenario = new KScenario(rect.x(), rect.y(), rect.width(), rect.height(), aP);
+        else
+            scenario = new KScenario(-800, -400, 1600, 800, aP);
+        scenarios.append(scenario);
+        return scenario;
+    }
+    inline void remove(KScenario * scene)
+    {
+        scenarios.removeOne(scene);
+        delete scene;
     }
 
     void clear()
@@ -62,9 +69,9 @@ public:
         docname.clear();
         document.clear();
 
-        qDebug() << "Delete all scenes:" << scenes.size();
-        while (!scenes.isEmpty()) {
-            KModelScene * scene = scenes.takeFirst();
+        qDebug() << "Delete all scenes:" << scenarios.size();
+        while (!scenarios.isEmpty()) {
+            KScenario * scene = scenarios.takeFirst();
             delete scene;
         }
     }
@@ -72,36 +79,35 @@ public:
     void serialize(QByteArray &ba) const
     {
         ba.clear();
-        quint32 sz = (quint32)scenes.size();
+        quint32 sz = (quint32)scenarios.size();
         QDataStream stream(&ba, QIODevice::WriteOnly);
         stream << sz;
         for(quint32 k = 0; k < sz; k++)
-            scenes.at(k)->serialize(stream);
+            scenarios.at(k)->serialize(stream);
     }
     QDataStream & serialize(QDataStream & s) const
     {
         s << __assessmentToken << created << name << author
           << description << remark << docname << document;
 
-        quint32 sz = (quint32)scenes.size();
+        quint32 sz = (quint32)scenarios.size();
         s << sz;
         for(quint32 k = 0; k < sz; k++)
-            scenes.at(k)->serialize(s);
+            scenarios.at(k)->serialize(s);
         return s;
     }
-    void deserialize(const QByteArray &ba)
+    void deserialize(KAssessment * aP, const QByteArray &ba)
     {
         quint32 sz;
         QDataStream stream(ba);
         stream >> sz;
-        scenes.clear();
+        scenarios.clear();
         for(quint32 k = 0; k < sz; k++) {
-            KModelScene * scene = createScene();
+            KScenario * scene = createScenario(aP);
             scene->deserialize(stream);
-            scenes.append(scene);
         }
     }
-    QDataStream & deserialize(QDataStream & s)
+    QDataStream & deserialize(KAssessment * aP, QDataStream & s)
     {
         QString token;
         s >> token;
@@ -111,31 +117,23 @@ public:
             quint32 sz;
             s >> sz;
             for(quint32 k = 0; k < sz; k++) {
-                KModelScene * scene = createScene();
+                KScenario * scene = createScenario(aP);
                 scene->deserialize(s);
-                scenes.append(scene);
             }
         }
         return s;
     }
 };
 
-KAssessment::KAssessment(const QDateTime & c) : dptr(new KCasePrivate)
+KAssessment::KAssessment(QObject *parent)
+    : QObject(parent), dptr(new KAssessmentPrivate(QDateTime()))
 {
-    if (c.isValid())
-        dptr->created = c;
+
 }
 
-KAssessment::KAssessment(const KAssessment &rhs) : dptr(rhs.dptr)
+KAssessment::KAssessment(const QDateTime & c, QObject *parent)
+    : QObject(parent), dptr(new KAssessmentPrivate(c))
 {
-}
-
-KAssessment &KAssessment::operator=(const KAssessment &rhs)
-{
-    if (this != &rhs) {
-        dptr.operator=(rhs.dptr);
-    }
-    return *this;
 }
 
 KAssessment::~KAssessment()
@@ -215,22 +213,25 @@ void KAssessment::setDocument(const QByteArray &doc)
 
 void KAssessment::deserialize(const QByteArray & cont)
 {
-    dptr->deserialize(cont);
+    dptr->deserialize(this, cont);
 }
-
-KModelScene * KAssessment::createScene(const QRectF &rect)
+KScenario * KAssessment::firstScenario() const
 {
-    return dptr->createScene(rect);
+    return dptr->firstScenario();
 }
-SceneList KAssessment::scenes() const
+KScenario * KAssessment::createScenario(const QRectF &rect)
 {
-    return dptr->scenes;
+    return dptr->createScenario(this, rect);
 }
-bool KAssessment::contains(KModelScene * scene) const
+ScenarioList KAssessment::scenarios() const
 {
-    return dptr->scenes.contains(scene);
+    return dptr->scenarios;
 }
-void KAssessment::remove(KModelScene * scene)
+bool KAssessment::contains(KScenario * scene) const
+{
+    return dptr->scenarios.contains(scene);
+}
+void KAssessment::remove(KScenario * scene)
 {
     dptr->remove(scene);
 }
@@ -253,5 +254,5 @@ QDataStream & KAssessment::serialize(QDataStream & stream) const
 QDataStream & KAssessment::deserialize(QDataStream & stream)
 {
     qDebug() << Q_FUNC_INFO << ", stream pos: " << stream.device()->pos();
-    return dptr->deserialize(stream);
+    return dptr->deserialize(this, stream);
 }

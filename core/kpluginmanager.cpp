@@ -285,6 +285,10 @@ KStorage * KPluginManager::storage() const
 {
     return dptr->storage();
 }
+bool KPluginManager::hasStorage() const
+{
+    return dptr->storage() != 0;
+}
 
 const Quantity * KPluginManager::findQuantity(IModelFactory * fact, unsigned int qid) const
 {

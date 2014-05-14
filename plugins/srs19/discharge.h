@@ -13,6 +13,8 @@ public:
 
     const KPortList & outputs() const;
     QString displayText() const;
+    virtual QDataStream & serialize(QDataStream &stream) const;
+    virtual QDataStream & deserialize(QDataStream &stream);
 
 protected:
     KPortList        _outPorts;

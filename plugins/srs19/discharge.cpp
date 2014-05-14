@@ -37,6 +37,20 @@ QString Discharge::displayText() const
 {
     return "";
 }
+QDataStream & Discharge::serialize(QDataStream &stream) const
+{
+    qDebug() << Q_FUNC_INFO << ", stream pos: " << stream.device()->pos();
+    IModel::serialize(stream);
+    _dataList.serialize(stream);
+    return stream;
+}
+QDataStream & Discharge::deserialize(QDataStream &stream)
+{
+    qDebug() << Q_FUNC_INFO << ", stream pos: " << stream.device()->pos();
+    IModel::deserialize(stream);
+    _dataList.deserialize(stream);
+    return stream;
+}
 
 /////////////////////////////////////////////////////////////////////////////////////////
 AirDischarge::AirDischarge(IModelFactory * fact, const KModelInfo& inf)

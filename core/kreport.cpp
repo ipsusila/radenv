@@ -2,6 +2,7 @@
 #include "kreport.h"
 #include "koutput.h"
 #include "kassessment.h"
+#include "kscenario.h"
 #include "imodel.h"
 #include "kgroup.h"
 
@@ -31,6 +32,23 @@ void KReport::setName(const QString& n)
 {
     _name = n;
 }
+QTextStream * KReport::textStream() const
+{
+    return _stream;
+}
+void KReport::releaseStream()
+{
+    if (_stream != 0) {
+        delete _stream;
+        _stream = 0;
+    }
+}
+
+void KReport::clear()
+{
+    //nothing
+}
+
 void KReport::beginReport()
 {
      //initialize report
@@ -42,11 +60,10 @@ void KReport::beginReport()
 }
 void KReport::endReport()
 {
-    delete _stream;
-    _stream = 0;
+    releaseStream();
 
     //write to output window
-    QString txt = toPlainText();
+    QString txt = toString();
     KOutput & out = KOutput::handler();
     if (out.isHtml()) {
         txt.replace('<', "&lt;")
@@ -57,25 +74,14 @@ void KReport::endReport()
     out.newLine();
 }
 
-QString KReport::toPlainText()
+QString KReport::toString()
 {
     if (_buffer.isEmpty())
         return QString();
     return QString::fromUtf8(_buffer.constData());
 }
 
-/*
-void KReport::printData(const KData& d)
-{
-    Q_ASSERT(_stream);
-    if (d.quantity() == Rad::CommentQuantity)
-        (*_stream) << "//" << d.value().toString() << Rad::LatinEndLine;
-    else if (d.isValid())
-        (*_stream) << d.displayText() << Rad::LatinEndLine;
-}
-*/
-
-void KReport::addAssessment(const KAssessment& caseObj)
+void KReport::add(const KAssessment& caseObj)
 {
     Q_ASSERT(_stream);
     //display to info
@@ -87,7 +93,16 @@ void KReport::addAssessment(const KAssessment& caseObj)
                 << QObject::tr("Remark      : ") << caseObj.remark()  << Rad::LatinEndLine
                 << QObject::tr("Document    : ") << caseObj.docname() << Rad::LatinEndLine;
 }
-void KReport::addModel(IModel * model)
+void KReport::add(const KScenario& scenario)
+{
+    Q_ASSERT(_stream);
+    //display to info
+    (*_stream) << Rad::LatinEndLine << "---------------------------------------------------------------------------------" << Rad::LatinEndLine
+               << QObject::tr("Name        : ") << scenario.name()  << Rad::LatinEndLine
+               << QObject::tr("Description : ") << scenario.description()  << Rad::LatinEndLine;
+}
+
+void KReport::add(IModel * model)
 {
     Q_ASSERT(_stream);
     const KModelInfo & info = model->info();
@@ -95,7 +110,7 @@ void KReport::addModel(IModel * model)
                 << QObject::tr("Model ") << model->tagName() << " " << info.text() << Rad::LatinEndLine
                 << info.description() << Rad::LatinEndLine;
 }
-void KReport::addLocation(const KLocation& loc)
+void KReport::add(const KLocation& loc)
 {
     Q_ASSERT(_stream);
     if (!loc.isValid())
@@ -107,7 +122,7 @@ void KReport::addLocation(const KLocation& loc)
                 << QObject::tr("Latitude    : ") << loc.latitude() << Rad::LatinEndLine
                 << QObject::tr("Longitude   : ") << loc.longitude() << Rad::LatinEndLine;
 }
-void KReport::addUserInputs(const KDataGroupArray & dga)
+void KReport::add(const KDataGroupArray & dga)
 {
     Q_ASSERT(_stream);
     if (dga.isEmpty())
@@ -124,7 +139,7 @@ void KReport::addUserInputs(const KDataGroupArray & dga)
             (*_stream) << group.itemAt(n);
     }
 }
-void KReport::addResult(const KDataArray & da)
+void KReport::add(const KDataArray & da)
 {
     Q_ASSERT(_stream);
     (*_stream) << da;
@@ -137,7 +152,7 @@ void KReport::addResult(const KDataArray & da)
         printData(da.at(k));
     */
 }
-void KReport::addResult(const KDataTable & table)
+void KReport::add(const KDataTable & table)
 {
     Q_ASSERT(_stream);
     (*_stream) << table;

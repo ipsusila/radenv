@@ -5,7 +5,7 @@
 #include "kport.h"
 #include "kconnector.h"
 #include "imodel.h"
-#include "kmodelscene.h"
+#include "kscenario.h"
 
 class KConnectorPrivate : public QSharedData {
     KConnector * connector;
@@ -130,7 +130,7 @@ public:
         //z-value
 
         //search port
-        KModelScene * scene = reinterpret_cast<KModelScene*>(connector->scene());
+        KScenario * scene = reinterpret_cast<KScenario*>(connector->scene());
         Q_ASSERT(scene != 0);
         IModel * mi = scene->findModel(inpTagName);
         IModel * mo = scene->findModel(outTagName);

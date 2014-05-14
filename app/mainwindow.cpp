@@ -6,13 +6,15 @@
 #include <QStatusBar>
 #include <QCloseEvent>
 #include <QFileDialog>
+#include <QSettings>
+#include <QTextEdit>
 #include "mainwindow.h"
 #include "xmodelview.h"
 
 #include "uioutputview.h"
 #include "kstorage.h"
 #include "kstoragecontent.h"
-#include "kmodelscene.h"
+#include "kscenario.h"
 #include "kdata.h"
 #include "klocation.h"
 #include "imodelfactory.h"
@@ -35,46 +37,30 @@
 MainWindow::MainWindow(KPluginManager *pm, UiOutputView * vw, QWidget *parent) :
     QMainWindow(parent), plugMan(pm), outView(vw), asExplorer(0)
 {
-    //create scene
-    scene = new KModelScene(-800, -400, 1600, 800);
-
     createViews();
     createActions();
     createToolBars();
     createMenus();
     createStatusBar();
+    setupActionStates();
 
     setWindowTitle(tr("SMEA Dose Assessments"));
     setUnifiedTitleAndToolBarOnMac(true);
-
-    //test
-    KAssessment a;
-    a.setName("Test assessment 1");
-    a.setAuthor("IP Susila");
-    KModelScene * sc = a.createScene();
-    sc->setSceneName("Case 01");
-    sc = a.createScene();
-    sc->setSceneName("Case 02");
-    asExplorer->addAssessment(a);
-
-    KAssessment a2;
-    a2.setName("Test assessment 2");
-    a2.setAuthor("IP Susila");
-    sc = a2.createScene();
-    sc->setSceneName("Case 11");
-    sc = a2.createScene();
-    sc->setSceneName("Case 12");
-    asExplorer->addAssessment(a2);
-
 }
 
 MainWindow::~MainWindow()
 {
-    delete view;
 }
 
 void MainWindow::closeEvent(QCloseEvent *event)
 {
+    KPluginManager * pm = KPluginManager::instance();
+    if (pm->hasStorage()) {
+        QSettings settings;
+        QString lastStorage = pm->storage()->storageName();
+        settings.setValue("app/storage", lastStorage);
+    }
+
     event->accept();
 }
 
@@ -83,7 +69,9 @@ void MainWindow::closeEvent(QCloseEvent *event)
  */
 void MainWindow::createViews()
 {
-    view = new XModelView(scene, this);
+    view = new XModelView(this);
+    reportView = new QTextEdit(this);
+    reportView->setReadOnly(true);
 
     //allocate stack widget to display multiple views
     //available views:
@@ -94,6 +82,7 @@ void MainWindow::createViews()
 
     pages = new QStackedWidget();
     pages->addWidget(view);
+    pages->addWidget(reportView);
     pages->setCurrentWidget(view);
 
     this->setCentralWidget(pages);
@@ -121,6 +110,13 @@ void MainWindow::createViews()
     action->setText(tr("Show Assessment Explorer"));
     viewMenu->addAction(action);
 
+    connect(asExplorer, SIGNAL(currentScenarioChanged(KScenario*)),
+            view, SLOT(attachScenario(KScenario*)));
+    connect(asExplorer, SIGNAL(removingScenario(KScenario*)),
+            view, SLOT(detachScenario(KScenario*)));
+    connect(asExplorer, SIGNAL(viewChanged(int, void*)),
+            this, SLOT(switchView(int, void*)));
+
 }
 
 void MainWindow::createActions()
@@ -139,25 +135,25 @@ void MainWindow::createActions()
     fNewAct->setShortcut(QKeySequence::New);
     fNewAct->setStatusTip(tr("Create new assessment"));
     fNewAct->setIcon(QIcon(":/std/new-assessment.png"));
-    connect(fNewAct, SIGNAL(triggered()), this, SLOT(newAssessment()));
+    connect(fNewAct, SIGNAL(triggered()), asExplorer, SLOT(addAssessment()));
 
     fOpenAct = new QAction(tr("&Open Assessment..."), this);
     fOpenAct->setShortcut(QKeySequence::Open);
     fOpenAct->setStatusTip(tr("Open existing assessment"));
     fOpenAct->setIcon(QIcon(":/std/open-assessment.png"));
-    connect(fOpenAct, SIGNAL(triggered()), this, SLOT(openAssessment()));
+    connect(fOpenAct, SIGNAL(triggered()), asExplorer, SLOT(openAssessment()));
 
     fSaveAct = new QAction(tr("&Save Assessment"), this);
     fSaveAct->setShortcut(QKeySequence::Save);
     fSaveAct->setStatusTip(tr("Save the assessment"));
     fSaveAct->setIcon(QIcon(":/std/save-assessment.png"));
-    connect(fSaveAct, SIGNAL(triggered()), this, SLOT(saveAssessment()));
+    connect(fSaveAct, SIGNAL(triggered()), asExplorer, SLOT(saveAssessment()));
 
     fSaveAsAct = new QAction(tr("Save Assessment &As..."), this);
     fSaveAsAct->setShortcut(QKeySequence::SaveAs);
     fSaveAsAct->setStatusTip(tr("Save the assessment to given name"));
     fSaveAsAct->setIcon(QIcon(":/std/save-assessment-as.png"));
-    connect(fSaveAsAct, SIGNAL(triggered()), this, SLOT(saveAssessmentAs()));
+    connect(fSaveAsAct, SIGNAL(triggered()), asExplorer, SLOT(saveAssessmentAs()));
 
     fPrintSetupAct = new QAction(tr("Print Setup..."), this);
     //fPrintSetupAct->setShortcut(QKeySequence::Save);
@@ -233,13 +229,13 @@ void MainWindow::createActions()
     //eRenumberAct->setShortcuts(QKeySequence::Quit);
     eRenumberAct->setStatusTip(tr("Renumber model's tag"));
     eRenumberAct->setIcon(QIcon(":/std/edit-renumber.png"));
-    connect(eRenumberAct, SIGNAL(triggered()), view, SLOT(reannotateModel()));
+    connect(eRenumberAct, SIGNAL(triggered()), asExplorer, SLOT(reannotateModel()));
 
     eClearAct = new QAction(tr("&Clear all..."), this);
     //eClearAct->setShortcuts(QKeySequence::Quit);
-    eClearAct->setStatusTip(tr("Delete all models from scene"));
+    eClearAct->setStatusTip(tr("Delete all models from scenario"));
     eClearAct->setIcon(QIcon(":/std/edit-clear.png"));
-    connect(eClearAct, SIGNAL(triggered()), view, SLOT(clearModel()));
+    connect(eClearAct, SIGNAL(triggered()), asExplorer, SLOT(clearModel()));
 
     eOptionsAct = new QAction(tr("&Options..."), this);
     //eOptionsAct->setShortcuts(QKeySequence::Quit);
@@ -280,17 +276,17 @@ void MainWindow::createActions()
     mVerifyAct->setIcon(QIcon(":/std/model-verify.png"));
     connect(mVerifyAct, SIGNAL(triggered()), this, SLOT(modelVerify()));
 
-    mCalcAct = new QAction(tr("&Calculate"), this);
+    mEvalAct = new QAction(tr("&Evaluate"), this);
     //mCalcAct->setShortcuts(QKeySequence::HelpContents);
-    mCalcAct->setStatusTip(tr("Calculate concentration and dose"));
-    mCalcAct->setIcon(QIcon(":/std/model-calculate.png"));
-    connect(mCalcAct, SIGNAL(triggered()), this, SLOT(modelCalculate()));
+    mEvalAct->setStatusTip(tr("Evaluate scenario"));
+    mEvalAct->setIcon(QIcon(":/std/model-calculate.png"));
+    connect(mEvalAct, SIGNAL(triggered()), this, SLOT(modelCalculate()));
 
     mReportAct = new QAction(tr("R&eport"), this);
     //mReportAct->setShortcuts(QKeySequence::HelpContents);
     mReportAct->setStatusTip(tr("Generate model and calculation report"));
     mReportAct->setIcon(QIcon(":/std/model-report.png"));
-    connect(mReportAct, SIGNAL(triggered()), view, SLOT(report()));
+    connect(mReportAct, SIGNAL(triggered()), asExplorer, SLOT(generateReport()));
 
 
     /*
@@ -321,7 +317,7 @@ void MainWindow::createActions()
     connect(vZoomInAct, SIGNAL(triggered()), view, SLOT(zoomIn()));
 
     vZoomFitAct = new QAction(tr("Zoom Fit"), this);
-    vZoomFitAct->setStatusTip(tr("Fit scene into view"));
+    vZoomFitAct->setStatusTip(tr("Fit scenario into view"));
     vZoomFitAct->setIcon(QIcon(":/std/zoom-fit.png"));
     connect(vZoomFitAct, SIGNAL(triggered()), view, SLOT(zoomFit()));
 
@@ -382,7 +378,7 @@ void MainWindow::createToolBars()
     modelToolBar->addAction(mLocationAct);
     modelToolBar->addSeparator();
     modelToolBar->addAction(mVerifyAct);
-    modelToolBar->addAction(mCalcAct);
+    modelToolBar->addAction(mEvalAct);
     modelToolBar->addAction(mReportAct);
 
     viewToolBar = addToolBar(tr("View"));
@@ -401,6 +397,8 @@ void MainWindow::createToolBars()
 void MainWindow::createMenus()
 {
     fileMenu = menuBar()->addMenu(tr("&File"));
+    fileMenu->addAction(mDatabaseAct);
+    fileMenu->addSeparator();
     fileMenu->addAction(fNewAct);
     fileMenu->addAction(fOpenAct);
     fileMenu->addSeparator();
@@ -424,13 +422,13 @@ void MainWindow::createMenus()
 
     //populate plugin menus and submenus
     modelMenu = menuBar()->addMenu(tr("&Model"));
-    modelMenu->addAction(mDatabaseAct);
-    modelMenu->addSeparator();
+    //modelMenu->addAction(mDatabaseAct);
+    //modelMenu->addSeparator();
     modelMenu->addAction(mRadionuclideAct);
     modelMenu->addAction(mLocationAct);
     modelMenu->addSeparator();
     modelMenu->addAction(mVerifyAct);
-    modelMenu->addAction(mCalcAct);
+    modelMenu->addAction(mEvalAct);
     modelMenu->addAction(mReportAct);
 
     //create plugin menus
@@ -556,64 +554,40 @@ void MainWindow::createStatusBar()
 {
     statusBar()->showMessage(tr("Ready"));
 }
+void MainWindow::setupActionStates()
+{
+    bool enabled = KPluginManager::instance()->hasStorage();
+
+    fNewAct->setEnabled(enabled);
+    fOpenAct->setEnabled(enabled);
+    fSaveAct->setEnabled(enabled);
+    fSaveAsAct->setEnabled(enabled);
+    fPrintPrevAct->setEnabled(enabled);
+    fPrintAct->setEnabled(enabled);
+    fPrintSetupAct->setEnabled(enabled);
+
+    eClearAct->setEnabled(enabled);
+    eRemoveAct->setEnabled(enabled);
+    eRemoveConAct->setEnabled(enabled);
+    eConnectAct->setEnabled(enabled);
+    eRenumberAct->setEnabled(enabled);
+
+    //mMapAct->setEnabled(enabled);
+    mLocationAct->setEnabled(enabled);
+    mRadionuclideAct->setEnabled(enabled);
+    mVerifyAct->setEnabled(enabled);
+    mEvalAct->setEnabled(enabled);
+    //mCalcStepAct->setEnabled(enabled);
+    mReportAct->setEnabled(enabled);
+}
 
 void MainWindow::modelTriggeredAction(IModelFactory* f, const KModelInfo & info)
 {
     Q_ASSERT(f != 0);
-    //Ask scene to create model
-    view->createModel(f, info);
+    //Ask view to create model
+    //view->createModel(f, info);
+    asExplorer->createModel(f, info);
     xTrace() << "Create model: " << info.name();
-}
-
-void MainWindow::newAssessment()
-{
-    quintptr addr = (quintptr)TestClass::instance();
-    QString sAddr = QString::number(addr, 16);
-    xTrace() << "@Address : " << sAddr;
-    xTrace() << "@@Current value: " << TestClass::instance()->currentValue();
-    TestClass::instance()->increment(20);
-    xTrace() << "#@Next value: " << TestClass::instance()->currentValue();
-}
-
-void MainWindow::openAssessment()
-{
-    //open file
-    QString fileName = QFileDialog::getOpenFileName(this, tr("Open File"),
-                                                    "",
-                                                    tr("Data file (*.dat)"));
-    if (fileName.isEmpty())
-        return;
-
-    QFile file(fileName);
-    if (file.open(QFile::ReadOnly)) {
-        QDataStream stream(&file);
-        scene->clearModels();
-        scene->deserialize(stream);
-        file.close();
-    }
-}
-
-void MainWindow::saveAssessment()
-{
-    //save as current name
-}
-
-void MainWindow::saveAssessmentAs()
-{
-    //save as file
-    QString fileName = QFileDialog::getSaveFileName(this, tr("Save File"),
-                                                    "",
-                                                    tr("Data file (*.dat)"));
-    if (fileName.isEmpty())
-        return;
-
-    QFile file(fileName);
-    if (file.open(QFile::WriteOnly)) {
-        QDataStream stream(&file);
-        scene->serialize(stream);
-        file.close();
-    }
-
 }
 
 void MainWindow::printPreview()
@@ -639,64 +613,75 @@ void MainWindow::editOptions()
 void MainWindow::editMode(QAction * act)
 {
     if (act == eNoneAct)
-        view->setEditMode(KModelScene::None);
+        view->setEditMode(KScenario::None);
     else if (act == eConnectAct)
-        view->setEditMode(KModelScene::Connect);
+        view->setEditMode(KScenario::Connect);
     else if (act == eRemoveConAct)
-        view->setEditMode(KModelScene::RemoveConnection);
+        view->setEditMode(KScenario::RemoveConnection);
     else if (act == eRemoveAct)
-        view->setEditMode(KModelScene::RemoveModel);
+        view->setEditMode(KScenario::RemoveModel);
 }
 void MainWindow::modelDatabase()
 {
-
+    QString fileName = QFileDialog::getSaveFileName(this, tr("Database File"),
+                               "", tr("Database file (*.db)"), 0, QFileDialog::DontConfirmOverwrite);
+    KPluginManager * pm = KPluginManager::instance();
+    if (!fileName.isEmpty()) {
+        if (!pm->hasStorage() || pm->storage()->storageName() != fileName) {
+            pm->setStorage(fileName);
+            asExplorer->closeAllAssessment();
+            setupActionStates();
+        }
+    }
 }
 
 void MainWindow::modelLocations()
 {
-    DialogLocation dlg(KPluginManager::instance()->storage());
-    dlg.exec();
-    view->refreshModels();
+    if (KPluginManager::instance()->hasStorage()) {
+        DialogLocation dlg(KPluginManager::instance()->storage());
+        dlg.exec();
+        asExplorer->refreshScenario();
+    }
 
 }
 void MainWindow::modelRadionuclides()
 {
-    DialogRadionuclide dlg(KPluginManager::instance()->storage());
-    dlg.exec();
-    view->refreshModels();
+    if (KPluginManager::instance()->hasStorage()) {
+        DialogRadionuclide dlg(KPluginManager::instance()->storage());
+        dlg.exec();
+        asExplorer->refreshScenario();
+    }
 }
 void MainWindow::modelVerify()
 {
     outView->clearContents();
-    view->verifyModels();
+    asExplorer->verifyScenario();
 }
 
 void MainWindow::modelCalculate()
 {
     outView->clearContents();
-    view->calculate();
+    asExplorer->evaluateScenario();
 }
 
 
 void MainWindow::helpContent()
 {
-    //TEST
-    AssessmentList list;
-    list.append(KAssessment());
-    list.append(KAssessment());
 
-    AssessmentList list2 = list;
-    list = AssessmentList();
-
-    //test
-    bool a = KPluginManager::instance()->storage()->assessmentExists("PRSG");
-    qDebug() << "Assessment exists?" << a;
-
-    QStringList names;
-    names << "abcde" << "cdef" << "avvv'vd";
-    KPluginManager::instance()->storage()->loadAssessments(names);
 }
 void MainWindow::helpAbout()
 {
 
+}
+void MainWindow::switchView(int id, void *data)
+{
+    if (id == UiAssessmentExplorer::Report) {
+        KReport * rep = reinterpret_cast<KReport*>(data);
+        if (rep != 0)
+            reportView->setHtml(rep->toString());
+        pages->setCurrentWidget(reportView);
+    }
+    else {
+        pages->setCurrentWidget(view);
+    }
 }

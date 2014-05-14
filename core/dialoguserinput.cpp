@@ -1,5 +1,7 @@
 #include <QDialogButtonBox>
 #include <QVBoxLayout>
+#include <QApplication>
+#include <QDesktopWidget>
 #include "dialoguserinput.h"
 #include "ksettingmanager.h"
 
@@ -8,6 +10,11 @@ DialogUserInput::DialogUserInput(IModel * m, IUserInput * ui, QWidget *parent) :
 {
     QDialogButtonBox * bbox = new QDialogButtonBox(this);
     QVBoxLayout * vbox = new QVBoxLayout();
+
+    //desktop
+    QDesktopWidget * desktop = QApplication::desktop();
+    QSize dSize = desktop->size();
+    this->setMaximumSize(dSize);
 
     bbox->addButton(QDialogButtonBox::Ok);
     bbox->addButton(QDialogButtonBox::Cancel);
@@ -25,8 +32,10 @@ DialogUserInput::DialogUserInput(IModel * m, IUserInput * ui, QWidget *parent) :
     KSettingManager * setting = model->factory()->settingManager();
     if (setting != 0) {
         QRect rect = setting->geometry(model);
-        if (rect.isValid())
-            this->setGeometry(rect);
+        if (rect.isValid()) {
+            if (rect.top() < (dSize.height() - 20) && rect.left() < (dSize.width() - 20))
+                this->setGeometry(rect);
+        }
     }
 }
 DialogUserInput::~DialogUserInput()

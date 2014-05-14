@@ -23,6 +23,7 @@ public:
     IModel * createModel(QDataStream &stream) const;
     void setStorage(const QString& name);
     KStorage * storage() const;
+    bool hasStorage() const;
 
     const Quantity * findQuantity(IModelFactory * fact, unsigned int qid) const;
     const Quantity * findQuantity(const QString &factoryName, unsigned int qid) const;

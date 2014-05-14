@@ -29,7 +29,7 @@ class KStorage;
 class KAssessment;
 class KConnector;
 class KCalculationInfo;
-class KModelScene;
+class KScenario;
 class KSettingManager;
 class KQuantityControl;
 class KPluginManager;
@@ -50,14 +50,15 @@ typedef QList<KModelInfo>               ModelInfoList;
 typedef QList<KGroupInfo>               GroupInfoList;
 typedef QList<KRadionuclide>            RadionuclideList;
 typedef QList<KLocation>                LocationList;
-typedef QList<KAssessment>                    AssessmentList;
+typedef QList<KAssessment*>             AssessmentList;
 typedef KGroup<KData>                   DataGroup;
 typedef QList<KCalculationInfo>         CalculationList;
 typedef QList<const Quantity *>         ConstQuantityList;
 typedef QList<Quantity *>               QuantityList;
 typedef QList<KDataArray>               DataArrayList;
 typedef QList<KQuantityControl>         QuantityControlList;
-typedef QList<KModelScene *>            SceneList;
+typedef QList<KScenario *>              ScenarioList;
+typedef QList<KReport *>                ReportList;
 
 typedef struct _tagPM                   SMargin;
 typedef struct _tagPM                   SPadding;
@@ -74,6 +75,13 @@ typedef struct _tagPM                   SPadding;
 #define xInfo()     (KOutput::handler() << KOutput::EndLine << KOutput::Info)
 #define xWarning()  (KOutput::handler() << KOutput::EndLine << KOutput::Warning)
 #define xError()    (KOutput::handler() << KOutput::EndLine << KOutput::Error)
+
+#if QT_VERSION >= 0x050000
+    #define xEscHtml(str)    ((str).toHtmlEscaped())
+#else
+    //#include <QtGui/qtextdocument.h>
+    #define xEscHtml(str)    Qt::escape((str))
+#endif
 
 /**
  * Default storage name

@@ -2,21 +2,17 @@
 #define XMODELVIEW_H
 
 #include <QGraphicsView>
-#include "kmodelscene.h"
+#include "kscenario.h"
 
 class XModelView : public QGraphicsView
 {
     Q_OBJECT
 public:
-    explicit XModelView(QGraphicsScene * scene, QWidget * parent = 0);
-    void setEditMode(KModelScene::EditMode mode);
+    explicit XModelView(QWidget * parent = 0);
+    void setEditMode(KScenario::EditMode mode);
 
     bool isDisplayGrid() const;
     bool isSnapToGrid() const;
-    void createModel(IModelFactory * factory, const KModelInfo & info);
-    void refreshModels();
-    void verifyModels();
-    void calculate();
 
 protected:
     virtual void resizeEvent(QResizeEvent *event);
@@ -30,10 +26,6 @@ protected:
 signals:
     
 public slots:
-    void clearModel();
-    void reannotateModel();
-    void report();
-
     void snapToGrid(bool v);
     void displayGrid(bool v);
     void zoomIn();
@@ -41,8 +33,11 @@ public slots:
     void zoomFit();
     void zoomOriginal();
 
+    void detachScenario(KScenario * scenario);
+    void attachScenario(KScenario * scenario);
+
 private:
-    qreal _zoomFactor;
+    bool _isFitInView;
     
 };
 

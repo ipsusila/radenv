@@ -8,7 +8,8 @@ class QAction;
 class QActionGroup;
 class QMenu;
 class QStackedWidget;
-class KModelScene;
+class QTextEdit;
+class KScenario;
 class XModelView;
 class IModelFactory;
 class XModelWidget;
@@ -23,11 +24,8 @@ public:
 
 private slots:
     void modelTriggeredAction(IModelFactory* f, const KModelInfo & info);
+    void switchView(int id, void * data);
 
-    void newAssessment();
-    void openAssessment();
-    void saveAssessment();
-    void saveAssessmentAs();
     void printPreview();
     void printSetup();
     void printAll();
@@ -54,6 +52,7 @@ private:
     void createMenus();
     void createToolBars();
     void createStatusBar();
+    void setupActionStates();
 
     void createPluginMenus();
     void populatePluginMenus(XModelWidget * mw, QMenu * groupMenu,
@@ -63,8 +62,8 @@ private:
     KPluginManager * plugMan;
     UiOutputView * outView;
     UiAssessmentExplorer * asExplorer;
-    KModelScene * scene;
     XModelView * view;
+    QTextEdit * reportView;
     QStackedWidget * pages;
 
     QMenu *fileMenu;
@@ -96,8 +95,8 @@ private:
     QAction * mLocationAct;
     QAction * mRadionuclideAct;
     QAction * mVerifyAct;
-    QAction * mCalcAct;
-    QAction * mCalcStepAct;
+    QAction * mEvalAct;
+    QAction * mEvalStepAct;
     QAction * mReportAct;
 
     QAction * vZoomFitAct;

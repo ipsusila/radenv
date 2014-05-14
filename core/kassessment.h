@@ -4,13 +4,13 @@
 #include <QRectF>
 #include "iserializable.h"
 
-class KCasePrivate;
-class RADENV_API KAssessment : public ISerializable
+class KAssessmentPrivate;
+class RADENV_API KAssessment : public QObject, public ISerializable
 {
+    Q_OBJECT
 public:
-    KAssessment(const QDateTime & created = QDateTime());
-    KAssessment(const KAssessment &other);
-    KAssessment &operator=(const KAssessment &other);
+    explicit KAssessment(QObject * parent);
+    KAssessment(const QDateTime & created, QObject * parent);
     ~KAssessment();
 
     bool operator==(const KAssessment &other) const;
@@ -31,10 +31,11 @@ public:
     QByteArray document() const;
     void setDocument(const QByteArray & doc);
 
-    KModelScene * createScene(const QRectF & rect = QRectF());
-    SceneList scenes() const;
-    bool contains(KModelScene * scene) const;
-    void remove(KModelScene * scene);
+    KScenario * createScenario(const QRectF & rect = QRectF());
+    KScenario * firstScenario() const;
+    ScenarioList scenarios() const;
+    bool contains(KScenario * scene) const;
+    void remove(KScenario * scene);
     void clear();
 
     void deserialize(const QByteArray & cont);
@@ -43,7 +44,8 @@ public:
     virtual QDataStream & deserialize(QDataStream & stream);
 
 private:
-    QExplicitlySharedDataPointer<KCasePrivate> dptr;
+    Q_DISABLE_COPY(KAssessment)
+    QExplicitlySharedDataPointer<KAssessmentPrivate> dptr;
 };
 K_DECLARE_SERIALIZABLE(KAssessment)
 

@@ -7,10 +7,21 @@
 QT += core gui
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
+#radcore version
+RADENVCORE = radenvcore
+RADENVCOREV = 1
+#change here fore diff core
+
+
+VERSION = 1.0.0
 TARGET = srs19
 TEMPLATE = lib
 CONFIG += plugin
-win32:CONFIG(debug, debug|release): TARGET = $$join(TARGET,,,d)
+win32:CONFIG(debug, debug|release) {
+    TARGET = $$join(TARGET,,,d)
+    RADENVCORE = $$join(RADENVCORE,,,d)
+}
+RADENVCORE = $$join(RADENVCORE,,,$$RADENVCOREV)
 
 DEFINES += SRS19_BUILD_MODULE
 
@@ -101,10 +112,9 @@ unix:!symbian {
     INSTALLS += target
 }
 
-win32:CONFIG(release, debug|release): LIBS += -L$$OUT_PWD/../../radenv/ -lradenvcore
-else:win32:CONFIG(debug, debug|release): LIBS += -L$$OUT_PWD/../../radenv/ -lradenvcored
-else:symbian: LIBS += -lradenvcore
-else:unix: LIBS += -L$$OUT_PWD/../../radenv/ -lradenvcore
+win32: LIBS += -L$$OUT_PWD/../../radenv/ -l$$RADENVCORE
+else:symbian: LIBS += -l$$RADENVCORE
+else:unix: LIBS += -L$$OUT_PWD/../../radenv/ -l$$RADENVCORE
 
 INCLUDEPATH += $$PWD/../../core
 DEPENDPATH += $$PWD/../../core
