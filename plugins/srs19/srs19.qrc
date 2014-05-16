@@ -1,9 +1,41 @@
 <RCC>
     <qresource prefix="/srs19">
-        <file alias="cloud.png">images/upload-cloud.png</file>
+        <file alias="atmospheric.png">images/upload-cloud.png</file>
         <file alias="water.png">images/water--arrow.png</file>
-        <file alias="atmospheric.png">images/weather-clouds.png</file>
-        <file alias="transport.png">images/sort-date-descending.png</file>
-        <file alias="river.png">images/water.png</file>
+        <file>images/weather-clouds.png</file>
+        <file alias="sewage.png">images/sort-date-descending.png</file>
+        <file alias="genericwater.png">images/water.png</file>
+        <file>images/beans.png</file>
+        <file>images/counter.png</file>
+        <file>images/cup-tea.png</file>
+        <file>images/fruit.png</file>
+        <file alias="crop.png">images/holly.png</file>
+        <file alias="forage.png">images/leaf.png</file>
+        <file>images/leaf-plant.png</file>
+        <file alias="stored-feed.png">images/leaf-yellow.png</file>
+        <file alias="milk.png">images/milk.png</file>
+        <file>images/road.png</file>
+        <file alias="constant.png">images/sort-number.png</file>
+        <file alias="infant.png">images/toilet.png</file>
+        <file>images/tree.png</file>
+        <file>images/tree-yellow.png</file>
+        <file alias="adult.png">images/users.png</file>
+        <file alias="stack.png">images/stacksmall.png</file>
+        <file alias="river.png">images/river.png</file>
+        <file alias="largelake.png">images/largelake.png</file>
+        <file alias="pond.png">images/pond.png</file>
+        <file alias="animal-feed.png">images/animal-feed.png</file>
+        <file alias="irrigation.png">images/irrigation.png</file>
+        <file alias="estuary.png">images/estuary.png</file>
+        <file alias="coastal.png">images/coastal.png</file>
+        <file alias="baby.png">images/baby.png</file>
+        <file alias="freshwaterfish.png">images/freshwater-fish.png</file>
+        <file alias="meat.png">images/meat.png</file>
+        <file alias="shellfish.png">images/shellfish.png</file>
+        <file alias="ground.png">images/ground.png</file>
+        <file alias="freshwater-sediment.png">images/freshwater-sediment.png</file>
+        <file alias="coastal-sediment.png">images/coastal-sediment.png</file>
+        <file alias="surface-sewage.png">images/surface-sewage.png</file>
+        <file alias="marinefish.png">images/fish.png</file>
     </qresource>
 </RCC>

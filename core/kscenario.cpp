@@ -12,7 +12,7 @@
 #include "kconnector.h"
 #include "dialogcalculation.h"
 #include "kscenarioevaluator.h"
-#include "kpluginmanager.h"
+#include "kapplication.h"
 #include "kassessment.h"
 
 //Stream token
@@ -178,7 +178,7 @@ KScenario::~KScenario()
     qDebug() << "Scene destroyed";
 }
 
-int KScenario::copyTo(KScenario * mscene, bool all) const
+int KScenario::copyModelsTo(KScenario * mscene, bool all) const
 {
     Q_ASSERT(mscene);
 
@@ -206,7 +206,7 @@ int KScenario::copyTo(KScenario * mscene, bool all) const
         ConnectorList connectors = src->outputConnectors();
         foreach(KConnector * con, connectors) {
             //if connected model is not being copied, ignore connection
-            IModel * dest = copiedModels[con->outputPort()->model()];
+            IModel * dest = copiedModels[con->inputPort()->model()];
             if (dest == 0)
                 continue;
 
@@ -259,7 +259,7 @@ IModel * KScenario::findModel(const QString& tagName) const
 
 IModel * KScenario::createModel(IModelFactory * factory, const KModelInfo& info)
 {
-    IModel * model = KPluginManager::instance()->createModel(factory, info);
+    IModel * model = KApplication::selfInstance()->createModel(factory, info);
     if (model != 0) {
         dptr->annotateModel(model);
         addItem(model);
@@ -662,7 +662,7 @@ QDataStream & KScenario::deserialize(QDataStream & stream)
     int nz;
     stream >> nz;
     for (int k = 0; k < nz; k++) {
-        IModel * md = KPluginManager::instance()->createModel(stream);
+        IModel * md = KApplication::selfInstance()->createModel(stream);
         if (md != 0) {
             addItem(md);
             md->deserialize(stream);

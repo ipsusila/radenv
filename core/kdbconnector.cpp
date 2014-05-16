@@ -1,5 +1,6 @@
 #include "kdbconnector.h"
 #include <QSharedData>
+#include <QStringList>
 
 class KDbConnectorPrivate : public QSharedData {
     QMap<QString, QString> _conMaps;

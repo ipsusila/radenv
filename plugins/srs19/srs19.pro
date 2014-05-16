@@ -21,7 +21,7 @@ win32:CONFIG(debug, debug|release) {
     TARGET = $$join(TARGET,,,d)
     RADENVCORE = $$join(RADENVCORE,,,d)
 }
-RADENVCORE = $$join(RADENVCORE,,,$$RADENVCOREV)
+win32:RADENVCORE = $$join(RADENVCORE,,,$$RADENVCOREV)
 
 DEFINES += SRS19_BUILD_MODULE
 
@@ -112,9 +112,8 @@ unix:!symbian {
     INSTALLS += target
 }
 
-win32: LIBS += -L$$OUT_PWD/../../radenv/ -l$$RADENVCORE
-else:symbian: LIBS += -l$$RADENVCORE
-else:unix: LIBS += -L$$OUT_PWD/../../radenv/ -l$$RADENVCORE
+symbian: LIBS += -l$$RADENVCORE
+else: LIBS += -L$$OUT_PWD/../../radenv/ -l$$RADENVCORE
 
 INCLUDEPATH += $$PWD/../../core
 DEPENDPATH += $$PWD/../../core

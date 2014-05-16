@@ -41,12 +41,12 @@ Srs19Factory::~Srs19Factory()
     //nothing todo
 }
 
-void Srs19Factory::setManager(KPluginManager * mngr)
+void Srs19Factory::setManager(KApplication * mngr)
 {
     _manager = mngr;
 }
 
-KPluginManager * Srs19Factory::manager() const
+KApplication * Srs19Factory::manager() const
 {
     return _manager;
 }
@@ -156,6 +156,8 @@ void Srs19Factory::detachStorage()
     _settingManager->save();
 
     //save other quantities
+
+    _storage = 0;
 }
 
 bool Srs19Factory::initialize()
@@ -171,13 +173,13 @@ bool Srs19Factory::initialize()
     ModelInfoList mi;
     //model information
     mi << KModelInfo(AirDischarge::SerialId, "AD", tr("Atmospheric Discharge"),
-                     tr("Discharge of radionuclide to atmosfer"), QIcon(":/srs19/cloud.png"))
+                     tr("Discharge of radionuclide to atmosfer"), QIcon(":/srs19/stack.png"))
        << KModelInfo(WaterDischarge::SerialId, "WD", tr("Surface Water Discharge"),
                      tr("Discharge of radionuclide to water"), QIcon(":/srs19/water.png"))
        << KModelInfo(SewageDischarge::SerialId, "SD", tr("Sewage Discharge"),
-                     tr("Discharge of radionuclide to sewage"), QIcon())
+                     tr("Discharge of radionuclide to sewage"), QIcon(":/srs19/sewage.png"))
        << KModelInfo(ConstantValue::SerialId, "C", tr("Constant value"),
-                      tr("User defined constant value(s)"), QIcon(":/srs19/transport.png"));
+                      tr("User defined constant value(s)"), QIcon(":/srs19/constant.png"));
     //add to group info
     _groupInfos.append(KGroupInfo(QObject::tr("Source"), mi));
 
@@ -187,53 +189,53 @@ bool Srs19Factory::initialize()
        << KModelInfo(RiverTransport::SerialId, "RT", tr("River Pathway"),
                      tr("Radionuclide transport model through river pathway"), QIcon(":/srs19/river.png"))
        << KModelInfo(EstuarineTransport::SerialId, "ET", tr("Estuarine Pathway"),
-                     tr("Radionuclide transport model through estuarine pathway"), QIcon(":/srs19/transport.png"))
+                     tr("Radionuclide transport model through estuarine pathway"), QIcon(":/srs19/estuary.png"))
        << KModelInfo(CoastalTransport::SerialId, "CT", tr("Coastal Water Pathway"),
-                     tr("Radionuclide transport model through coastal water"), QIcon(":/srs19/transport.png"))
+                     tr("Radionuclide transport model through coastal water"), QIcon(":/srs19/coastal.png"))
        << KModelInfo(SmallLakeTransport::SerialId, "ST", tr("Small Lake Pathway"),
-                     tr("Radionuclide transport model through small lake pathway"), QIcon(":/srs19/transport.png"))
+                     tr("Radionuclide transport model through small lake pathway"), QIcon(":/srs19/pond.png"))
        << KModelInfo(LargeLakeTransport::SerialId, "LT", tr("Large Lake Pathway"),
-                     tr("Radionuclide transport model through large lake pathway"), QIcon(":/srs19/transport.png"))
+                     tr("Radionuclide transport model through large lake pathway"), QIcon(":/srs19/largelake.png"))
        << KModelInfo(GenericCoastalTransport::SerialId, "GCT", tr("Generic Large Lake/Coastal Water Pathway"),
-                     tr("Radionuclide transport model through large lake/coastal water"), QIcon(":/srs19/transport.png"))
+                     tr("Radionuclide transport model through large lake/coastal water"), QIcon(":/srs19/genericwater.png"))
        << KModelInfo(FreshwaterSediment::SerialId, "FS", tr("Freshwater sediment"),
-                     tr("Sediment effect to radionuclide at freshwater"), QIcon(":/srs19/transport.png"))
+                     tr("Sediment effect to radionuclide at freshwater"), QIcon(":/srs19/freshwater-sediment.png"))
        << KModelInfo(CoastalSediment::SerialId, "CS", tr("Coastal sediment"),
-                     tr("Sediment effect to radionuclide at coastal"), QIcon(":/srs19/transport.png"))
+                     tr("Sediment effect to radionuclide at coastal"), QIcon(":/srs19/coastal-sediment.png"))
        << KModelInfo(Irrigation::SerialId, "IR", tr("Irrigation"),
-                     tr("Effect of radionuclide by irrigation"), QIcon(":/srs19/transport.png"))
+                     tr("Effect of radionuclide by irrigation"), QIcon(":/srs19/irrigation.png"))
        << KModelInfo(SludgeTransport::SerialId, "SL", tr("Surface sewage sludge"),
-                     tr("Surface concentration per unit area of sewage sludge"), QIcon(":/srs19/transport.png"))
+                     tr("Surface concentration per unit area of sewage sludge"), QIcon(":/srs19/surface-sewage.png"))
        << KModelInfo(GroundDeposition::SerialId, "GR", tr("Ground deposition"),
-                     tr("Deposition of radionuclide in surface soil"), QIcon(":/srs19/transport.png"));
+                     tr("Deposition of radionuclide in surface soil"), QIcon(":/srs19/ground.png"));
     _groupInfos.append(KGroupInfo(QObject::tr("Transport"), mi));
 
     mi.clear();
     mi << KModelInfo(Crop::SerialId, "CR", tr("Crops"),
-                    tr("Accumulation of radionuclide in crops"), QIcon(":/srs19/transport.png"))
+                    tr("Accumulation of radionuclide in crops"), QIcon(":/srs19/crop.png"))
         << KModelInfo(Forage::SerialId, "FR", tr("Forage"),
-                    tr("Accumulation of radionuclide in forages"), QIcon(":/srs19/transport.png"))
+                    tr("Accumulation of radionuclide in forages"), QIcon(":/srs19/forage.png"))
         << KModelInfo(StoredForage::SerialId, "SF", tr("Stored Forage"),
-                    tr("Concentration of radionuclide in stored animal feeds"), QIcon())
+                    tr("Concentration of radionuclide in stored animal feeds"), QIcon(":/srs19/stored-feed.png"))
         << KModelInfo(AnimalFeed::SerialId, "AF", tr("Animal Feed"),
-                    tr("Concentration of radionuclide in animal feeds"), QIcon())
+                    tr("Concentration of radionuclide in animal feeds"), QIcon(":/srs19/animal-feed.png"))
         << KModelInfo(MilkTransport::SerialId, "MT", tr("Milk"),
-                    tr("Concentration of radionuclide in milk"), QIcon())
+                    tr("Concentration of radionuclide in milk"), QIcon(":/srs19/milk.png"))
         << KModelInfo(MeatTransport::SerialId, "FT", tr("Meat"),
-                    tr("Concentration of radionuclide in meat"), QIcon())
+                    tr("Concentration of radionuclide in meat"), QIcon(":/srs19/meat.png"))
         << KModelInfo(FreshwaterFishTransport::SerialId, "FW", tr("Freshwater fish"),
-                    tr("Concentration of radionuclide in freshwater fish"), QIcon())
+                    tr("Concentration of radionuclide in freshwater fish"), QIcon(":/srs19/freshwaterfish.png"))
         << KModelInfo(MarineFishTransport::SerialId, "MF", tr("Marine fish"),
-                    tr("Concentration of radionuclide in marine fish"), QIcon())
+                    tr("Concentration of radionuclide in marine fish"), QIcon(":/srs19/marinefish.png"))
         << KModelInfo(MarineShellfishTransport::SerialId, "SF", tr("Marine shellfish"),
-                    tr("Concentration of radionuclide in marine shellfish"), QIcon()) ;
+                    tr("Concentration of radionuclide in marine shellfish"), QIcon(":/srs19/shellfish.png")) ;
     _groupInfos.append(KGroupInfo(tr("Foods"), mi));
 
     mi.clear();
     mi << KModelInfo(InfantDoseEstimation::SerialId, "IF", tr("Infant"),
-                    tr("Infant dose estimation"), QIcon(":/srs19/transport.png"))
+                    tr("Infant dose estimation"), QIcon(":/srs19/infant.png"))
         << KModelInfo(AdultDoseEstimation::SerialId, "AU", tr("Adult"),
-                    tr("Adult dose estimation"), QIcon(":/srs19/transport.png"));
+                    tr("Adult dose estimation"), QIcon(":/srs19/adult.png"));
     _groupInfos.append(KGroupInfo(tr("Doses"), mi));
 
     return true;

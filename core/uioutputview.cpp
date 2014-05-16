@@ -13,7 +13,7 @@ UiOutputView::UiOutputView(QWidget *parent) :
 }
 UiOutputView::~UiOutputView()
 {
-    qDebug() << "Output handler (view) destroyed";
+    qDebug() << "~Output handler (view) destroyed";
 }
 
 void UiOutputView::onOutputReady(const QString& msg)

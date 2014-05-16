@@ -1,9 +1,10 @@
 #include <QListWidgetItem>
 #include <QCheckBox>
+#include <QSettings>
 #include "dialogassessmentbrowser.h"
 #include "ui_dialogassessmentbrowser.h"
 #include "kassessment.h"
-#include "kpluginmanager.h"
+#include "kapplication.h"
 #include "kstorage.h"
 
 class CheckBoxItem : public QCheckBox
@@ -30,10 +31,14 @@ DialogAssessmentBrowser::DialogAssessmentBrowser(const QStringList & excludes, Q
 {
     ui->setupUi(this);
     loadAllAssessments(excludes);
+
+    KApplication::selfInstance()->setupValidGeometry("asbrowserdialog/geometry", this);
 }
 
 DialogAssessmentBrowser::~DialogAssessmentBrowser()
 {
+    QSettings settings;
+    settings.setValue("asbrowserdialog/geometry", this->saveGeometry());
     delete ui;
 }
 AssessmentList DialogAssessmentBrowser::assessments(QObject * parent) const
@@ -49,7 +54,7 @@ AssessmentList DialogAssessmentBrowser::assessments(QObject * parent) const
         }
     }
 
-    AssessmentList list = KPluginManager::instance()
+    AssessmentList list = KApplication::selfInstance()
             ->storage()->loadAssessments(names, parent);
 
     return list;
@@ -57,7 +62,7 @@ AssessmentList DialogAssessmentBrowser::assessments(QObject * parent) const
 
 void DialogAssessmentBrowser::loadAllAssessments(const QStringList &excludes)
 {
-    AssessmentList list = KPluginManager::instance()
+    AssessmentList list = KApplication::selfInstance()
             ->storage()->loadAssessmentPreviews(excludes, this);
     AssessmentList::const_iterator ait = list.constBegin();
     AssessmentList::const_iterator end = list.constEnd();

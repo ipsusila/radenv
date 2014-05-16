@@ -14,7 +14,7 @@
 #include "uiuserinput.h"
 #include "ksettingmanager.h"
 #include "kconnector.h"
-#include "kpluginmanager.h"
+#include "kapplication.h"
 #include "kstorage.h"
 
 /**
@@ -168,6 +168,7 @@ IModel * IModel::copyTo(KScenario * mscene) const
         model->setZValue(this->zValue());
         model->setLocation(location());
         model->setReport(report());
+        model->dptr->_userInputs = this->dptr->_userInputs;
         copyDataTo(model);
     }
 
@@ -297,6 +298,7 @@ bool IModel::promptUserInputs()
         }
         else {
             QDialog * dlg = new DialogUserInput(this, wUserInp);
+            dlg->setWindowIcon(info().icon());
             if (dlg->exec() == QDialog::Accepted) {
                 wUserInp->acceptValues();
                 accepted = true;

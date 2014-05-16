@@ -9,6 +9,7 @@ class QActionGroup;
 class QMenu;
 class QStackedWidget;
 class QTextEdit;
+class QPrinter;
 class KScenario;
 class XModelView;
 class IModelFactory;
@@ -19,21 +20,26 @@ class MainWindow : public QMainWindow
 {
     Q_OBJECT
 public:
-    explicit MainWindow(KPluginManager * pm, UiOutputView * vw, QWidget *parent = 0);
+    explicit MainWindow(UiOutputView * vw, QWidget *parent = 0);
     ~MainWindow();
 
 private slots:
     void modelTriggeredAction(IModelFactory* f, const KModelInfo & info);
     void switchView(int id, void * data);
+    void printRequested(QPrinter * printer);
+    void setupActionStates();
+    void changeScenario(KScenario * scenario);
 
     void printPreview();
-    void printSetup();
+    void pageSetup();
     void printAll();
+    void saveAsPdf();
 
     void editOptions();
     void editMode(QAction * act);
 
     void modelDatabase();
+    void closeDatabase();
     void modelLocations();
     void modelRadionuclides();
     void modelVerify();
@@ -52,19 +58,19 @@ private:
     void createMenus();
     void createToolBars();
     void createStatusBar();
-    void setupActionStates();
+    void clearAllViews();
 
     void createPluginMenus();
     void populatePluginMenus(XModelWidget * mw, QMenu * groupMenu,
         IModelFactory * factory, GroupInfoList groupList);
     void populatePluginMenus(QMenu * groupMenu, IModelFactory * factory, GroupInfoList groupList);
 
-    KPluginManager * plugMan;
     UiOutputView * outView;
     UiAssessmentExplorer * asExplorer;
     XModelView * view;
     QTextEdit * reportView;
     QStackedWidget * pages;
+    QPrinter * printer;
 
     QMenu *fileMenu;
     QMenu *editMenu;
@@ -76,9 +82,10 @@ private:
     QAction * fOpenAct;
     QAction * fSaveAct;
     QAction * fSaveAsAct;
+    QAction * fSaveAsPdfAct;
     QAction * fPrintPrevAct;
     QAction * fPrintAct;
-    QAction * fPrintSetupAct;
+    QAction * fPageSetupAct;
     QAction * fQuitAct;
 
     QAction * eClearAct;
@@ -91,6 +98,7 @@ private:
     QActionGroup * eGroupEdit;
 
     QAction * mDatabaseAct;
+    QAction * mCloseDbAct;
     QAction * mMapAct;
     QAction * mLocationAct;
     QAction * mRadionuclideAct;

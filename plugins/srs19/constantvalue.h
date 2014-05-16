@@ -20,6 +20,7 @@ public:
     bool verify(int * err = 0, int * warn = 0);
     virtual QDataStream & serialize(QDataStream &stream) const;
     virtual QDataStream & deserialize(QDataStream &stream);
+    virtual void copyDataTo(IModel * model) const;
 
 protected:
     bool allocateIoPorts();

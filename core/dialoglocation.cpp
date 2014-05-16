@@ -1,6 +1,8 @@
 #include <QMessageBox>
 #include <QtDebug>
 #include <QFileDialog>
+#include <QSettings>
+#include "kapplication.h"
 #include "dialoglocation.h"
 #include "ui_dialoglocation.h"
 #include "kstorage.h"
@@ -13,10 +15,13 @@ DialogLocation::DialogLocation(KStorage * stg, QWidget *parent) :
 {
     ui->setupUi(this);
     setupLocations(stg);
+    KApplication::selfInstance()->setupValidGeometry("locationdialog/geometry", this);
 }
 
 DialogLocation::~DialogLocation()
 {
+    QSettings settings;
+    settings.setValue("locationdialog/geometry", saveGeometry());
     delete ui;
 }
 

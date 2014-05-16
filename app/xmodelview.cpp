@@ -2,6 +2,8 @@
 #include <QMessageBox>
 #include <QMouseEvent>
 #include <QGraphicsItem>
+#include <QPrinter>
+#include <QPixmap>
 #include "xmodelview.h"
 #include "imodel.h"
 #include "kconnector.h"
@@ -28,28 +30,27 @@ void XModelView::resizeEvent(QResizeEvent *event)
 
 }
 
-void XModelView::drawBackground(QPainter * painter, const QRectF & rect)
+void XModelView::drawGrid(QPainter * painter, const QRectF & rect)
 {
-    QGraphicsView::drawBackground(painter, rect);
-
     //add grid add frame
     KScenario * mc = reinterpret_cast<KScenario *>(scene());
     if (mc == 0)
         return;
 
     if (mc->displayGrid()) {
-        QRectF arect = mc->sceneRect();
+        //QRectF rect = mc->sceneRect();
         int grid = mc->grid();
 
         //major and minor grid pen
         QPen minPen(QColor(230,230,230), 1, Qt::DotLine);
         QPen majPen(QColor(230,230,230), 1);
+        //QPen majPen(QColor(Qt::black), 1);
 
         //starting position, normalized to grid size
-        int x = grid * ((int)arect.x() / grid);
-        int y = grid * ((int)arect.y() / grid);
-        int r = grid * ((int)arect.right() / grid);
-        int b = grid * ((int)arect.bottom() / grid);
+        int x = grid * ((int)rect.x() / grid);
+        int y = grid * ((int)rect.y() / grid);
+        int r = grid * ((int)rect.right() / grid);
+        int b = grid * ((int)rect.bottom() / grid);
 
         //draw vertical line
         int dg = grid * 5;
@@ -57,11 +58,11 @@ void XModelView::drawBackground(QPainter * painter, const QRectF & rect)
         while (x < r) {
             if (x % dg == 0) {
                 painter->setPen(majPen);
-                painter->drawLine(x, arect.y(), x, arect.bottom());
+                painter->drawLine(x, rect.y(), x, rect.bottom());
                 painter->setPen(minPen);
             }
             else {
-                painter->drawLine(x, arect.y(), x, arect.bottom());
+                painter->drawLine(x, rect.y(), x, rect.bottom());
             }
 
             //next grid line
@@ -73,11 +74,11 @@ void XModelView::drawBackground(QPainter * painter, const QRectF & rect)
         while (y < b) {
             if (y % dg == 0) {
                 painter->setPen(majPen);
-                painter->drawLine(arect.x(), y, arect.right(), y);
+                painter->drawLine(rect.x(), y, rect.right(), y);
                 painter->setPen(minPen);
             }
             else {
-                painter->drawLine(arect.x(), y, arect.right(), y);
+                painter->drawLine(rect.x(), y, rect.right(), y);
             }
 
             //next grid line
@@ -94,6 +95,13 @@ void XModelView::drawBackground(QPainter * painter, const QRectF & rect)
     //display name
     QString txt = mc->name() + " (" + mc->assessment()->name() + ")";
     painter->drawText(mc->sceneRect(), Qt::AlignTop | Qt::AlignLeft, txt);
+}
+
+void XModelView::drawBackground(QPainter * painter, const QRectF & rect)
+{
+    QGraphicsView::drawBackground(painter, rect);
+    QGraphicsScene * sc = scene();
+    drawGrid(painter, sc == 0 ? QRectF() : sc->sceneRect());
 }
 void XModelView::mousePressEvent(QMouseEvent * event)
 {
@@ -244,7 +252,72 @@ void XModelView::attachScenario(KScenario * scenario)
 {
     if (scenario != scene()) {
         setScene(scenario);
-        zoomFit();
+        zoomOriginal();
+        ensureVisible(scenario->itemsBoundingRect());
+    }
+}
+
+void XModelView::printDocument(QPrinter * printer)
+{
+    if (this->scene() != 0) {
+        KScenario * scenario = reinterpret_cast<KScenario *>(scene());
+        printer->setDocName(scenario->name());
+
+        /*
+        QRect scRect = scene()->sceneRect().toRect();
+        QRect prRect = printer->pageRect();
+        float sx = (float)prRect.width() / scRect.width();
+        float sy = (float)prRect.height() / scRect.height();
+        float ss = qMin(sx, sy);
+        QRect imgRect = QRect(0, 0, scRect.width() * ss, scRect.height() * ss);
+        QPixmap pixmap(imgRect.size());
+        pixmap.fill();
+        QPainter painter(&pixmap);
+        painter.setWindow(scRect);
+        imgRect.moveCenter(QPoint(0, 0));
+        //painter.setViewport(imgRect);
+        displayGrid(&painter, scRect);
+        //painter.translate(scRect.left(), scRect.top());
+        scenario->render(&painter, imgRect, scRect);
+
+        QPainter painterPrint(printer);
+        painterPrint.drawPixmap(printer->margins().left, printer->margins().top,
+                                pixmap.width(), pixmap.height(), pixmap);
+        pixmap.save("e:/pix.jpg");
+        */
+
+        /*
+        QPainter painter(printer);
+        painter.setRenderHint(QPainter::Antialiasing);
+        painter.setWindow(scRect);
+        displayGrid(&painter, scRect);
+        painter.translate(scRect.left(), scRect.top());
+        scenario->render(&painter, prRect, scRect, Qt::KeepAspectRatio);
+        */
+
+
+        //TODO
+        //drawing without using pixmap
+        QRect scRect = scene()->sceneRect().toRect();
+        QRect prRect = printer->pageRect();
+
+        //draw to pixmap
+        QPixmap pixmap(scRect.size());
+        pixmap.fill();
+
+        //create painter
+        QPainter painter(&pixmap);
+        painter.setRenderHint(QPainter::Antialiasing);
+        painter.setWindow(scRect);
+        drawGrid(&painter, scRect);
+        painter.translate(scRect.left(), scRect.top());
+        scene()->render(&painter);
+
+        //draw to printer
+        QPixmap scPixmap = pixmap.scaled(prRect.size(), Qt::KeepAspectRatio, Qt::SmoothTransformation);
+        QPainter painterPrint(printer);
+        painterPrint.drawPixmap(QPoint(0,0), scPixmap, scPixmap.rect());
+
     }
 }
 

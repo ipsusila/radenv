@@ -9,7 +9,7 @@
 #include "dialogscenario.h"
 #include "dialogassessment.h"
 #include "dialogassessmentbrowser.h"
-#include "kpluginmanager.h"
+#include "kapplication.h"
 #include "kstorage.h"
 #include "koutput.h"
 #include "khtmlreport.h"
@@ -243,6 +243,10 @@ void UiAssessmentExplorer::buildMenus()
     asMenu->addAction(actOpenAssessment);
     asMenu->addSeparator();
     asMenu->addAction(actSaveAssessment);
+
+    QAction * actSaveAssessmentAs = new QAction(tr("Save Assessment As..."), asMenu);
+    connect(actSaveAssessmentAs, SIGNAL(triggered()), this, SLOT(saveAssessmentAs()));
+    asMenu->addAction(actSaveAssessmentAs);
     asMenu->addAction(actSaveAllAssessment);
     asMenu->addSeparator();
 
@@ -264,11 +268,19 @@ void UiAssessmentExplorer::buildMenus()
     QAction * actEvalScenario = new QAction(tr("Evaluate..."), scMenu);
     connect(actEvalScenario, SIGNAL(triggered()), this, SLOT(evaluateScenario()));
     scMenu->addAction(actEvalScenario);
-    scMenu->addSeparator();
 
     QAction * actGenReport = new QAction(tr("Generate Report"), scMenu);
     connect(actGenReport, SIGNAL(triggered()), this, SLOT(generateReport()));
     scMenu->addAction(actGenReport);
+    scMenu->addSeparator();
+
+    QAction * actCopyScenario = new QAction(tr("Copy Scenario"), scMenu);
+    connect(actCopyScenario, SIGNAL(triggered()), this, SLOT(copyScenario()));
+    scMenu->addAction(actCopyScenario);
+
+    QAction * actEditScenario = new QAction(tr("Edit Scenario"), scMenu);
+    connect(actEditScenario, SIGNAL(triggered()), this, SLOT(editScenario()));
+    scMenu->addAction(actEditScenario);
     scMenu->addSeparator();
 
     QAction * actRemoveScenario = new QAction(tr("Remove Scenario..."), scMenu);
@@ -298,12 +310,21 @@ void UiAssessmentExplorer::setDecoration(QTreeWidgetItem * item)
     ExplorerItem * eItem = reinterpret_cast<ExplorerItem *>(item);
     if (eItem->isRootItem()) {
         if (eItem->isExpanded())
+            eItem->setIcon(0, QIcon(":/core/root-expanded.png"));
+        else
+            eItem->setIcon(0, QIcon(":/core/root-collapsed.png"));
+    }
+    else if (eItem->isAssessmentItem()) {
+        if (eItem->isExpanded())
             eItem->setIcon(0, QIcon(":/core/assessment-expanded.png"));
         else
             eItem->setIcon(0, QIcon(":/core/assessment-collapsed.png"));
     }
-    else {
-
+    else if (eItem->isScenarioItem()) {
+        if (eItem->isExpanded())
+            eItem->setIcon(0, QIcon(":/core/scenario-expanded.png"));
+        else
+            eItem->setIcon(0, QIcon(":/core/scenario-collapsed.png"));
     }
 }
 void UiAssessmentExplorer::handleCurrentItem(QTreeWidgetItem * current, QTreeWidgetItem * previous)
@@ -418,6 +439,18 @@ void UiAssessmentExplorer::changeScenario(KScenario * scenario)
         qDebug() << "Scenario changed";
     }
 }
+void UiAssessmentExplorer::addScenario(KScenario * scenario)
+{
+    //search for assessment item
+    ExplorerItem * root = dptr->root();
+    for(int k = 0; k < root->childCount(); k++) {
+        ExplorerItem * asItem = reinterpret_cast<ExplorerItem *>(root->child(k));
+        if (asItem->assessment() == scenario->assessment()) {
+            addScenario(asItem, scenario);
+            break;
+        }
+    }
+}
 
 void UiAssessmentExplorer::addScenario(QTreeWidgetItem *aItem, KScenario *scene)
 {
@@ -470,17 +503,75 @@ void UiAssessmentExplorer::displayContextMenu(const QPoint & pos)
     }
 }
 
+QTreeWidgetItem * UiAssessmentExplorer::assessmentItem(KAssessment *aP, QTreeWidgetItem * parent) const
+{
+    if (parent == 0)
+        parent = dptr->root();
+
+    for(int k = 0; k < parent->childCount(); k++) {
+        ExplorerItem * child = reinterpret_cast<ExplorerItem *>(parent->child(k));
+        if (child->isAssessmentItem() && child->assessment() == aP) {
+            return child;
+        }
+        else {
+            QTreeWidgetItem * aItem = assessmentItem(aP, child);
+            if (aItem != 0)
+                return aItem;
+        }
+    }
+    return 0;
+}
+
+
+QTreeWidgetItem * UiAssessmentExplorer::scenarioItem(KScenario * scenario, QTreeWidgetItem * parent) const
+{
+    if (parent == 0)
+        parent = dptr->root();
+
+    for(int k = 0; k < parent->childCount(); k++) {
+        ExplorerItem * child = reinterpret_cast<ExplorerItem *>(parent->child(k));
+        if (child->isScenarioItem() && child->scenario() == scenario) {
+            return child;
+        }
+        else {
+            QTreeWidgetItem * scItem = scenarioItem(scenario, child);
+            if (scItem != 0)
+                return scItem;
+        }
+    }
+    return 0;
+}
+
+QTreeWidgetItem * UiAssessmentExplorer::reportItem(KScenario * scenario,
+                                                  QTreeWidgetItem *parent) const
+{
+    if (parent == 0)
+        parent = dptr->root();
+
+    for(int k = 0; k < parent->childCount(); k++) {
+        ExplorerItem * child = reinterpret_cast<ExplorerItem *>(parent->child(k));
+        if (child->scenario() == scenario && child->report() != 0) {
+            return child;
+        }
+        else {
+            QTreeWidgetItem * repItem = reportItem(scenario, child);
+            if (repItem != 0)
+                return repItem;
+        }
+    }
+    return 0;
+}
+
 void UiAssessmentExplorer::addAssessment()
 {
-    if (!KPluginManager::instance()->hasStorage())
+    if (!KApplication::selfInstance()->hasStorage())
         return;
 
     //add new assessment
-    //TODO
-    //check for existing assessment with a same name
     DialogAssessment dlg;
+    dlg.setWindowTitle(tr("Add New Assessment"));
     if (dlg.exec() == QDialog::Accepted) {
-        this->addAssessment(dlg.assessment(this));
+        addAssessment(dlg.assessment(this));
     }
 }
 
@@ -491,10 +582,10 @@ void UiAssessmentExplorer::removeAssessment()
     if (cItem != 0 && (aP = cItem->assessment()) != 0) {
         //ask
         int ret = QMessageBox::question(this, tr("Remove Assessment?"),
-            tr("Remove Assessment: ") + aP->name() + "?", QMessageBox::Yes, QMessageBox::No);
+            tr("Do you really want to remove Assessment: ") + aP->name() + " from database?", QMessageBox::Yes, QMessageBox::No);
         if (ret == QMessageBox::Yes) {
             //remove from storage
-            KPluginManager::instance()->storage()->remove(*aP);
+            KApplication::selfInstance()->storage()->remove(*aP);
 
             //delete item
             delete cItem;
@@ -508,9 +599,8 @@ void UiAssessmentExplorer::saveAssessment()
     KAssessment * aP;
     ExplorerItem * cItem = reinterpret_cast<ExplorerItem *>(currentItem());
     if (cItem != 0 && (aP = cItem->assessment()) != 0) {
-        //TODO
         //save assessment
-        KPluginManager::instance()->storage()->save(*aP);
+        KApplication::selfInstance()->storage()->save(*aP);
     }
 }
 void UiAssessmentExplorer::saveAssessmentAs()
@@ -518,10 +608,15 @@ void UiAssessmentExplorer::saveAssessmentAs()
     KAssessment * curAp = dptr->currentAssessment();
     if (curAp != 0) {
         DialogAssessment dlg(curAp);
+        dlg.setWindowTitle(tr("Save Assessment As..."));
         if (dlg.exec() == QDialog::Accepted) {
             KAssessment * aP = dlg.assessment(this);
             if (aP != 0) {
-                KPluginManager::instance()->storage()->save(*aP);
+                KApplication::selfInstance()->storage()->save(*aP);
+                QTreeWidgetItem * aItem = assessmentItem(aP);
+                if (aItem)
+                    aItem->setText(0, aP->name());
+                /*
                 ExplorerItem * root = dptr->root();
                 for(int k = 0; k < root->childCount(); k++) {
                     ExplorerItem * item = reinterpret_cast<ExplorerItem *>(root->child(k));
@@ -530,6 +625,7 @@ void UiAssessmentExplorer::saveAssessmentAs()
                         break;
                     }
                 }
+                */
             }
         }
     }
@@ -544,7 +640,7 @@ void UiAssessmentExplorer::saveAllAssessment()
         if (aP != 0) {
             //save assessment
             xTrace() << "Saving assessment " << aP->name();
-            KPluginManager::instance()->storage()->save(*aP);
+            KApplication::selfInstance()->storage()->save(*aP);
         }
     }
 }
@@ -552,6 +648,14 @@ void UiAssessmentExplorer::closeAllAssessment()
 {
     //close all assessments
     ExplorerItem * root = dptr->root(this);
+    if (root->childCount() == 0)
+        return;
+
+    int ret = QMessageBox::question(this, tr("Close Assessment?"),
+        tr("Do you really want to close all assessment (s)?"), QMessageBox::Yes, QMessageBox::No);
+    if (ret != QMessageBox::Yes)
+        return;
+
     while(root->childCount() > 0) {
         ExplorerItem * child = reinterpret_cast<ExplorerItem *>(root->child(0));
         KAssessment * aP = child->assessment();
@@ -564,7 +668,7 @@ void UiAssessmentExplorer::closeAllAssessment()
 
 void UiAssessmentExplorer::openAssessment()
 {
-    if (KPluginManager::instance()->hasStorage()) {
+    if (KApplication::selfInstance()->hasStorage()) {
         QStringList excludes = assessmentNames();
         DialogAssessmentBrowser dlg(excludes);
         if (dlg.exec() == QDialog::Accepted) {
@@ -585,12 +689,26 @@ void UiAssessmentExplorer::closeAssessment()
 
 void UiAssessmentExplorer::addScenario()
 {
-    ExplorerItem * cItem = reinterpret_cast<ExplorerItem *>(currentItem());
-    if (cItem != 0 && cItem->assessment() != 0) {
-        DialogScenario dlg(cItem->assessment());
+    KAssessment * aP = dptr->currentAssessment();
+    if (aP != 0) {
+        DialogScenario dlg(aP);
+        dlg.setWindowTitle(tr("Add New Scenario"));
         if (dlg.exec() == QDialog::Accepted) {
             KScenario * scP = dlg.scenario();
-            addScenario(cItem, scP);
+            addScenario(scP);
+        }
+    }
+}
+void UiAssessmentExplorer::editScenario()
+{
+    KScenario * scP = dptr->currentScenario();
+    if (scP != 0) {
+        DialogScenario dlg(scP);
+        dlg.setWindowTitle(tr("Edit Scenario ") + scP->name());
+        if (dlg.exec() == QDialog::Accepted) {
+            QTreeWidgetItem * scItem = scenarioItem(scP);
+            if (scItem != 0)
+                scItem->setText(0, scP->name());
         }
     }
 }
@@ -603,7 +721,7 @@ void UiAssessmentExplorer::removeScenario()
         if (scP != 0) {
             //ask
             int ret = QMessageBox::question(this, tr("Remove Scenario?"),
-                tr("Remove Scenario: ") + scP->name() + "?", QMessageBox::Yes, QMessageBox::No);
+                tr("Do you really want to remove scenario: ") + scP->name() + "?", QMessageBox::Yes, QMessageBox::No);
             if (ret == QMessageBox::Yes) {
                 delete sItem;
                 removeScenario(scP);
@@ -626,32 +744,19 @@ void UiAssessmentExplorer::evaluateScenario()
         curScenario->evaluate();
 }
 
-KReport * UiAssessmentExplorer::report(KScenario * scenario) const
-{
-    ExplorerItem * root = dptr->root();
-    for(int m = 0; m < root->childCount(); m++) {
-        QTreeWidgetItem * aItem = root->child(m);
-        for (int n = 0; n < aItem->childCount(); n++) {
-            QTreeWidgetItem * scItem = aItem->child(n);
-            for(int j = 0; j < scItem->childCount(); j++) {
-                ExplorerItem * repItem = reinterpret_cast<ExplorerItem *>(scItem->child(j));
-                if (repItem->scenario() == scenario && repItem->report() != 0)
-                    return repItem->report();
-            }
-
-        }
-    }
-    return 0;
-}
-
 void UiAssessmentExplorer::generateReport()
 {
     KScenario * curScenario = dptr->currentScenario();
     if (curScenario != 0) {
-        KReport * rep = report(curScenario);
+        ExplorerItem * repItem =
+                reinterpret_cast<ExplorerItem*>(reportItem(curScenario));
+        if (repItem == 0)
+            return;
+        KReport * rep = repItem->report();
         if (rep != 0)
             curScenario->setReport(rep);
         curScenario->generateReport();
+        setCurrentItem(repItem);
     }
 }
 void UiAssessmentExplorer::refreshScenario()
@@ -660,6 +765,19 @@ void UiAssessmentExplorer::refreshScenario()
     if (curScenario != 0)
         curScenario->refresh();
 }
+void UiAssessmentExplorer::copyScenario()
+{
+    KScenario * curScenario = dptr->currentScenario();
+    if (curScenario != 0) {
+        //get scenarioname
+        KAssessment * aP = curScenario->assessment();
+        KScenario * copyScenario = aP->createScenario(curScenario->name());
+        curScenario->copyModelsTo(copyScenario, true);
+        copyScenario->setDescription(curScenario->description());
+        addScenario(copyScenario);
+    }
+}
+
 void UiAssessmentExplorer::createModel(IModelFactory * factory, const KModelInfo & info)
 {
     KScenario * curScenario = dptr->currentScenario();

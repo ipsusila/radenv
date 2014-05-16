@@ -13,8 +13,8 @@ class IModelFactory
 public:
     virtual ~IModelFactory() {}
 
-    virtual void setManager(KPluginManager * mngr) = 0;
-    virtual KPluginManager * manager() const = 0;
+    virtual void setManager(KApplication * mngr) = 0;
+    virtual KApplication * manager() const = 0;
     virtual KStorage * storage() const = 0;
     virtual void attachStorage(KStorage * stg) = 0;
     virtual void detachStorage() = 0;

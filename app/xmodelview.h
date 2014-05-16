@@ -4,6 +4,7 @@
 #include <QGraphicsView>
 #include "kscenario.h"
 
+class QPrinter;
 class XModelView : public QGraphicsView
 {
     Q_OBJECT
@@ -13,6 +14,7 @@ public:
 
     bool isDisplayGrid() const;
     bool isSnapToGrid() const;
+    void printDocument(QPrinter * printer);
 
 protected:
     virtual void resizeEvent(QResizeEvent *event);
@@ -22,6 +24,7 @@ protected:
 
     void removeItem(QGraphicsItem * item);
     void removeConnection(QGraphicsItem * selItem);
+    void drawGrid(QPainter * painter, const QRectF & rect);
 
 signals:
     

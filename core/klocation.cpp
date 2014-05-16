@@ -5,7 +5,7 @@
 #include "klocation.h"
 #include "kcalculationinfo.h"
 #include "kstorage.h"
-#include "kpluginmanager.h"
+#include "kapplication.h"
 
 class KLocationPrivate : public QSharedData
 {
@@ -291,7 +291,7 @@ QDataStream & KLocation::deserialize(QDataStream & stream)
     qDebug() << Q_FUNC_INFO << ", stream pos: " << stream.device()->pos();
     QString c;
     stream >> c;
-    *this = KPluginManager::instance()->storage()->location(c);
+    *this = KApplication::selfInstance()->storage()->location(c);
 
     return stream;
 }

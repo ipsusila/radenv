@@ -8,6 +8,10 @@
 #include <QFileDialog>
 #include <QSettings>
 #include <QTextEdit>
+#include <QPrinter>
+#include <QPrintDialog>
+#include <QPageSetupDialog>
+#include <QPrintPreviewDialog>
 #include "mainwindow.h"
 #include "xmodelview.h"
 
@@ -27,15 +31,13 @@
 #include "dialoglocation.h"
 #include "dialogradionuclide.h"
 #include "kmath.h"
-#include "kpluginmanager.h"
+#include "kapplication.h"
 #include "kassessment.h"
 #include "uiassessmentexplorer.h"
+#include "dialogoption.h"
 
-//test
-#include "testclass.h"
-
-MainWindow::MainWindow(KPluginManager *pm, UiOutputView * vw, QWidget *parent) :
-    QMainWindow(parent), plugMan(pm), outView(vw), asExplorer(0)
+MainWindow::MainWindow(UiOutputView * vw, QWidget *parent) :
+    QMainWindow(parent), outView(vw), asExplorer(0)
 {
     createViews();
     createActions();
@@ -46,20 +48,27 @@ MainWindow::MainWindow(KPluginManager *pm, UiOutputView * vw, QWidget *parent) :
 
     setWindowTitle(tr("SMEA Dose Assessments"));
     setUnifiedTitleAndToolBarOnMac(true);
+
+    QSettings settings;
+    restoreGeometry(settings.value("app/geometry").toByteArray());
+    restoreState(settings.value("app/settings").toByteArray());
 }
 
 MainWindow::~MainWindow()
 {
+    delete printer;
 }
 
 void MainWindow::closeEvent(QCloseEvent *event)
 {
-    KPluginManager * pm = KPluginManager::instance();
-    if (pm->hasStorage()) {
-        QSettings settings;
-        QString lastStorage = pm->storage()->storageName();
-        settings.setValue("app/storage", lastStorage);
-    }
+    QSettings settings;
+    QString lastStorage;
+    KApplication * pm = KApplication::selfInstance();
+    if (pm->hasStorage())
+        lastStorage = pm->storage()->storageName();
+    settings.setValue("app/storage", lastStorage);
+    settings.setValue("app/geometry", this->saveGeometry());
+    settings.setValue("app/state", saveState());
 
     event->accept();
 }
@@ -72,6 +81,9 @@ void MainWindow::createViews()
     view = new XModelView(this);
     reportView = new QTextEdit(this);
     reportView->setReadOnly(true);
+
+    //create printer
+    printer = new QPrinter(QPrinter::PrinterResolution);
 
     //allocate stack widget to display multiple views
     //available views:
@@ -91,6 +103,7 @@ void MainWindow::createViews()
 
     //Create dock widget to display the output
     QDockWidget *dock = new QDockWidget(tr("Output window"), this);
+    dock->setObjectName("OutputWindow");
     dock->setAllowedAreas(Qt::BottomDockWidgetArea);
     dock->setWidget(outView);
     dock->setContentsMargins(2,2,2,2);
@@ -101,6 +114,7 @@ void MainWindow::createViews()
 
     //Create dock widget to display the models
     dock = new QDockWidget(tr("Assessment Explorer"), this);
+    dock->setObjectName("AssessmentExplorer");
     dock->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
     asExplorer = new UiAssessmentExplorer(dock);
     dock->setContentsMargins(2,2,2,0);
@@ -116,7 +130,10 @@ void MainWindow::createViews()
             view, SLOT(detachScenario(KScenario*)));
     connect(asExplorer, SIGNAL(viewChanged(int, void*)),
             this, SLOT(switchView(int, void*)));
-
+    connect(asExplorer, SIGNAL(currentScenarioChanged(KScenario*)),
+            this, SLOT(changeScenario(KScenario*)));
+    connect(asExplorer, SIGNAL(removingScenario(KScenario*)),
+            this, SLOT(changeScenario(KScenario*)));
 }
 
 void MainWindow::createActions()
@@ -155,11 +172,17 @@ void MainWindow::createActions()
     fSaveAsAct->setIcon(QIcon(":/std/save-assessment-as.png"));
     connect(fSaveAsAct, SIGNAL(triggered()), asExplorer, SLOT(saveAssessmentAs()));
 
-    fPrintSetupAct = new QAction(tr("Print Setup..."), this);
+    fSaveAsPdfAct = new QAction(tr("Save As PDF..."), this);
+    //fSaveAsPdfAct->setShortcut(QKeySequence::SaveAs);
+    fSaveAsPdfAct->setStatusTip(tr("Save current view as PDF file"));
+    fSaveAsPdfAct->setIcon(QIcon(":/std/savepdf.png"));
+    connect(fSaveAsPdfAct, SIGNAL(triggered()), this, SLOT(saveAsPdf()));
+
+    fPageSetupAct = new QAction(tr("Page Setup..."), this);
     //fPrintSetupAct->setShortcut(QKeySequence::Save);
-    fPrintSetupAct->setStatusTip(tr("Setup printer"));
+    fPageSetupAct->setStatusTip(tr("Setup page for printer"));
     //fPrintSetupAct->setIcon(QIcon(":/std/save-assessment.png"));
-    connect(fPrintSetupAct, SIGNAL(triggered()), this, SLOT(printSetup()));
+    connect(fPageSetupAct, SIGNAL(triggered()), this, SLOT(pageSetup()));
 
     fPrintPrevAct = new QAction(tr("Print Pre&view..."), this);
     //fPrintPrevAct->setShortcut(QKeySequence::Print);
@@ -167,9 +190,9 @@ void MainWindow::createActions()
     //fPrintPrevAct->setIcon(QIcon(":/std/save-assessment.png"));
     connect(fPrintPrevAct, SIGNAL(triggered()), this, SLOT(printPreview()));
 
-    fPrintAct = new QAction(tr("&Print"), this);
+    fPrintAct = new QAction(tr("&Print..."), this);
     fPrintAct->setShortcut(QKeySequence::Print);
-    fPrintAct->setStatusTip(tr("Print all"));
+    fPrintAct->setStatusTip(tr("Print currently active document"));
     fPrintAct->setIcon(QIcon(":/std/print.png"));
     connect(fPrintAct, SIGNAL(triggered()), this, SLOT(printAll()));
 
@@ -258,6 +281,12 @@ void MainWindow::createActions()
     mDatabaseAct->setIcon(QIcon(":/std/model-database.png"));
     connect(mDatabaseAct, SIGNAL(triggered()), this, SLOT(modelDatabase()));
 
+    mCloseDbAct = new QAction(tr("&Close Database"), this);
+    //mCloseDbAct->setShortcuts(QKeySequence::HelpContents);
+    mCloseDbAct->setStatusTip(tr("Close current database"));
+    mCloseDbAct->setIcon(QIcon(":/std/model-closedb.png"));
+    connect(mCloseDbAct, SIGNAL(triggered()), this, SLOT(closeDatabase()));
+
     mRadionuclideAct = new QAction(tr("Manage &Radionuclides..."), this);
     //mRadionuclideAct->setShortcuts(QKeySequence::HelpContents);
     mRadionuclideAct->setStatusTip(tr("Manage Radionuclide database"));
@@ -299,14 +328,14 @@ void MainWindow::createActions()
     */
     vDisplayGridAct = new QAction(tr("&Display Grid"), this);
     vDisplayGridAct->setCheckable(true);
-    vDisplayGridAct->setChecked(view->isDisplayGrid());
+    //vDisplayGridAct->setChecked(view->isDisplayGrid());
     vDisplayGridAct->setStatusTip(tr("Show/hide grid line"));
     vDisplayGridAct->setIcon(QIcon(":/std/grid-show.png"));
     connect(vDisplayGridAct, SIGNAL(triggered(bool)), view, SLOT(displayGrid(bool)));
 
     vSnapGridAct = new QAction(tr("&Snap to Grid"), this);
     vSnapGridAct->setCheckable(true);
-    vSnapGridAct->setChecked(view->isSnapToGrid());
+    //vSnapGridAct->setChecked(view->isSnapToGrid());
     vSnapGridAct->setStatusTip(tr("Snap object to grid"));
     vSnapGridAct->setIcon(QIcon(":/std/grid-snap.png"));
     connect(vSnapGridAct, SIGNAL(triggered(bool)), view, SLOT(snapToGrid(bool)));
@@ -354,7 +383,11 @@ void MainWindow::createActions()
 void MainWindow::createToolBars()
 {
     fileToolBar = addToolBar(tr("File"));
+    fileToolBar->setObjectName("tbFile");
     fileToolBar->addAction(fQuitAct);
+    fileToolBar->addSeparator();
+    fileToolBar->addAction(mDatabaseAct);
+    fileToolBar->addAction(mCloseDbAct);
     fileToolBar->addSeparator();
     fileToolBar->addAction(fNewAct);
     fileToolBar->addAction(fOpenAct);
@@ -365,6 +398,7 @@ void MainWindow::createToolBars()
     fileToolBar->addAction(fPrintAct);
 
     editToolBar = addToolBar(tr("Edit"));
+    editToolBar->setObjectName("tbEdit");
     editToolBar->addActions(eGroupEdit->actions());
     editToolBar->addSeparator();
     editToolBar->addAction(eClearAct);
@@ -374,7 +408,7 @@ void MainWindow::createToolBars()
     editToolBar->addAction(this->eOptionsAct);
 
     modelToolBar = addToolBar(tr("Model"));
-    modelToolBar->addAction(mDatabaseAct);
+    modelToolBar->setObjectName("tbModel");
     modelToolBar->addAction(mLocationAct);
     modelToolBar->addSeparator();
     modelToolBar->addAction(mVerifyAct);
@@ -382,6 +416,7 @@ void MainWindow::createToolBars()
     modelToolBar->addAction(mReportAct);
 
     viewToolBar = addToolBar(tr("View"));
+    viewToolBar->setObjectName("tbView");
     viewToolBar->addAction(this->vDisplayGridAct);
     viewToolBar->addAction(this->vSnapGridAct);
     viewToolBar->addAction(this->vZoomOrigAct);
@@ -398,6 +433,7 @@ void MainWindow::createMenus()
 {
     fileMenu = menuBar()->addMenu(tr("&File"));
     fileMenu->addAction(mDatabaseAct);
+    fileMenu->addAction(mCloseDbAct);
     fileMenu->addSeparator();
     fileMenu->addAction(fNewAct);
     fileMenu->addAction(fOpenAct);
@@ -405,7 +441,9 @@ void MainWindow::createMenus()
     fileMenu->addAction(fSaveAct);
     fileMenu->addAction(fSaveAsAct);
     fileMenu->addSeparator();
-    fileMenu->addAction(fPrintSetupAct);
+    fileMenu->addAction(fSaveAsPdfAct);
+    fileMenu->addSeparator();
+    fileMenu->addAction(fPageSetupAct);
     fileMenu->addAction(fPrintPrevAct);
     fileMenu->addAction(fPrintAct);
     fileMenu->addSeparator();
@@ -456,7 +494,7 @@ void MainWindow::createPluginMenus()
     //add top menus
     bool hasSeparator = false;
     bool hasViewSeparator = false;
-    FactoryList factories = KPluginManager::instance()->factories();
+    FactoryList factories = KApplication::selfInstance()->factories();
     foreach(IModelFactory * factory, factories) {
         //if is top level factory, add as new menu item (placed after model)
         if (factory->isTopLevel()) {
@@ -464,6 +502,7 @@ void MainWindow::createPluginMenus()
 
             //Create dock widget to display the models
             QDockWidget *dock = new QDockWidget(factory->name(), this);
+            dock->setObjectName(factory->name());
             dock->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
             XModelWidget * mw = new XModelWidget(dock);
             dock->setWidget(mw);
@@ -556,29 +595,52 @@ void MainWindow::createStatusBar()
 }
 void MainWindow::setupActionStates()
 {
-    bool enabled = KPluginManager::instance()->hasStorage();
+    bool enabled = KApplication::selfInstance()->hasStorage();
+    bool scenarioView = pages->currentWidget() == view && view->scene() != 0;
+    bool hasAssessment = asExplorer->currentAssessment() != 0;
+    bool hasContent = view->scene() != 0 || !reportView->document()->isEmpty();
 
+    mCloseDbAct->setEnabled(enabled);
     fNewAct->setEnabled(enabled);
     fOpenAct->setEnabled(enabled);
-    fSaveAct->setEnabled(enabled);
-    fSaveAsAct->setEnabled(enabled);
-    fPrintPrevAct->setEnabled(enabled);
-    fPrintAct->setEnabled(enabled);
-    fPrintSetupAct->setEnabled(enabled);
+    fSaveAct->setEnabled(enabled && hasAssessment);
+    fSaveAsAct->setEnabled(enabled && hasAssessment);
+    fSaveAsPdfAct->setEnabled(enabled && hasContent);
+    fPrintPrevAct->setEnabled(enabled && hasContent);
+    fPrintAct->setEnabled(enabled && hasContent);
+    fPageSetupAct->setEnabled(enabled);
 
-    eClearAct->setEnabled(enabled);
-    eRemoveAct->setEnabled(enabled);
-    eRemoveConAct->setEnabled(enabled);
-    eConnectAct->setEnabled(enabled);
-    eRenumberAct->setEnabled(enabled);
+    eClearAct->setEnabled(enabled && scenarioView);
+    eRemoveAct->setEnabled(enabled && scenarioView);
+    eRemoveConAct->setEnabled(enabled && scenarioView);
+    eConnectAct->setEnabled(enabled && scenarioView);
+    eRenumberAct->setEnabled(enabled && scenarioView);
 
     //mMapAct->setEnabled(enabled);
     mLocationAct->setEnabled(enabled);
     mRadionuclideAct->setEnabled(enabled);
-    mVerifyAct->setEnabled(enabled);
-    mEvalAct->setEnabled(enabled);
+    mVerifyAct->setEnabled(enabled && scenarioView);
+    mEvalAct->setEnabled(enabled && scenarioView);
     //mCalcStepAct->setEnabled(enabled);
-    mReportAct->setEnabled(enabled);
+    mReportAct->setEnabled(enabled && scenarioView);
+}
+void MainWindow::changeScenario(KScenario * scenario)
+{
+    if (scenario != 0) {
+        vSnapGridAct->setChecked(scenario->snapToGrid());
+        vDisplayGridAct->setChecked(scenario->displayGrid());
+    }
+    else {
+        vSnapGridAct->setChecked(false);
+        vDisplayGridAct->setChecked(false);
+    }
+}
+
+void MainWindow::clearAllViews()
+{
+    asExplorer->closeAllAssessment();
+    reportView->clear();
+    setupActionStates();
 }
 
 void MainWindow::modelTriggeredAction(IModelFactory* f, const KModelInfo & info)
@@ -589,25 +651,72 @@ void MainWindow::modelTriggeredAction(IModelFactory* f, const KModelInfo & info)
     asExplorer->createModel(f, info);
     xTrace() << "Create model: " << info.name();
 }
+void MainWindow::printRequested(QPrinter *printer)
+{
+    if (pages->currentWidget() == view)
+        view->printDocument(printer);
+    else if (pages->currentWidget() == reportView)
+        reportView->print(printer);
+}
 
 void MainWindow::printPreview()
 {
-
+#if !defined(Q_OS_SYMBIAN)
+    QPrintPreviewDialog dlg(printer, this);
+    connect(&dlg, SIGNAL(paintRequested(QPrinter*)), this, SLOT(printRequested(QPrinter*)));
+    dlg.exec();
+#endif
 }
 
-void MainWindow::printSetup()
+void MainWindow::pageSetup()
 {
-
+#if !defined(Q_OS_SYMBIAN)
+    QPageSetupDialog dlg(printer, this);
+    dlg.exec();
+#endif
 }
 
 void MainWindow::printAll()
 {
-
+#if !defined(Q_OS_SYMBIAN)
+    if (QPrintDialog(printer).exec() == QDialog::Accepted) {
+        printRequested(printer);
+    }
+#endif
+    /*
+    if (pages->currentWidget() == view) {
+        view->printWithDialog();
+    }
+    else if (pages->currentWidget() == reportView) {
+        QPrinter printer;
+        if (QPrintDialog(&printer).exec() == QDialog::Accepted) {
+            reportView->print(&printer);
+        }
+    }
+    */
+}
+void MainWindow::saveAsPdf()
+{
+    QString fileName = QFileDialog::getSaveFileName(this, tr("Save File"),"",
+                                                     tr("PDF File (*.pdf);;All files (*.*)"));
+    if (!fileName.isEmpty()) {
+        QPrinter pdf;
+        pdf.setOutputFileName(fileName);
+        pdf.setOutputFormat(QPrinter::PdfFormat);
+        pdf.setOrientation(printer->orientation());
+        pdf.setPaperSize(printer->paperSize());
+        pdf.setResolution(printer->resolution());
+        pdf.setFullPage(printer->fullPage());
+        pdf.setCopyCount(1);
+        printRequested(&pdf);
+    }
 }
 
 void MainWindow::editOptions()
 {
-
+    DialogOption dlg;
+    if (dlg.exec() == QDialog::Accepted)
+        dlg.applyOptions();
 }
 
 void MainWindow::editMode(QAction * act)
@@ -625,20 +734,26 @@ void MainWindow::modelDatabase()
 {
     QString fileName = QFileDialog::getSaveFileName(this, tr("Database File"),
                                "", tr("Database file (*.db)"), 0, QFileDialog::DontConfirmOverwrite);
-    KPluginManager * pm = KPluginManager::instance();
+    KApplication * pm = KApplication::selfInstance();
     if (!fileName.isEmpty()) {
         if (!pm->hasStorage() || pm->storage()->storageName() != fileName) {
             pm->setStorage(fileName);
-            asExplorer->closeAllAssessment();
-            setupActionStates();
+            clearAllViews();
         }
     }
+}
+void MainWindow::closeDatabase()
+{
+    //TODO
+    //ask
+    KApplication::selfInstance()->closeStorage();
+    clearAllViews();
 }
 
 void MainWindow::modelLocations()
 {
-    if (KPluginManager::instance()->hasStorage()) {
-        DialogLocation dlg(KPluginManager::instance()->storage());
+    if (KApplication::selfInstance()->hasStorage()) {
+        DialogLocation dlg(KApplication::selfInstance()->storage());
         dlg.exec();
         asExplorer->refreshScenario();
     }
@@ -646,8 +761,8 @@ void MainWindow::modelLocations()
 }
 void MainWindow::modelRadionuclides()
 {
-    if (KPluginManager::instance()->hasStorage()) {
-        DialogRadionuclide dlg(KPluginManager::instance()->storage());
+    if (KApplication::selfInstance()->hasStorage()) {
+        DialogRadionuclide dlg(KApplication::selfInstance()->storage());
         dlg.exec();
         asExplorer->refreshScenario();
     }
@@ -684,4 +799,5 @@ void MainWindow::switchView(int id, void *data)
     else {
         pages->setCurrentWidget(view);
     }
+    setupActionStates();
 }

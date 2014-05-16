@@ -13,6 +13,13 @@ KData Transport::modelData(const Quantity &qty) const
         return d;
     return constUserInputs().find(qty);
 }
+void Transport::copyDataTo(IModel *model) const
+{
+    if (model->info().serialId() == info().serialId()) {
+        Transport * dest = reinterpret_cast<Transport *>(model);
+        dest->_dataList = this->_dataList;
+    }
+}
 
 KDataArray Transport::result() const
 {

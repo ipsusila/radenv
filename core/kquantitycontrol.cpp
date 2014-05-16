@@ -1,7 +1,7 @@
 #include <QSharedData>
 #include "kquantitycontrol.h"
 #include "radcore.h"
-#include "kpluginmanager.h"
+#include "kapplication.h"
 #include "imodelfactory.h"
 
 class KQuantityControlPrivate : public QSharedData {
@@ -19,13 +19,13 @@ public:
     inline QDataStream & serialize(QDataStream &s) const
     {
         s << _enableOnSet;
-        KPluginManager::instance()->serialize(s, _controller);
+        KApplication::selfInstance()->serialize(s, _controller);
         //Rad::serialize(s, _controller);
 
         qint32 nz = _controlledQuantities.size();
         s << nz;
         for(int k = 0; k < nz; k++)
-            KPluginManager::instance()->serialize(s, _controlledQuantities.at(k));
+            KApplication::selfInstance()->serialize(s, _controlledQuantities.at(k));
             //Rad::serialize(s, _controlledQuantities.at(k));
 
         return s;
@@ -33,12 +33,12 @@ public:
     inline QDataStream & deserialize(QDataStream &s)
     {
         s >> _enableOnSet;
-        _controller = KPluginManager::instance()->deserialize(s); //Rad::deserialize(s);
+        _controller = KApplication::selfInstance()->deserialize(s); //Rad::deserialize(s);
         qint32 nz;
         s >> nz;
         _controlledQuantities.clear();
         for(int k = 0; k < nz; k++) {
-            const Quantity * qty = KPluginManager::instance()->deserialize(s); //Rad::deserialize(s);
+            const Quantity * qty = KApplication::selfInstance()->deserialize(s); //Rad::deserialize(s);
             if (qty != 0)
                 _controlledQuantities.append(qty);
         }

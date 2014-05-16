@@ -1,4 +1,6 @@
 #include <QtDebug>
+#include <QSettings>
+#include "kapplication.h"
 #include "dialogcalculation.h"
 #include "ui_dialogcalculation.h"
 
@@ -15,10 +17,14 @@ DialogCalculation::DialogCalculation(QWidget *parent) :
     //TODO
     //continous is disabled
     ui->rbContinuous->setEnabled(false);
+
+    KApplication::selfInstance()->setupValidGeometry("calcdialog/geometry", this);
 }
 
 DialogCalculation::~DialogCalculation()
 {
+    QSettings settings;
+    settings.setValue("calcdialog/geometry", saveGeometry());
     delete ui;
     qDebug() << "Remove calculation dialog";
 }

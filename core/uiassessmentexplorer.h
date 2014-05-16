@@ -45,10 +45,12 @@ public slots:
     void closeAssessment();
     void addScenario();
     void removeScenario();
+    void editScenario();
     void verifyScenario();
     void evaluateScenario();
     void generateReport();    
     void refreshScenario();
+    void copyScenario();
 
     void clearModel();
     void reannotateModel();
@@ -57,10 +59,13 @@ public slots:
 
 protected:
     void addScenario(QTreeWidgetItem * aItem, KScenario * scene);
+    void addScenario(KScenario * scenario);
     void changeScenario(KScenario * scenario);
     void buildMenus();
     QStringList assessmentNames() const;
-    KReport * report(KScenario * scenario) const;
+    QTreeWidgetItem * reportItem(KScenario * scenario, QTreeWidgetItem * parent = 0) const;
+    QTreeWidgetItem * scenarioItem(KScenario * scenario, QTreeWidgetItem * parent = 0) const;
+    QTreeWidgetItem * assessmentItem(KAssessment * aP, QTreeWidgetItem * parent = 0) const;
 
 private:
     Q_DISABLE_COPY(UiAssessmentExplorer)

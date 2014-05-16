@@ -16,8 +16,8 @@ public:
     Srs19Factory();
     virtual ~Srs19Factory();
 
-    void setManager(KPluginManager * mngr);
-    KPluginManager * manager() const;
+    void setManager(KApplication * mngr);
+    KApplication * manager() const;
     KStorage * storage() const;
 
     bool isTopLevel() const;
@@ -41,7 +41,7 @@ private:
     GroupInfoList _groupInfos;
     IParamsEditor * _paramsEditor;
     KSettingManager * _settingManager;
-    KPluginManager * _manager;
+    KApplication * _manager;
     KStorage * _storage;
 };
 

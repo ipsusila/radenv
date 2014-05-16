@@ -20,7 +20,7 @@ public:
     KScenario(int x, int y, int w, int h, QObject * parent);
     virtual ~KScenario();
     IModel * createModel(IModelFactory * factory, const KModelInfo& info);
-    int copyTo(KScenario * mscene, bool all) const;
+    int copyModelsTo(KScenario * mscene, bool all) const;
     void clearModels();
     void refresh();
     void verify();

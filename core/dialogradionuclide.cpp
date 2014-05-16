@@ -1,6 +1,8 @@
 #include <QDialog>
 #include <QtDebug>
 #include <QMessageBox>
+#include <QSettings>
+#include "kapplication.h"
 #include "dialogradionuclide.h"
 #include "ui_dialogradionuclide.h"
 #include "kstorage.h"
@@ -13,10 +15,13 @@ DialogRadionuclide::DialogRadionuclide(KStorage * stg, QWidget *parent) :
 {
     ui->setupUi(this);
     setupRadionuclides(stg);
+    KApplication::selfInstance()->setupValidGeometry("nuclidedialog/geometry", this);
 }
 
 DialogRadionuclide::~DialogRadionuclide()
 {
+    QSettings settings;
+    settings.setValue("nuclidedialog/geometry", saveGeometry());
     delete ui;
 }
 

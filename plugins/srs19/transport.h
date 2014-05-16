@@ -14,6 +14,7 @@ public:
     virtual const KPortList & inputs() const;
     virtual QString displayText() const;
     virtual bool calculate(const KCalculationInfo& ci);
+    virtual void copyDataTo(IModel *model) const;
 
 protected:
     KPortList        _outPorts;

@@ -10,6 +10,8 @@
 #include <QtDebug>
 #include "kassessment.h"
 #include "kscenario.h"
+#include "koptions.h"
+#include "kapplication.h"
 
 //Token identifier
 static const QString __assessmentToken = "@Assessment_v-1.0";
@@ -43,13 +45,21 @@ public:
         return scenarios.first();
     }
 
-    inline KScenario * createScenario(KAssessment * aP, const QRectF & rect = QRectF())
+    inline KScenario * createScenario(KAssessment * aP, const QString & baseName = QString(),
+                                      const QRectF & rect = QRectF())
     {
         KScenario * scenario;
-        if (rect.isValid())
+        if (rect.isValid()) {
             scenario = new KScenario(rect.x(), rect.y(), rect.width(), rect.height(), aP);
-        else
-            scenario = new KScenario(-800, -400, 1600, 800, aP);
+        } else {
+            QRect defRect = KApplication::selfInstance()->options()->scenarioSceneRect();
+            scenario = new KScenario(defRect.x(), defRect.y(), defRect.width(), defRect.height(), aP);
+        }
+
+        //setting up name
+        if (!baseName.isEmpty())
+            scenario->setName(getScenarioName(baseName));
+
         scenarios.append(scenario);
         return scenario;
     }
@@ -57,6 +67,27 @@ public:
     {
         scenarios.removeOne(scene);
         delete scene;
+    }
+
+    QString getScenarioName(const QString& baseName)
+    {
+        bool found;
+        int counter = 1;
+        const QChar ch = '0';
+        QString scName = baseName;
+        do {
+            found = true;
+            for(int k = 0; k < scenarios.count(); k++) {
+                if (scName.compare(scenarios.at(k)->name(), Qt::CaseInsensitive) == 0) {
+                    //re-search for new names
+                    found = false;
+                    scName = QString("%1-%2").arg(baseName).arg(counter++, 2, 10, ch);
+                    break;
+                }
+            }
+        } while (!found);
+
+        return scName;
     }
 
     void clear()
@@ -219,9 +250,9 @@ KScenario * KAssessment::firstScenario() const
 {
     return dptr->firstScenario();
 }
-KScenario * KAssessment::createScenario(const QRectF &rect)
+KScenario * KAssessment::createScenario(const QString &baseName, const QRectF &rect)
 {
-    return dptr->createScenario(this, rect);
+    return dptr->createScenario(this, baseName, rect);
 }
 ScenarioList KAssessment::scenarios() const
 {

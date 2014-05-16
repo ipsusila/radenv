@@ -31,7 +31,7 @@ public:
     QByteArray document() const;
     void setDocument(const QByteArray & doc);
 
-    KScenario * createScenario(const QRectF & rect = QRectF());
+    KScenario * createScenario(const QString & baseName, const QRectF & rect = QRectF());
     KScenario * firstScenario() const;
     ScenarioList scenarios() const;
     bool contains(KScenario * scene) const;

@@ -1,20 +1,14 @@
 #include <QDialogButtonBox>
 #include <QVBoxLayout>
-#include <QApplication>
-#include <QDesktopWidget>
 #include "dialoguserinput.h"
 #include "ksettingmanager.h"
+#include "kapplication.h"
 
 DialogUserInput::DialogUserInput(IModel * m, IUserInput * ui, QWidget *parent) :
     QDialog(parent), model(m), userInput(ui)
 {
     QDialogButtonBox * bbox = new QDialogButtonBox(this);
     QVBoxLayout * vbox = new QVBoxLayout();
-
-    //desktop
-    QDesktopWidget * desktop = QApplication::desktop();
-    QSize dSize = desktop->size();
-    this->setMaximumSize(dSize);
 
     bbox->addButton(QDialogButtonBox::Ok);
     bbox->addButton(QDialogButtonBox::Cancel);
@@ -28,15 +22,24 @@ DialogUserInput::DialogUserInput(IModel * m, IUserInput * ui, QWidget *parent) :
                         .arg(model->tagName())
                         .arg(model->info().text()));
 
-    //set size
+    QRect rect;
+    QSize mSize;
     KSettingManager * setting = model->factory()->settingManager();
-    if (setting != 0) {
-        QRect rect = setting->geometry(model);
-        if (rect.isValid()) {
-            if (rect.top() < (dSize.height() - 20) && rect.left() < (dSize.width() - 20))
-                this->setGeometry(rect);
-        }
-    }
+    if (setting != 0)
+        rect = setting->geometry(model);
+    else
+        rect = this->geometry();
+
+    //convert to valid geometry/size
+    KApplication::selfInstance()->toValidDialogGeometry(&rect, &mSize);
+
+    //this maksimum size
+    setMaximumSize(mSize);
+
+    //resize and move
+    resize(rect.size());
+    move(rect.topLeft());
+
 }
 DialogUserInput::~DialogUserInput()
 {
@@ -53,6 +56,7 @@ void DialogUserInput::saveSettings()
     //save size
     KSettingManager * setting = model->factory()->settingManager();
     if (setting != 0) {
-        setting->saveGeometry(model, this->geometry());
+        QRect rect = QRect(pos(), size());
+        setting->saveGeometry(model, rect);
     }
 }

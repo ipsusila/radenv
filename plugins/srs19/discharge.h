@@ -15,6 +15,7 @@ public:
     QString displayText() const;
     virtual QDataStream & serialize(QDataStream &stream) const;
     virtual QDataStream & deserialize(QDataStream &stream);
+    virtual void copyDataTo(IModel * model) const;
 
 protected:
     KPortList        _outPorts;

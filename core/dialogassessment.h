@@ -2,6 +2,7 @@
 #define DIALOGASSESSMENT_H
 
 #include <QDialog>
+#include <QAbstractButton>
 #include "radglobal.h"
 
 namespace Ui {
@@ -21,6 +22,11 @@ public:
 protected slots:
     void onButtonAccepted();
     
+private slots:
+    void on_buttonBox_clicked(QAbstractButton *button);
+
+    void on_btnBrowse_clicked();
+
 private:
     Ui::DialogAssessment *ui;
     KAssessment * asPtr;

@@ -19,11 +19,12 @@ public:
         Sludge = 9
     };
 
-    KDataArray result() const;
-    bool calculate(const KCalculationInfo& ci);
-    const KPortList & inputs() const;
+    virtual KDataArray result() const;
+    virtual bool calculate(const KCalculationInfo& ci);
+    virtual const KPortList & inputs() const;
 
-    bool verify(int * err = 0, int * warn = 0);
+    virtual bool verify(int * err = 0, int * warn = 0);
+    virtual void copyDataTo(IModel * model) const;
 protected:
     KPortList        _inpPorts;
     KDataArray       _dataList;

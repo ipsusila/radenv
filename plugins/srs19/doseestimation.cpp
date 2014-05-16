@@ -46,6 +46,14 @@ void DoseEstimation::defineParameters()
 
 }
 
+void DoseEstimation::copyDataTo(IModel * model) const
+{
+    if (model->info().serialId() == info().serialId()) {
+        DoseEstimation * dest = reinterpret_cast<DoseEstimation *>(model);
+        dest->_dataList = this->_dataList;
+    }
+}
+
 KDataArray DoseEstimation::result() const
 {
     return _dataList;

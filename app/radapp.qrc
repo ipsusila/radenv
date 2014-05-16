@@ -73,5 +73,7 @@
         <file alias="model-database.png">images/database-property.png</file>
         <file alias="edit-cursor.png">images/cursor.png</file>
         <file alias="edit-renumber.png">images/tag-hash.png</file>
+        <file alias="model-closedb.png">images/database-delete.png</file>
+        <file alias="savepdf.png">images/blue-document-pdf-text.png</file>
     </qresource>
 </RCC>

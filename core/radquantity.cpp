@@ -1,5 +1,5 @@
 #include "radglobal.h"
-#include "kpluginmanager.h"
+#include "kapplication.h"
 #include "imodelfactory.h"
 
 /** empty variable */

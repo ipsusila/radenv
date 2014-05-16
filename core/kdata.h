@@ -79,6 +79,7 @@ public:
     bool operator==(const KData& o) const;
     bool operator!=(const KData& o) const;
 
+    virtual QString toString(int idx = 0, int prec = -1) const;
     virtual QString displayText() const;
     virtual QDataStream & serialize(QDataStream &stream) const;
     virtual QDataStream & deserialize(QDataStream &stream);
@@ -106,6 +107,7 @@ public:
     KDataItem & operator*=(qreal c);
     KDataItem & operator/=(qreal c);
 
+    virtual QString toString(const Quantity * qty, int prec = -1) const;
     virtual QDataStream & serialize(QDataStream &stream) const;
     virtual QDataStream & deserialize(QDataStream &stream);
 

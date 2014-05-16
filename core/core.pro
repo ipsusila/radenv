@@ -49,8 +49,6 @@ SOURCES += \
     dialoguserinput.cpp \
     uiarrayitemtable.cpp \
     uiarrayitemdelegate.cpp \
-    kpluginmanager.cpp \
-    testclass.cpp \
     kassessment.cpp \
     uiassessmentexplorer.cpp \
     uioutputview.cpp \
@@ -60,7 +58,9 @@ SOURCES += \
     dialogassessment.cpp \
     dialogassessmentbrowser.cpp \
     kdbconnector.cpp \
-    khtmlreport.cpp
+    khtmlreport.cpp \
+    kapplication.cpp \
+    koptions.cpp
 
 HEADERS +=\
     kradionuclide.hxx \
@@ -103,8 +103,6 @@ HEADERS +=\
     dialoguserinput.h \
     uiarrayitemtable.h \
     uiarrayitemdelegate.h \
-    kpluginmanager.h \
-    testclass.h \
     iserializable.h \
     kassessment.h \
     uiassessmentexplorer.h \
@@ -115,7 +113,9 @@ HEADERS +=\
     dialogassessment.h \
     dialogassessmentbrowser.h \
     kdbconnector.h \
-    khtmlreport.h
+    khtmlreport.h \
+    kapplication.h \
+    koptions.h
 
 symbian {
     MMP_RULES += EXPORTUNFROZEN

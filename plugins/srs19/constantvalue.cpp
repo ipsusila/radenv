@@ -16,6 +16,13 @@ KData ConstantValue::modelData(const Quantity &qty) const
 {
     return _dataList.find(qty);
 }
+void ConstantValue::copyDataTo(IModel * model) const
+{
+    if (model->info().serialId() == info().serialId()) {
+        ConstantValue * dest = reinterpret_cast<ConstantValue *>(model);
+        dest->_dataList = this->_dataList;
+    }
+}
 
 KDataArray ConstantValue::result() const
 {

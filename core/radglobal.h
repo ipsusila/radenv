@@ -32,7 +32,8 @@ class KCalculationInfo;
 class KScenario;
 class KSettingManager;
 class KQuantityControl;
-class KPluginManager;
+class KApplication;
+class KOptions;
 
 struct _tagPM {
     int left;
@@ -79,7 +80,7 @@ typedef struct _tagPM                   SPadding;
 #if QT_VERSION >= 0x050000
     #define xEscHtml(str)    ((str).toHtmlEscaped())
 #else
-    //#include <QtGui/qtextdocument.h>
+    #include <QTextDocument>
     #define xEscHtml(str)    Qt::escape((str))
 #endif
 

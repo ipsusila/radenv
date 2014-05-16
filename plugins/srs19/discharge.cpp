@@ -18,6 +18,13 @@ KData Discharge::modelData(const Quantity &qty) const
         return d;
     return constUserInputs().find(qty);
 }
+void Discharge::copyDataTo(IModel * model) const
+{
+    if (model->info().serialId() == info().serialId()) {
+        Discharge * dest = reinterpret_cast<Discharge *>(model);
+        dest->_dataList = this->_dataList;
+    }
+}
 
 KDataArray Discharge::result() const
 {

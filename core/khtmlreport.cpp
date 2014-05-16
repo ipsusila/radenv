@@ -3,6 +3,8 @@
 #include "kscenario.h"
 #include "imodel.h"
 #include "kgroup.h"
+#include "kapplication.h"
+#include "koptions.h"
 
 KHtmlReport::KHtmlReport()
 {
@@ -48,15 +50,15 @@ void KHtmlReport::add(const KAssessment& asObj)
               << "<tr><td>Author</td><td>:</td><td>" << xEscHtml(asObj.author()) << "</td></tr>"
               << "<tr><td>Description</td><td>:</td><td>" << xEscHtml(asObj.description()) << "</td></tr>"
               << "<tr><td>Remark</td><td>:</td><td>" << xEscHtml(asObj.remark()) << "</td></tr>"
-              << "</table><br><hr>";
+              << "</table><br>";
 }
 void KHtmlReport::add(const KScenario& scenario)
 {
     QTextStream * stream = textStream();
     Q_ASSERT(stream);
 
-    (*stream) << "<h3>" << xEscHtml(scenario.name()) << "</h3>"
-              << "<p>" << xEscHtml(scenario.description()) << "</p><hr>";
+    (*stream) << "<hr><h3>" << xEscHtml(scenario.name()) << "</h3>"
+              << "<p>" << xEscHtml(scenario.description()) << "</p>";
 }
 
 void KHtmlReport::add(IModel * model)
@@ -65,7 +67,7 @@ void KHtmlReport::add(IModel * model)
     Q_ASSERT(stream);
 
     const KModelInfo & info = model->info();
-    (*stream) << "<h4>" << xEscHtml(model->tagName()) << ":" << xEscHtml(info.text()) << "</h4>"
+    (*stream) << "<hr><h4>" << xEscHtml(model->tagName()) << ":" << xEscHtml(info.text()) << "</h4>"
               << "<p>" << xEscHtml(info.description()) << "</p>";
 }
 void KHtmlReport::add(const KLocation& loc)
@@ -90,8 +92,8 @@ void KHtmlReport::add(const KDataGroupArray & dga)
     QTextStream * stream = textStream();
     Q_ASSERT(stream);
 
-    (*stream) << "<hr><h4>Parameters</h4><table border='1' cellpadding='5' cellspacing='0'>"
-              << "<tr><th>Symbol</th><th>Value</th><th>Unit</th></tr>";
+    (*stream) << "<h4>Input Parameters</h4><table border='1' cellpadding='5' cellspacing='0'>"
+              << "<tr><th>Quantity</th><th>Value</th><th>Unit</th></tr>";
     for(int k = 0; k < dga.size(); k++) {
         const DataGroup & group = dga.at(k);
         if (group.isEmpty())
@@ -102,27 +104,27 @@ void KHtmlReport::add(const KDataGroupArray & dga)
             const KData & d = group.itemAt(n);
             const Quantity * qty = d.quantityPtr();
             if (qty->isComment()) {
-                (*stream) << "<tr><td colspan='3'>" << xEscHtml(d.value().toString()) << "</td></tr>";
+                (*stream) << "<tr><td colspan='3'>" << xEscHtml(d.toString()) << "</td></tr>";
             }
             else if (d.contains(KData::Array)) {
-                (*stream) << "<tr><td colspan='3'><em>" << xEscHtml(qty->symbol)
+                (*stream) << "<tr><td colspan='3'><em>" << xEscHtml(qty->displayText())
                           << ":" << xEscHtml(qty->description) << "</em></td></tr>";
                 for(int m = 0; m < d.count(); m++) {
                     const KDataItem & di = d.at(m);
                     (*stream) << "<tr><td>" << xEscHtml(di.name()) << "</td>"
-                              << "<td>" << di.value().toString() << "</td>"
+                              << "<td>" << di.toString(qty) << "</td>"
                               << "<td>" << xEscHtml(qty->unit) << "</td></tr>";
                 }
             }
             else {
-                (*stream) << "<tr><td>" << xEscHtml(qty->symbol) << "</td>"
-                          << "<td>" << d.value().toString() << "</td>"
+                (*stream) << "<tr><td>" << xEscHtml(qty->displayText()) << "</td>"
+                          << "<td>" << d.toString() << "</td>"
                           << "<td>" << xEscHtml(qty->unit) << "</td></tr>";
             }
         }
     }
 
-    (*stream) << "</table>";
+    (*stream) << "</table>\n";
 }
 void KHtmlReport::add(const KDataArray & da)
 {
@@ -132,32 +134,32 @@ void KHtmlReport::add(const KDataArray & da)
     QTextStream * stream = textStream();
     Q_ASSERT(stream);
 
-    (*stream) << "<hr><h4>Parameters</h4><table border='1' cellpadding='5' cellspacing='0'>"
-              << "<tr><th>Symbol</th><th>Value</th><th>Unit</th></tr>";
+    (*stream) << "<h4>Parameters</h4><table border='1' cellpadding='5' cellspacing='0'>"
+              << "<tr><th>Quantity</th><th>Value</th><th>Unit</th></tr>";
     for(int k = 0; k < da.size(); k++)
     {
         const KData & d = da.at(k);
         const Quantity * qty = d.quantityPtr();
         if (qty->isComment()) {
-            (*stream) << "<tr><td colspan='3'>" << xEscHtml(d.value().toString()) << "</td></tr>";
+            (*stream) << "<tr><td colspan='3'>" << xEscHtml(d.toString()) << "</td></tr>";
         }
         else if (d.contains(KData::Array)) {
-            (*stream) << "<tr><td colspan='3'><em>" << xEscHtml(qty->symbol)
+            (*stream) << "<tr><td colspan='3'><em>" << xEscHtml(qty->displayText())
                       << ":" << xEscHtml(qty->description) << "</em></td></tr>";
             for(int m = 0; m < d.count(); m++) {
                 const KDataItem & di = d.at(m);
                 (*stream) << "<tr><td>" << di.name() << "</td>"
-                          << "<td>" << di.value().toString() << "</td>"
+                          << "<td>" << di.toString(qty) << "</td>"
                           << "<td>" << xEscHtml(qty->unit) << "</td></tr>";
             }
         }
         else {
-            (*stream) << "<tr><td>" << xEscHtml(qty->symbol) << "</td>"
-                      << "<td>" << d.value().toString() << "</td>"
+            (*stream) << "<tr><td>" << xEscHtml(qty->displayText()) << "</td>"
+                      << "<td>" << d.toString() << "</td>"
                       << "<td>" << xEscHtml(qty->unit) << "</td></tr>";
         }
     }
-    (*stream) << "</table>";
+    (*stream) << "</table>\n";
 }
 void KHtmlReport::add(const KDataTable & table)
 {
@@ -169,7 +171,7 @@ void KHtmlReport::add(const KDataTable & table)
 
     int nrow = table.rowCount();
     int ncol = table.columnCount();
-    (*stream) << "<hr><h4>Parameter/Result</h4><table border='1' cellpadding='5' cellspacing='0'>";
+    (*stream) << "<h4>Result/Output</h4><table border='1' cellpadding='5' cellspacing='0'>";
 
     //column header (first column is empty)
     (*stream) << "<tr><th>&nbsp;</th>";
@@ -184,11 +186,17 @@ void KHtmlReport::add(const KDataTable & table)
 
         //next column
         for(int c = 0; c < ncol; c++) {
-            (*stream) << "<td>" << xEscHtml(table.value(r,c).toString()) << "</td>";
+            QString vstr = table.value(r, c).toString();
+            double num;
+            bool ok;
+            num = vstr.toDouble(&ok);
+            if (ok)
+                vstr = QString::number(num, 'g', KApplication::selfInstance()->options()->numberPrecision());
+            (*stream) << "<td>" << xEscHtml(vstr) << "</td>";
         }
         (*stream) << "</tr>";
     }
 
-    (*stream) << "</table>";
+    (*stream) << "</table>\n";
 }
 

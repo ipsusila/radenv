@@ -9,6 +9,8 @@
 #include "kquantitycontrol.h"
 #include "koutput.h"
 #include "imodelfactory.h"
+#include "kapplication.h"
+#include "koptions.h"
 
 UiUserInput::UiUserInput(IModelFactory *fact, KDataGroupArray * ga, QWidget *parent) :
     IUserInput(parent), factory(fact), dataArray(ga)
@@ -132,6 +134,8 @@ void UiUserInput::createLineEdit(KData * d, int row, QGridLayout * grid, QWidget
     QLineEdit * ed = new QLineEdit(p);
     ed->setToolTip(qty.description);
     ed->setText(d->value().toString());
+    ed->setMinimumWidth(KApplication::selfInstance()->options()->minInputWidth());
+    ed->setMaximumWidth(KApplication::selfInstance()->options()->maxInputWidth());
     grid->addWidget(ed, row, 1);
     connect(ed, SIGNAL(textChanged(QString)), this, SLOT(on_textValue_changed(QString)));
 
@@ -148,6 +152,8 @@ void UiUserInput::createIntInput(KData * d, int row, QGridLayout * grid, QWidget
     inpInt->setMinimum(qty.minValue);
     inpInt->setMaximum(qty.maxValue);
     inpInt->setValue((int)d->numericValue());
+    inpInt->setMinimumWidth(KApplication::selfInstance()->options()->minInputWidth());
+    inpInt->setMaximumWidth(KApplication::selfInstance()->options()->maxInputWidth());
     grid->addWidget(inpInt, row, 1);
     connect(inpInt, SIGNAL(valueChanged(int)), this, SLOT(on_intValue_changed(int)));
 
@@ -166,6 +172,8 @@ void UiUserInput::createRealInput(KData * d, int row, QGridLayout * grid, QWidge
     inpReal->setMaximum(qty.maxValue);
     inpReal->setDecimals(qty.decimal);
     inpReal->setValue(d->numericValue());
+    inpReal->setMinimumWidth(KApplication::selfInstance()->options()->minInputWidth());
+    inpReal->setMaximumWidth(KApplication::selfInstance()->options()->maxInputWidth());
     grid->addWidget(inpReal, row, 1);
     connect(inpReal, SIGNAL(valueChanged(double)), this, SLOT(on_realValue_changed(double)));
 
@@ -195,6 +203,7 @@ void UiUserInput::createComment(KData * d, int row, QGridLayout * grid, QWidget 
         grid->addWidget(label, row, 0, 1, 3);
     else
         grid->addWidget(label, row, 1, 1, 2);
+    label->adjustSize();
 }
 void UiUserInput::createUnit(const KData * d, int row, int * width2,
                              QGridLayout * grid, QWidget * p)

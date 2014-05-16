@@ -7,7 +7,8 @@
 #include "koutput.h"
 #include "kradionuclide.h"
 #include "kstorage.h"
-#include "kpluginmanager.h"
+#include "kapplication.h"
+#include "koptions.h"
 
 /** null parameter */
 static const KData __nullData;
@@ -76,7 +77,7 @@ public:
     {
         s << (qint32)_types;
         //Rad::serialize(s, _quantity);
-        KPluginManager::instance()->serialize(s, _quantity);
+        KApplication::selfInstance()->serialize(s, _quantity);
         s << _items;
 
         return s;
@@ -86,7 +87,7 @@ public:
         qint32 itypes;
         s >> itypes;
         _types = KData::ContentTypes(itypes);
-        _quantity = KPluginManager::instance()->deserialize(s); //Rad::deserialize(s);
+        _quantity = KApplication::selfInstance()->deserialize(s); //Rad::deserialize(s);
         s >> _items;
 
         return s;
@@ -170,6 +171,11 @@ public:
             return QString::number(di.numericValue());
         }
     }
+    QString toString(int idx, int prec) const
+    {
+        const KDataItem & di = _items.at(idx);
+        return di.toString(_quantity, prec);
+    }
 
     QString displayText() const
     {
@@ -181,7 +187,7 @@ public:
             QString txt = QString("%1: %2 %3").arg(_quantity->displayText())
                     .arg(toString(di)).arg(_quantity->unit);
             if (di.contentTypes().testFlag(KData::RadionuclideSource)) {
-                const KRadionuclide & nuc = KPluginManager::instance()->storage()->radionuclide(di.name());
+                const KRadionuclide & nuc = KApplication::selfInstance()->storage()->radionuclide(di.name());
                 txt += QString(" (%1, lambda = %2 s-1)").arg(nuc.nuclide()).arg(nuc.halfLife().decayConstant());
             }
 
@@ -196,7 +202,7 @@ public:
             txt += QString("\n  %1: %2 %3").arg(beg->name())
                     .arg(toString(*beg)).arg(_quantity->unit);
             if (beg->contentTypes().testFlag(KData::RadionuclideSource)) {
-                const KRadionuclide & nuc = KPluginManager::instance()->storage()->radionuclide(beg->name());
+                const KRadionuclide & nuc = KApplication::selfInstance()->storage()->radionuclide(beg->name());
                 txt += QString(" (lambda = %1 s-1)").arg(nuc.halfLife().decayConstant());
             }
             beg++;
@@ -253,6 +259,23 @@ KData::ContentTypes KDataItem::contentTypes() const
 void KDataItem::setValue(const QVariant &v)
 {
     _value = v;
+}
+QString KDataItem::toString(const Quantity * qty, int prec) const
+{
+    if (prec < 0)
+        prec = KApplication::selfInstance()->options()->numberPrecision();
+    bool flag;
+    switch(qty->type) {
+    case Rad::Boolean:
+        flag = _value.toBool();
+        return (flag ? "True/Yes" : "False/No");
+    case Rad::Text:
+        return _value.toString();
+    case Rad::Comment:
+        return "//" + _value.toString();
+    default:
+        return QString::number(numericValue(), 'g', prec);
+    }
 }
 
 KDataItem KDataItem::operator*(qreal c) const
@@ -462,7 +485,10 @@ bool KData::operator!=(const KData& o) const
 {
     return &this->quantity() != &o.quantity();
 }
-
+QString KData::toString(int idx, int prec) const
+{
+    return dptr->toString(idx, prec);
+}
 QString KData::displayText() const
 {
     return dptr->displayText();

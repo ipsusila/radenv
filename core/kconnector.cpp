@@ -193,10 +193,15 @@ public:
         }
     }
     inline void copyTo(KConnectorPrivate * d, KPort * out, KPort * inp) const {
+        if (this->firstPort == this->input)
+            d->firstPort = inp;
+        else
+            d->firstPort = out;
         d->input = inp;
         d->output = out;
         d->points = this->points;
         d->rect = this->rect;
+        d->connect();
     }
     void recalculateRect()
     {
@@ -285,6 +290,7 @@ KConnector::~KConnector()
 void KConnector::copyTo(KConnector * con, KPort * out, KPort * inp) const
 {
     dptr->copyTo(con->dptr, out, inp);
+    con->setPos(this->pos());
 }
 void KConnector::disconnect()
 {
