@@ -131,6 +131,7 @@ public:
     const KData & find(const QString& qty) const;
     const KData & find(const Quantity& v) const;
     QString displayText() const;
+    QString toHtml() const;
 
     void separateTo(KDataArray * dArray, KDataTable * dTable) const;
 
@@ -162,6 +163,7 @@ public:
     QVariant valueOf(const Quantity & v, int gid = DataGroup::DefaultId) const;
     ConstQuantityList quantities() const;
     KDataArray toDataArray() const;
+    QString toHtml() const;
 
     void separateTo(KDataGroupArray * dArray, KDataTable * dTable, KData::ContentTypes type = KData::RadionuclideArray) const;
 
@@ -201,10 +203,11 @@ public:
     const Quantity * quantity(int idx) const;
     QString name(int idx) const;
 
-    QString columnHeader(int col) const;
-    QString rowHeader(int row) const;
+    QString columnHeader(int col, bool isHtml) const;
+    QString rowHeader(int row, bool isHtml) const;
     QVariant value(int row, int col) const;
     void replace(int row, int col, const QVariant& v);
+    QString toHtml() const;
 
 private:
     QSharedDataPointer<KDataTablePrivate> dptr;

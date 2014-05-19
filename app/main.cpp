@@ -3,6 +3,7 @@
 #include <QtDebug>
 #include <QSettings>
 #include <QIcon>
+#include <QVariant>
 #include "mainwindow.h"
 #include "uioutputview.h"
 #include "kapplication.h"
@@ -12,6 +13,7 @@ int main(int argc, char *argv[])
     //setup applications
     KApplication a(argc, argv);
     a.setWindowIcon(QIcon(":/std/app-icon.png"));
+
 
     //setup settings
     QCoreApplication::setOrganizationName("BATAN");

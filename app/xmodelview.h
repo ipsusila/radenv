@@ -24,7 +24,6 @@ protected:
 
     void removeItem(QGraphicsItem * item);
     void removeConnection(QGraphicsItem * selItem);
-    void drawGrid(QPainter * painter, const QRectF & rect);
 
 signals:
     

@@ -81,23 +81,23 @@ typedef struct _tagQuantity
     {
         return QString::number(defaultValue, fmt, decimal);
     }
-    inline QString displayText() const
+    inline QString displayText(bool isHtml = false) const
     {
         if (symbol.isEmpty())
             return text;
-        return QString("%1 (%2)").arg(text).arg(symbol);
+        return QString("%1 (%2)").arg(text).arg(isHtml ? rtSymbol : symbol);
     }
-    inline QString displayQuantityWithUnit() const
+    inline QString displayQuantityWithUnit(bool isHtml = false) const
     {
         if (unit.isEmpty())
             return symbol;
-        return QString("%1 (%2)").arg(symbol).arg(unit);
+        return QString("%1 (%2)").arg(isHtml ? rtSymbol : symbol).arg(isHtml ? rtUnit : unit);
     }
-    inline QString displayTextWithUnit() const
+    inline QString displayTextWithUnit(bool isHtml = false) const
     {
         if (unit.isEmpty())
             return text;
-        return QString("%1 (%2)").arg(text).arg(unit);
+        return QString("%1 (%2)").arg(text).arg(isHtml ? rtUnit : unit);
     } 
 } Quantity;
 

@@ -117,7 +117,7 @@ else: LIBS += -L$$OUT_PWD/../../radenv/ -l$$RADENVCORE
 
 INCLUDEPATH += $$PWD/../../core
 DEPENDPATH += $$PWD/../../core
-DESTDIR = $$OUT_PWD/../../radenv/plugins
+DESTDIR = $$OUT_PWD/../../radenv/plugins/radenv
 
 RESOURCES += \
     srs19.qrc

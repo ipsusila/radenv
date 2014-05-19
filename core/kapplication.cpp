@@ -149,7 +149,9 @@ public:
                 pluginsDir.cdUp();
             }
         #endif
-            pluginsDir.cd("plugins");
+            //TODO
+            //move to options
+            pluginsDir.cd("plugins/radenv");
         }
         else {
             pluginsDir = QDir(path);

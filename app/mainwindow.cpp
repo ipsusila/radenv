@@ -12,8 +12,11 @@
 #include <QPrintDialog>
 #include <QPageSetupDialog>
 #include <QPrintPreviewDialog>
+#include <QDesktopServices>
+#include <QMessageBox>
 #include "mainwindow.h"
 #include "xmodelview.h"
+#include "mapview.h"
 
 #include "uioutputview.h"
 #include "kstorage.h"
@@ -35,6 +38,7 @@
 #include "kassessment.h"
 #include "uiassessmentexplorer.h"
 #include "dialogoption.h"
+#include "dialogabout.h"
 
 MainWindow::MainWindow(UiOutputView * vw, QWidget *parent) :
     QMainWindow(parent), outView(vw), asExplorer(0)
@@ -52,6 +56,16 @@ MainWindow::MainWindow(UiOutputView * vw, QWidget *parent) :
     QSettings settings;
     restoreGeometry(settings.value("app/geometry").toByteArray());
     restoreState(settings.value("app/settings").toByteArray());
+
+    //check info database
+    if (KApplication::selfInstance()->hasStorage())
+    {
+        xTrace() << "Using database " << KApplication::selfInstance()->storage()->storageName();
+    }
+    else
+    {
+        xTrace() << "No database opened. Use New/Open Database menu to attach Database";
+    }
 }
 
 MainWindow::~MainWindow()
@@ -82,6 +96,10 @@ void MainWindow::createViews()
     reportView = new QTextEdit(this);
     reportView->setReadOnly(true);
 
+    //map view
+    mapView = new MapView(this);
+
+
     //create printer
     printer = new QPrinter(QPrinter::PrinterResolution);
 
@@ -95,9 +113,10 @@ void MainWindow::createViews()
     pages = new QStackedWidget();
     pages->addWidget(view);
     pages->addWidget(reportView);
-    pages->setCurrentWidget(view);
+    pages->addWidget(mapView);
 
-    this->setCentralWidget(pages);
+    pages->setCurrentWidget(view);
+    setCentralWidget(pages);
 
     viewMenu = new QMenu(tr("&View"), menuBar());
 
@@ -134,6 +153,11 @@ void MainWindow::createViews()
             this, SLOT(changeScenario(KScenario*)));
     connect(asExplorer, SIGNAL(removingScenario(KScenario*)),
             this, SLOT(changeScenario(KScenario*)));
+
+    connect(mapView, SIGNAL(geopositionChanged(QString)),
+            this, SLOT(displayGeoposition(QString)));
+    connect(asExplorer, SIGNAL(currentScenarioChanged(KScenario*)),
+            mapView, SLOT(displayScenario(KScenario*)));
 }
 
 void MainWindow::createActions()
@@ -293,6 +317,32 @@ void MainWindow::createActions()
     mRadionuclideAct->setIcon(QIcon(":/std/model-radioactivity.png"));
     connect(mRadionuclideAct, SIGNAL(triggered()), this, SLOT(modelRadionuclides()));
 
+    mScenarioAct = new QAction(tr("View &Scenario"), this);
+    //mScenarioAct->setShortcuts(QKeySequence::HelpContents);
+    mScenarioAct->setStatusTip(tr("Display scenario"));
+    mScenarioAct->setIcon(QIcon(":/std/model-scenario.png"));
+    connect(mScenarioAct, SIGNAL(triggered()), asExplorer, SLOT(displayScenario()));
+
+    mMapAct = new QAction(tr("View &Map"), this);
+    //mMapAct->setShortcuts(QKeySequence::HelpContents);
+    mMapAct->setStatusTip(tr("Display map for current scenario"));
+    mMapAct->setIcon(QIcon(":/std/model-map.png"));
+    connect(mMapAct, SIGNAL(triggered()), asExplorer, SLOT(displayMap()));
+
+    mMapPickLocationAct = new QAction(tr("&Pick Location"), this);
+    //mMapPickLocationAct->setShortcuts(QKeySequence::HelpContents);
+    mMapPickLocationAct->setStatusTip(tr("Pick location coordinate from map"));
+    mMapPickLocationAct->setCheckable(true);
+    mMapPickLocationAct->setIcon(QIcon(":/std/model-map-pick.png"));
+    connect(mMapPickLocationAct, SIGNAL(toggled(bool)), mapView, SLOT(pickLocationClicked(bool)));
+
+    mMapTrackLocationAct = new QAction(tr("&Track Coordinate"), this);
+    //mMapTrackLocationAct->setShortcuts(QKeySequence::HelpContents);
+    mMapTrackLocationAct->setStatusTip(tr("Track coordinate during mouse move"));
+    mMapTrackLocationAct->setCheckable(true);
+    mMapTrackLocationAct->setIcon(QIcon(":/std/model-map-track.png"));
+    connect(mMapTrackLocationAct, SIGNAL(toggled(bool)), mapView, SLOT(trackLocationClicked(bool)));
+
     mLocationAct = new QAction(tr("Manage &Locations..."), this);
     //mLocationAct->setShortcuts(QKeySequence::HelpContents);
     mLocationAct->setStatusTip(tr("Manage Location database"));
@@ -404,16 +454,20 @@ void MainWindow::createToolBars()
     editToolBar->addAction(eClearAct);
     //editToolBar->addSeparator();
     editToolBar->addAction(eRenumberAct);
-    editToolBar->addSeparator();
-    editToolBar->addAction(this->eOptionsAct);
+    //editToolBar->addSeparator();
+    //editToolBar->addAction(this->eOptionsAct);
 
     modelToolBar = addToolBar(tr("Model"));
     modelToolBar->setObjectName("tbModel");
-    modelToolBar->addAction(mLocationAct);
     modelToolBar->addSeparator();
+    modelToolBar->addAction(mScenarioAct);
     modelToolBar->addAction(mVerifyAct);
     modelToolBar->addAction(mEvalAct);
     modelToolBar->addAction(mReportAct);
+    modelToolBar->addSeparator();
+    modelToolBar->addAction(mMapAct);
+    modelToolBar->addAction(mMapPickLocationAct);
+    modelToolBar->addAction(mMapTrackLocationAct);
 
     viewToolBar = addToolBar(tr("View"));
     viewToolBar->setObjectName("tbView");
@@ -465,9 +519,15 @@ void MainWindow::createMenus()
     modelMenu->addAction(mRadionuclideAct);
     modelMenu->addAction(mLocationAct);
     modelMenu->addSeparator();
+    modelMenu->addAction(mScenarioAct);
     modelMenu->addAction(mVerifyAct);
     modelMenu->addAction(mEvalAct);
+    modelMenu->addSeparator();
     modelMenu->addAction(mReportAct);
+    modelMenu->addSeparator();
+    modelMenu->addAction(mMapAct);
+    modelMenu->addAction(mMapPickLocationAct);
+    modelMenu->addAction(mMapTrackLocationAct);
 
     //create plugin menus
     //the item is placed after [Model]
@@ -596,9 +656,12 @@ void MainWindow::createStatusBar()
 void MainWindow::setupActionStates()
 {
     bool enabled = KApplication::selfInstance()->hasStorage();
-    bool scenarioView = pages->currentWidget() == view && view->scene() != 0;
+    bool isScnView = pages->currentWidget() == view && view->scene() != 0;
+    bool isRepView = pages->currentWidget() == reportView;
+    bool isMapView = pages->currentWidget() == mapView;
     bool hasAssessment = asExplorer->currentAssessment() != 0;
     bool hasContent = view->scene() != 0 || !reportView->document()->isEmpty();
+    bool hasScn = view->scene() != 0;
 
     mCloseDbAct->setEnabled(enabled);
     fNewAct->setEnabled(enabled);
@@ -610,19 +673,22 @@ void MainWindow::setupActionStates()
     fPrintAct->setEnabled(enabled && hasContent);
     fPageSetupAct->setEnabled(enabled);
 
-    eClearAct->setEnabled(enabled && scenarioView);
-    eRemoveAct->setEnabled(enabled && scenarioView);
-    eRemoveConAct->setEnabled(enabled && scenarioView);
-    eConnectAct->setEnabled(enabled && scenarioView);
-    eRenumberAct->setEnabled(enabled && scenarioView);
+    eClearAct->setEnabled(enabled && isScnView);
+    eRemoveAct->setEnabled(enabled && isScnView);
+    eRemoveConAct->setEnabled(enabled && isScnView);
+    eConnectAct->setEnabled(enabled && isScnView);
+    eRenumberAct->setEnabled(enabled && isScnView);
 
-    //mMapAct->setEnabled(enabled);
     mLocationAct->setEnabled(enabled);
     mRadionuclideAct->setEnabled(enabled);
-    mVerifyAct->setEnabled(enabled && scenarioView);
-    mEvalAct->setEnabled(enabled && scenarioView);
+    mScenarioAct->setEnabled(enabled && !isScnView);
+    mVerifyAct->setEnabled(enabled && isScnView);
+    mEvalAct->setEnabled(enabled && isScnView);
     //mCalcStepAct->setEnabled(enabled);
-    mReportAct->setEnabled(enabled && scenarioView);
+    mReportAct->setEnabled(enabled && hasScn && !isRepView);
+    mMapAct->setEnabled(enabled && hasScn && !isMapView);
+    mMapPickLocationAct->setEnabled(enabled && isMapView);
+    mMapTrackLocationAct->setEnabled(isMapView);
 }
 void MainWindow::changeScenario(KScenario * scenario)
 {
@@ -636,10 +702,24 @@ void MainWindow::changeScenario(KScenario * scenario)
     }
 }
 
+void MainWindow::displayGeoposition(const QString & strInfo)
+{
+    QStatusBar * sb = statusBar();
+    if (!strInfo.isEmpty())
+    {
+        sb->showMessage(tr("Position is ") + strInfo);
+    }
+    else
+    {
+        sb->showMessage(strInfo);
+    }
+}
+
 void MainWindow::clearAllViews()
 {
     asExplorer->closeAllAssessment();
     reportView->clear();
+    pages->setCurrentWidget(view);
     setupActionStates();
 }
 
@@ -683,17 +763,6 @@ void MainWindow::printAll()
         printRequested(printer);
     }
 #endif
-    /*
-    if (pages->currentWidget() == view) {
-        view->printWithDialog();
-    }
-    else if (pages->currentWidget() == reportView) {
-        QPrinter printer;
-        if (QPrintDialog(&printer).exec() == QDialog::Accepted) {
-            reportView->print(&printer);
-        }
-    }
-    */
 }
 void MainWindow::saveAsPdf()
 {
@@ -732,8 +801,25 @@ void MainWindow::editMode(QAction * act)
 }
 void MainWindow::modelDatabase()
 {
-    QString fileName = QFileDialog::getSaveFileName(this, tr("Database File"),
-                               "", tr("Database file (*.db)"), 0, QFileDialog::DontConfirmOverwrite);
+    //create dialog
+    QFileDialog dlg(this, tr("New/Open Database"), "", tr("Database file (*.db);;All files (*.*)"));
+    dlg.setAcceptMode(QFileDialog::AcceptOpen);
+    dlg.setFileMode(QFileDialog::AnyFile);
+    dlg.setViewMode(QFileDialog::Detail);
+    dlg.setConfirmOverwrite(false);
+    dlg.setDefaultSuffix("db");
+    dlg.setLabelText(QFileDialog::FileName, tr("Database name"));
+    dlg.setReadOnly(false);
+    dlg.setOption(QFileDialog::DontUseNativeDialog, false);
+    dlg.setOption(QFileDialog::DontUseSheet, true);
+    if (dlg.exec() != QDialog::Accepted)
+    {
+        return;
+    }
+
+    //get selected filename
+    QStringList selList = dlg.selectedFiles();
+    QString fileName = selList.first();
     KApplication * pm = KApplication::selfInstance();
     if (!fileName.isEmpty()) {
         if (!pm->hasStorage() || pm->storage()->storageName() != fileName) {
@@ -744,10 +830,13 @@ void MainWindow::modelDatabase()
 }
 void MainWindow::closeDatabase()
 {
-    //TODO
-    //ask
-    KApplication::selfInstance()->closeStorage();
-    clearAllViews();
+    // TODO: ask user for closing databases
+    if (KApplication::selfInstance()->hasStorage())
+    {
+        clearAllViews();
+        KApplication::selfInstance()->closeStorage();
+        setupActionStates();
+    }
 }
 
 void MainWindow::modelLocations()
@@ -782,11 +871,24 @@ void MainWindow::modelCalculate()
 
 void MainWindow::helpContent()
 {
-
+    QDir dir(KApplication::selfInstance()->applicationDirPath());
+    const char * helpFile = "help.pdf";
+    QString helpFilePath = dir.absoluteFilePath(helpFile);
+    if (QFile::exists(helpFilePath))
+    {
+        QDesktopServices::openUrl(QUrl("file:///" + helpFilePath, QUrl::TolerantMode));
+    }
+    else
+    {
+        QMessageBox::information(this, tr("Help file"),
+                                 QString(tr("Help file '%1' does not exists."))
+                                 .arg(helpFilePath));
+    }
 }
 void MainWindow::helpAbout()
 {
-
+    DialogAbout dlg;
+    dlg.exec();
 }
 void MainWindow::switchView(int id, void *data)
 {
@@ -795,6 +897,14 @@ void MainWindow::switchView(int id, void *data)
         if (rep != 0)
             reportView->setHtml(rep->toString());
         pages->setCurrentWidget(reportView);
+    }
+    else if (id == UiAssessmentExplorer::Map) {
+        //TODO
+        //this is work, but should be replaced with efficient way
+        //i.e. call display scenario when calculation/evaluation finished.
+        KScenario * scenario = reinterpret_cast<KScenario*>(data);
+        mapView->displayScenario(scenario);
+        pages->setCurrentWidget(mapView);
     }
     else {
         pages->setCurrentWidget(view);

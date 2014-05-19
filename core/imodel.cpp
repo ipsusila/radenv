@@ -569,7 +569,7 @@ KLocation IModel::location() const
     return dptr->location();
 }
 
-KDataGroupArray *IModel::userInputs()
+KDataGroupArray * IModel::userInputs()
 {
     return dptr->userInputsPtr();
 }

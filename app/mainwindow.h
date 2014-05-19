@@ -16,6 +16,7 @@ class IModelFactory;
 class XModelWidget;
 class UiOutputView;
 class UiAssessmentExplorer;
+class MapView;
 class MainWindow : public QMainWindow
 {
     Q_OBJECT
@@ -29,6 +30,7 @@ private slots:
     void printRequested(QPrinter * printer);
     void setupActionStates();
     void changeScenario(KScenario * scenario);
+    void displayGeoposition(const QString & strInfo);
 
     void printPreview();
     void pageSetup();
@@ -65,6 +67,7 @@ private:
         IModelFactory * factory, GroupInfoList groupList);
     void populatePluginMenus(QMenu * groupMenu, IModelFactory * factory, GroupInfoList groupList);
 
+    MapView * mapView;
     UiOutputView * outView;
     UiAssessmentExplorer * asExplorer;
     XModelView * view;
@@ -97,9 +100,13 @@ private:
     QAction * eOptionsAct;
     QActionGroup * eGroupEdit;
 
+    QAction * mScenarioAct;
     QAction * mDatabaseAct;
     QAction * mCloseDbAct;
     QAction * mMapAct;
+    QAction * mMapEditAct;
+    QAction * mMapPickLocationAct;
+    QAction * mMapTrackLocationAct;
     QAction * mLocationAct;
     QAction * mRadionuclideAct;
     QAction * mVerifyAct;

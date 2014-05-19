@@ -608,6 +608,57 @@ QString KDataArray::displayText() const
 
     return txt;
 }
+QString KDataArray::toHtml() const
+{
+    if (isEmpty())
+        return QString::null;
+
+    QString html = "<table border=\"1\" cellpadding=\"3\" cellspacing=\"0\">"
+            "<tr><th>Quantity</th><th>Value</th><th>Unit</th></tr>";
+    for(int k = 0; k < count(); k++)
+    {
+        const KData & d = at(k);
+        const Quantity * qty = d.quantityPtr();
+        if (qty->isComment())
+        {
+            html += "<tr><td colspan=\"3\"><i>";
+            html += xEscHtml(d.toString());
+            html += "</i></td></tr>";
+        }
+        else if (d.contains(KData::Array))
+        {
+            html += "<tr><td colspan=\"3\" align=\"center\"><b>";
+            html += qty->displayText(true);
+            //html += ":";
+            //html += xEscHtml(qty->description);
+            html += "</b></td></tr>";
+            for(int m = 0; m < d.count(); m++)
+            {
+                const KDataItem & di = d.at(m);
+                html += "<tr><td align=\"right\">";
+                html += xEscHtml(di.name());
+                html += "</td><td>";
+                html += di.toString(qty);
+                html += "</td><td>";
+                html += qty->rtUnit;
+                html += "</td></tr>";
+            }
+        }
+        else
+        {
+            html += "<tr><td>";
+            html += qty->displayText(true);
+            html += "</td><td>";
+            html += d.toString();
+            html += "</td><td>";
+            html += qty->rtUnit;
+            html += "</td></tr>";
+        }
+    }
+    html += "</table>\n";
+
+    return html;
+}
 
 void KDataArray::separateTo(KDataArray * dArray, KDataTable * dTable) const
 {
@@ -848,6 +899,66 @@ KDataArray KDataGroupArray::toDataArray() const
     }
     return list;
 }
+QString KDataGroupArray::toHtml() const
+{
+    if (isEmpty())
+        return QString::null;
+
+    QString html = "<table border=\"1\" cellpadding=\"3\" cellspacing=\"0\">"
+                   "<tr><th>Quantity</th><th>Value</th><th>Unit</th></tr>";
+    for(int k = 0; k < count(); k++) {
+        const DataGroup & group = at(k);
+        if (group.isEmpty())
+            continue;
+
+        html += "<tr><td colspan=\"3\" align=\"center\"><b>";
+        html += xEscHtml(group.name);
+        html += "</b></td></tr>";
+        for(int n = 0; n < group.count(); n++)
+        {
+            const KData & d = group.itemAt(n);
+            const Quantity * qty = d.quantityPtr();
+            if (qty->isComment())
+            {
+                html += "<tr><td colspan=\"3\"><i>";
+                html += xEscHtml(d.toString());
+                html += "</i></td></tr>";
+            }
+            else if (d.contains(KData::Array))
+            {
+                html += "<tr><td colspan=\"3\" align=\"center\"><b>";
+                html += qty->displayText(true);
+                //html += ":";
+                //html += xEscHtml(qty->description);
+                html += "</b></td></tr>";
+                for(int m = 0; m < d.count(); m++)
+                {
+                    const KDataItem & di = d.at(m);
+                    html += "<tr><td align=\"right\">";
+                    html += xEscHtml(di.name());
+                    html += "</td><td>";
+                    html += di.toString(qty);
+                    html += "</td><td>";
+                    html += qty->rtUnit;
+                    html += "</td></tr>";
+                }
+            }
+            else
+            {
+                html += "<tr><td>";
+                html += qty->displayText(true);
+                html += "</td><td>";
+                html += d.toString();
+                html += "</td><td>";
+                html += qty->rtUnit;
+                html += "</td></tr>";
+            }
+        }
+    }
+
+    html += "</table>\n";
+    return html;
+}
 
 void KDataGroupArray::separateTo(KDataGroupArray * dArray, KDataTable * dTable, KData::ContentTypes type) const
 {
@@ -978,7 +1089,7 @@ public:
             return quantities.count();
     }
 
-    QVariant value(int row, int col) const
+    inline QVariant value(int row, int col) const
     {
         if (transposed)
             return values.at(col).at(row);
@@ -986,18 +1097,18 @@ public:
             return values.at(row).at(col);
     }
 
-    QString columnHeader(int col) const
+    inline QString columnHeader(int col, bool isHtml) const
     {
         if (transposed)
             return names.at(col);
         else
-            return quantities.at(col)->displayQuantityWithUnit();
+            return quantities.at(col)->displayQuantityWithUnit(isHtml);
     }
 
-    QString rowHeader(int row) const
+    inline QString rowHeader(int row, bool isHtml) const
     {
         if (transposed)
-            return quantities.at(row)->displayQuantityWithUnit();
+            return quantities.at(row)->displayQuantityWithUnit(isHtml);
         else
             return names.at(row);
     }
@@ -1047,13 +1158,13 @@ public:
         int len = 0;
         int sz = rowCount();
         for(int k = 0; k < sz; k++)
-            len = qMax(len, rowHeader(k).length());
+            len = qMax(len, rowHeader(k, false).length());
         return len;
     }
     int maxColumnLength(int col) const
     {
         int nrow = rowCount();
-        int len = columnHeader(col).length();
+        int len = columnHeader(col, false).length();
 
         for(int r = 0; r < nrow; r++)
             len = qMax(len, value(r,col).toString().length());
@@ -1129,13 +1240,13 @@ QString KDataTable::name(int idx) const
 {
     return dptr->name(idx);
 }
-QString KDataTable::columnHeader(int col) const
+QString KDataTable::columnHeader(int col, bool isHtml) const
 {
-    return dptr->columnHeader(col);
+    return dptr->columnHeader(col, isHtml);
 }
-QString KDataTable::rowHeader(int row) const
+QString KDataTable::rowHeader(int row, bool isHtml) const
 {
-    return dptr->rowHeader(row);
+    return dptr->rowHeader(row, isHtml);
 }
 QVariant KDataTable::value(int row, int col) const
 {
@@ -1144,6 +1255,50 @@ QVariant KDataTable::value(int row, int col) const
 void KDataTable::replace(int row, int col, const QVariant& v)
 {
     dptr->replace(row, col, v);
+}
+QString KDataTable::toHtml() const
+{
+    if (isEmpty())
+        return QString::null;
+
+    int nrow = rowCount();
+    int ncol = columnCount();
+
+    QString html = "<table border=\"1\" cellpadding=\"3\" cellspacing=\"0\">";
+
+    //column header (first column is empty)
+    html += "<tr><th>&nbsp;</th>";
+    for(int c = 0; c < ncol; c++)
+    {
+        html += "<th>";
+        html += columnHeader(c, true);
+        html += "</th>";
+    }
+    html += "</tr>";
+
+    //contents
+    for(int r = 0; r < nrow; r++) {
+        //first column
+        html += "<tr><td>";
+        html += rowHeader(r, true);
+        html += "</td>";
+
+        //next column
+        bool ok;
+        for(int c = 0; c < ncol; c++) {
+            QString vstr = value(r, c).toString();
+            qreal num = vstr.toDouble(&ok);
+            if (ok)
+                vstr = QString::number(num, 'g', KApplication::selfInstance()->options()->numberPrecision());
+            html += "<td>";
+            html += xEscHtml(vstr);
+            html += "</td>";
+        }
+        html += "</tr>";
+    }
+    html += "</table>\n";
+
+    return html;
 }
 
 QTextStream & operator<<(QTextStream & s, const KData & d)
@@ -1200,7 +1355,7 @@ QTextStream & operator<<(QTextStream & s, const KDataTable & table)
         s.setFieldAlignment(QTextStream::AlignCenter);
         for(int c = 0; c < ncol; c++) {
             s.setFieldWidth(table.maxColumnLength(c) + colPad);
-            s << table.columnHeader(c);
+            s << table.columnHeader(c, false);
             s.setFieldWidth(0);
             s << "|";
         }
@@ -1227,7 +1382,7 @@ QTextStream & operator<<(QTextStream & s, const KDataTable & table)
             s.setFieldWidth(0);
             s << "| ";
             s.setFieldWidth(rowHeaderLen);
-            s << table.rowHeader(r);
+            s << table.rowHeader(r,false);
             s.setFieldWidth(0);
             s << " |";
 

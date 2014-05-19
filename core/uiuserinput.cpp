@@ -117,11 +117,11 @@ void UiUserInput::createCaption(const KData * d, int row, int * width0,
     QLabel * label;
     const Quantity & qty = d->quantity();
     if (d->contains(KData::Mandatory))
-        label = new QLabel(qty.displayText()+"**", p);
+        label = new QLabel(qty.displayText(true)+"**", p);
     else if (d->contains(KData::ConditionalMandatory))
-        label = new QLabel(qty.displayText()+"*", p);
+        label = new QLabel(qty.displayText(true)+"*", p);
     else
-        label = new QLabel(qty.displayText(), p);
+        label = new QLabel(qty.displayText(true), p);
     grid->addWidget(label, row, 0);
 
     label->adjustSize();
@@ -210,8 +210,8 @@ void UiUserInput::createUnit(const KData * d, int row, int * width2,
 {
     //if quantity has unit, then create label for displaying unit
     const Quantity & qty = d->quantity();
-    if (!qty.unit.isEmpty()) {
-        QLabel * unit = new QLabel(qty.unit, p);
+    if (!qty.rtUnit.isEmpty()) {
+        QLabel * unit = new QLabel(qty.rtUnit, p);
         unit->setWordWrap(false);
         grid->addWidget(unit, row, 2);
         unit->adjustSize();

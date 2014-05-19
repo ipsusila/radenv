@@ -83,6 +83,9 @@ public:
     inline bool isScenarioSubItem() const {
         return (_assessment != 0 && _scenario != 0 && _type != Scenario);
     }
+    inline bool isMapItem() const {
+        return (_assessment != 0 && _scenario != 0 && _type == Map);
+    }
 };
 
 class UiAssessmentExplorerPrivate : public QSharedData
@@ -131,6 +134,11 @@ public:
             if (aP->contains(_curScenario))
                 _curScenario = 0;
         }
+    }
+    inline void clearCurrentAssessment()
+    {
+        _curAssessment = 0;
+        _curScenario = 0;
     }
 
     inline void setMenu(QMenu * rMenu, QMenu * aMenu, QMenu * sMenu)
@@ -463,7 +471,7 @@ void UiAssessmentExplorer::addScenario(QTreeWidgetItem *aItem, KScenario *scene)
     };
     */
     static QString subItems[] = {
-        tr("Reports"), tr("Maps")
+        tr("Report"), tr("Map")
     };
     static ExplorerItem::ExplorerItemType subTypes[] = {
         ExplorerItem::Reports, ExplorerItem::Map
@@ -555,6 +563,24 @@ QTreeWidgetItem * UiAssessmentExplorer::reportItem(KScenario * scenario,
         }
         else {
             QTreeWidgetItem * repItem = reportItem(scenario, child);
+            if (repItem != 0)
+                return repItem;
+        }
+    }
+    return 0;
+}
+QTreeWidgetItem * UiAssessmentExplorer::mapItem(KScenario * scenario, QTreeWidgetItem * parent) const
+{
+    if (parent == 0)
+        parent = dptr->root();
+
+    for(int k = 0; k < parent->childCount(); k++) {
+        ExplorerItem * child = reinterpret_cast<ExplorerItem *>(parent->child(k));
+        if (child->scenario() == scenario && child->isMapItem()) {
+            return child;
+        }
+        else {
+            QTreeWidgetItem * repItem = mapItem(scenario, child);
             if (repItem != 0)
                 return repItem;
         }
@@ -664,6 +690,7 @@ void UiAssessmentExplorer::closeAllAssessment()
             removeAssessment(aP);
         }
     }
+    dptr->clearCurrentAssessment();
 }
 
 void UiAssessmentExplorer::openAssessment()
@@ -765,6 +792,28 @@ void UiAssessmentExplorer::refreshScenario()
     if (curScenario != 0)
         curScenario->refresh();
 }
+void UiAssessmentExplorer::displayMap()
+{
+    //display map
+    KScenario * curScenario = dptr->currentScenario();
+    if (curScenario != 0)
+    {
+        QTreeWidgetItem * item = mapItem(curScenario);
+        if (item != 0)
+            setCurrentItem(item);
+    }
+}
+void UiAssessmentExplorer::displayScenario()
+{
+    KScenario * curScenario = dptr->currentScenario();
+    if (curScenario != 0)
+    {
+        QTreeWidgetItem * item = scenarioItem(curScenario);
+        if (item != 0)
+            setCurrentItem(item);
+    }
+}
+
 void UiAssessmentExplorer::copyScenario()
 {
     KScenario * curScenario = dptr->currentScenario();

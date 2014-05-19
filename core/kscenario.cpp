@@ -4,6 +4,7 @@
 #include <QCoreApplication>
 #include <QThread>
 #include <QSet>
+#include <QPainter>
 #include "kscenario.h"
 #include "imodel.h"
 #include "kmodelinfo.h"
@@ -286,6 +287,22 @@ void KScenario::refresh()
     }
     //fresh update
     this->update();
+}
+QList<ModelLocation> KScenario::extractLocations() const
+{
+    QList<ModelLocation> list;
+    for(int k = 0; k < items().size(); k++) {
+        QGraphicsItem * item = items().at(k);
+        IModel * md = qgraphicsitem_cast<IModel *>(item);
+        if (md != 0) {
+            KLocation loc = md->location();
+            if (loc.isValid())
+            {
+                list.append(ModelLocation(md, loc));
+            }
+        }
+    }
+    return list;
 }
 ReportList KScenario::reports() const
 {
@@ -681,5 +698,67 @@ QDataStream & KScenario::deserialize(QDataStream & stream)
     }
 
     return stream;
+}
+void KScenario::drawBackground(QPainter *painter, const QRectF &vrect)
+{
+    painter->setClipRect(vrect);
+    QRectF rect = sceneRect();
+    painter->fillRect(rect, this->backgroundBrush());
+    if (displayGrid()) {
+        int grd = grid();
+        //major and minor grd pen
+        QPen minPen(QColor(230,230,230), 1, Qt::DotLine);
+        QPen majPen(QColor(230,230,230), 1);
+        //QPen majPen(QColor(Qt::black), 1);
+
+        //starting position, normalized to grd size
+        int x = grd * ((int)rect.x() / grd);
+        int y = grd * ((int)rect.y() / grd);
+        int r = grd * ((int)rect.right() / grd);
+        int b = grd * ((int)rect.bottom() / grd);
+
+        //draw vertical line
+        int dg = grd * 5;
+        painter->setPen(minPen);
+        while (x < r) {
+            if (x % dg == 0) {
+                painter->setPen(majPen);
+                painter->drawLine(x, rect.y(), x, rect.bottom());
+                painter->setPen(minPen);
+            }
+            else {
+                painter->drawLine(x, rect.y(), x, rect.bottom());
+            }
+
+            //next grd line
+            x += grd;
+        }
+
+        //draw horizontal line
+        painter->setPen(minPen);
+        while (y < b) {
+            if (y % dg == 0) {
+                painter->setPen(majPen);
+                painter->drawLine(rect.x(), y, rect.right(), y);
+                painter->setPen(minPen);
+            }
+            else {
+                painter->drawLine(rect.x(), y, rect.right(), y);
+            }
+
+            //next grd line
+            y += grd;
+        }
+
+        //draw
+    }
+
+    //draw the frame
+    painter->setPen(QPen(Qt::darkGray, 1));
+    painter->drawRect(rect);
+
+    //display name
+    QString txt = name() + " (" + assessment()->name() + ")";
+    painter->drawText(rect, Qt::AlignTop | Qt::AlignLeft, txt);
 }
 

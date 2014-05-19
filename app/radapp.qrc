@@ -12,9 +12,9 @@
         <file>images/border-all.png</file>
         <file alias="model-calculate.png">images/calculator--arrow.png</file>
         <file>images/calculator-scientific.png</file>
-        <file>images/categories.png</file>
+        <file alias="model-scenario.png">images/categories.png</file>
         <file>images/chart.png</file>
-        <file>images/color.png</file>
+        <file alias="app-icon.png">images/color.png</file>
         <file>images/color-swatch.png</file>
         <file>images/cross-white.png</file>
         <file>images/gear.png</file>
@@ -69,11 +69,15 @@
         <file alias="save-assessment.png">images/disk.png</file>
         <file alias="save-assessment-as.png">images/disk--arrow.png</file>
         <file alias="edit-remove-con.png">images/node-delete.png</file>
-        <file alias="app-icon.png">images/fruit-lime.png</file>
+        <file>images/fruit-lime.png</file>
         <file alias="model-database.png">images/database-property.png</file>
         <file alias="edit-cursor.png">images/cursor.png</file>
         <file alias="edit-renumber.png">images/tag-hash.png</file>
         <file alias="model-closedb.png">images/database-delete.png</file>
         <file alias="savepdf.png">images/blue-document-pdf-text.png</file>
+        <file alias="model-map-edit.png">images/map--pencil.png</file>
+        <file alias="model-map-track.png">images/map--arrow.png</file>
+        <file alias="model-map-pick.png">images/marker.png</file>
+        <file alias="big-app-icon.png">images/color32.png</file>
     </qresource>
 </RCC>

@@ -78,27 +78,14 @@
         <item row="4" column="0">
          <widget class="QLabel" name="label_5">
           <property name="text">
-           <string>Latitude</string>
+           <string>Longitude</string>
           </property>
          </widget>
         </item>
         <item row="5" column="0">
          <widget class="QLabel" name="label_6">
           <property name="text">
-           <string>Longitude</string>
-          </property>
-         </widget>
-        </item>
-        <item row="5" column="1">
-         <widget class="QDoubleSpinBox" name="numLongitude">
-          <property name="decimals">
-           <number>8</number>
-          </property>
-          <property name="minimum">
-           <double>-1000.000000000000000</double>
-          </property>
-          <property name="maximum">
-           <double>1000.000000000000000</double>
+           <string>Latitude</string>
           </property>
          </widget>
         </item>
@@ -157,8 +144,11 @@
           </item>
          </layout>
         </item>
+        <item row="2" column="1">
+         <widget class="QLineEdit" name="edDistances"/>
+        </item>
         <item row="4" column="1">
-         <widget class="QDoubleSpinBox" name="numLatitude">
+         <widget class="QDoubleSpinBox" name="numLongitude">
           <property name="decimals">
            <number>8</number>
           </property>
@@ -170,8 +160,18 @@
           </property>
          </widget>
         </item>
-        <item row="2" column="1">
-         <widget class="QLineEdit" name="edDistances"/>
+        <item row="5" column="1">
+         <widget class="QDoubleSpinBox" name="numLatitude">
+          <property name="decimals">
+           <number>8</number>
+          </property>
+          <property name="minimum">
+           <double>-1000.000000000000000</double>
+          </property>
+          <property name="maximum">
+           <double>1000.000000000000000</double>
+          </property>
+         </widget>
         </item>
        </layout>
       </item>
@@ -261,8 +261,8 @@
   <tabstop>inpName</tabstop>
   <tabstop>edDistances</tabstop>
   <tabstop>numDegree</tabstop>
-  <tabstop>numLatitude</tabstop>
   <tabstop>numLongitude</tabstop>
+  <tabstop>numLatitude</tabstop>
   <tabstop>inpDescription</tabstop>
   <tabstop>inpMarker</tabstop>
   <tabstop>cmdBrowse</tabstop>

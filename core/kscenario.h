@@ -5,6 +5,22 @@
 #include "imodelfactory.h"
 #include "kcalculationinfo.h"
 #include "iserializable.h"
+#include "klocation.h"
+
+typedef struct tagModelLocation
+{
+    IModel * model;
+    KLocation location;
+
+    inline tagModelLocation() : model(0)
+    {
+    }
+
+    inline tagModelLocation(IModel * md, const KLocation & loc)
+        : model(md), location(loc)
+    {
+    }
+} ModelLocation;
 
 class KScenarioPrivate;
 class RADENV_API KScenario : public QGraphicsScene, public ISerializable
@@ -30,6 +46,7 @@ public:
     void stop();
     ReportList reports() const;
     void setReport(KReport * rep);
+    QList<ModelLocation> extractLocations() const;
 
     void setAssessment(KAssessment * aP);
     KAssessment * assessment() const;
@@ -63,6 +80,8 @@ public:
 
     virtual QDataStream & serialize(QDataStream & stream) const;
     virtual QDataStream & deserialize(QDataStream & stream);
+protected:
+    virtual void drawBackground(QPainter *painter, const QRectF &vrect);
 private:
     KScenarioPrivate * dptr;
 };

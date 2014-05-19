@@ -51,6 +51,8 @@ public slots:
     void generateReport();    
     void refreshScenario();
     void copyScenario();
+    void displayMap();
+    void displayScenario();
 
     void clearModel();
     void reannotateModel();
@@ -63,6 +65,7 @@ protected:
     void changeScenario(KScenario * scenario);
     void buildMenus();
     QStringList assessmentNames() const;
+    QTreeWidgetItem * mapItem(KScenario * scenario, QTreeWidgetItem * parent = 0) const;
     QTreeWidgetItem * reportItem(KScenario * scenario, QTreeWidgetItem * parent = 0) const;
     QTreeWidgetItem * scenarioItem(KScenario * scenario, QTreeWidgetItem * parent = 0) const;
     QTreeWidgetItem * assessmentItem(KAssessment * aP, QTreeWidgetItem * parent = 0) const;

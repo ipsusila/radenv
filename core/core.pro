@@ -60,7 +60,8 @@ SOURCES += \
     kdbconnector.cpp \
     khtmlreport.cpp \
     kapplication.cpp \
-    koptions.cpp
+    koptions.cpp \
+    dialogpicklocation.cpp
 
 HEADERS +=\
     kradionuclide.hxx \
@@ -115,7 +116,8 @@ HEADERS +=\
     kdbconnector.h \
     khtmlreport.h \
     kapplication.h \
-    koptions.h
+    koptions.h \
+    dialogpicklocation.h
 
 symbian {
     MMP_RULES += EXPORTUNFROZEN
@@ -143,7 +145,8 @@ FORMS += \
     dialogcalculation.ui \
     dialogscenario.ui \
     dialogassessment.ui \
-    dialogassessmentbrowser.ui
+    dialogassessmentbrowser.ui \
+    dialogpicklocation.ui
 
 RESOURCES += \
     core.qrc

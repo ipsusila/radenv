@@ -65,6 +65,7 @@ public:
     DataArrayList inputResults() const;
     ModelList connectedOutputModels() const;
     ConnectorList outputConnectors() const;
+    const KDataGroupArray & constUserInputs() const;
 
     //visit
     int sourceDistance() const;
@@ -104,7 +105,6 @@ protected:
     void notifyConnectionsChanged(bool connected);
     void setPortsVisible(bool v);
     KDataGroupArray * userInputs();
-    const KDataGroupArray & constUserInputs() const;
 
     explicit IModel(IModelFactory * fact, const KModelInfo& inf);
 
