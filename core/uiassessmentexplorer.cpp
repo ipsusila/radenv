@@ -4,6 +4,7 @@
 #include <QGraphicsView>
 #include <QMenu>
 #include <QMessageBox>
+#include <QSettings>
 #include "uiassessmentexplorer.h"
 #include "kscenario.h"
 #include "dialogscenario.h"
@@ -196,10 +197,24 @@ UiAssessmentExplorer::UiAssessmentExplorer(QWidget *parent) :
     connect(this, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(displayContextMenu(QPoint)));
 
     buildMenus();
+
+    //load latest assessments
+    QSettings settings;
+    QStringList asNames = settings.value("assessmentexplorer/assessments",
+                                        QStringList()).toStringList();
+    if (!asNames.isEmpty())
+    {
+        AssessmentList asList = KApplication::selfInstance()
+            ->storage()->loadAssessments(asNames, this);
+        addAssessments(asList);
+        dptr->root()->setExpanded(true);
+    }
 }
 UiAssessmentExplorer::~UiAssessmentExplorer()
 {
-
+    QSettings settings;
+    QStringList assessmentList = assessmentNames();
+    settings.setValue("assessmentexplorer/assessments", assessmentList);
 }
 
 void UiAssessmentExplorer::buildMenus()

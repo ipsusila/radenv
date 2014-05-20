@@ -52,6 +52,11 @@ symbian: LIBS += -l$$RADENVCORE -L$$MARBLEPATH/lib -lmarblewidget -lastro
 win32: LIBS += -L$$OUT_PWD/../radenv/ -l$$RADENVCORE -L$$MARBLEPATH -lmarblewidget -lastro
 else: LIBS += -L$$OUT_PWD/../radenv/ -l$$RADENVCORE -L$$MARBLEPATH/lib -lmarblewidget -lastro
 
+RC_FILE = app.rc
+
 RESOURCES += \
     radapp.qrc
+
+OTHER_FILES += \
+    app.rc
 
