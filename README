@@ -1,9 +1,17 @@
-Copyright (2014) I Putu Susila <putu@batan.go.id>
-National Atomic Energy Agency of Indonesia (BATAN)
+RADENV
+------
+A GUI-based software platform for assessing the impact of discharges of radioactive substances to the environment. The software can be extended to support various models through plugin mechanism.
+
+Currently, only SRS-19 plugin is implemented. The plugin is based on IAEA Safety Report Series No. 19, Generic Models for Use in Assessing the Impact of Discharges of Radioactive Substances to the Environment
+http://www-pub.iaea.org/MTCD/publications/PDF/Pub1103_scr.pdf
 
 Thanks to:
   * Yusuke Kamiyamane (Fugue icons)
   * Qt teams (Qt projects)
   * Marble teams (Marblewidget and related)
 
-This software is licensed under GPL v3. 
+This software is licensed under GPL v3.
+
+------
+Developer I Putu Susila
+National Atomic Energy Agency of Indonesia (BATAN) 
