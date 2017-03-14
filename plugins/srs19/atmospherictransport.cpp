@@ -223,7 +223,7 @@ qreal AtmosphericTransport::calcB(qreal x, qreal H, qreal AB, KDataArray * calcR
     (*calcResult) << KData(&Srs19::CorrectedVerticalDiffusionParameter, Sz);
 
     //eq. 5, page. 21
-    qreal B = 12.0 / (x * sz * qSqrt(2 * M_PI * M_PI * M_PI));
+    qreal B = 12.0 / (x * Sz * qSqrt(2 * M_PI * M_PI * M_PI));
     (*calcResult) << KData(&Srs19::LeeGaussianDiffusionFactor, B);
 
     return B;
